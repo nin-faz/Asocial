@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 
 export const typeDefs = gql`
     type Query {
-        findUserById(id : String!) : User
+        findUserById(id : ID!) : User
     }
 
     type Mutation {

@@ -6,18 +6,15 @@ const prisma = new PrismaClient();
 
 type UserQueries = WithRequired<QueryResolvers, 'findUserById'>;
 
-export const resolvers: UserQueries = {
+export const userQueries: UserQueries = {
     findUserById: async (_parent, { id }, _context) => {
-        console.log("Received ID:", id); // 🔥 Vérifier l'ID reçu
         const user = await prisma.user.findUnique({
-            where: { id }
+            where: { id : String(id) }
         });
 
         if (!user) {
             throw new Error(`User with ID ${id} not found`);
         }
-
-        console.log("User found:", JSON.stringify(user)); // 🔥 Vérifier si un utilisateur est trouvé
 
         return {
             ...user,

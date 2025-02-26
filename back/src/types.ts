@@ -75,7 +75,7 @@ export type Query = {
 
 
 export type QueryFindUserByIdArgs = {
-  id: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type SignInResponse = {

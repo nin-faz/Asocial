@@ -42,3 +42,31 @@ SigInUser :
         }
 
 
+
+createArticle : 
+
+EN AMONT, SE CONNECTER VIA LE SIGN IN PUIS RECUPERER LE TOKEN ASSOCIE
+
+
+
+    CORPS : 
+        mutation CreateArticle($content: String!) {
+            createArticle(content: $content) {
+                code
+                message
+                success
+            }
+        }
+
+
+    Variables : 
+    {
+        "content": "Ceci est un contenu d'un article"
+    }
+
+
+    Header: 
+
+    Bearer <Token>
+
+

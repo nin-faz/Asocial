@@ -3,7 +3,7 @@ import { MutationResolvers } from "../../types.js";
 
 export const createUser: NonNullable<MutationResolvers['createUser']> = async (_, {username, password}, {dataSources: {db}}) => {
   try {
-    const existUser = await db.user.findFirstOrThrow({where: {username}});
+    const existUser = await db.user.findFirst({where: {username}});
     if(existUser) {
         return{
             code: 403,
@@ -12,7 +12,7 @@ export const createUser: NonNullable<MutationResolvers['createUser']> = async (_
             user: null
         }
     }
-    
+
     const createdUser = await db.user.create({
       data: {
         username,
@@ -30,7 +30,7 @@ export const createUser: NonNullable<MutationResolvers['createUser']> = async (_
         id: createdUser.id,
         username: createdUser.username,
         bio: createdUser.bio, 
-        createdAt: createdUser.createdAt.toISOString() 
+        createdAt: createdUser.createdAt.toISOString()
       }
     }
   } catch (error){

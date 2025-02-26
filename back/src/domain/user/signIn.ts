@@ -1,9 +1,18 @@
 import { comparePassword, createJWT  } from "../../module/auth.js";
 import { MutationResolvers } from "../../types.js";
 
-export const signIn: NonNullable<MutationResolvers['signIn']> = async (_, {username, password}, {dataSources}, __) => {
+export const signIn: NonNullable<MutationResolvers['signIn']> = async (_, {username, password}, {dataSources : {db}}, __) => {
   try {
-    const user = await dataSources.db.user.findFirstOrThrow({where: {username}});
+    const user = await db.user.findFirst({where: {username}});
+    if(!user) {
+        return {
+            code: 401,
+            message: 'user does not exist',
+            success: false,
+            token: null,
+        }
+    }
+
     const isValidPassword = await comparePassword(password, user.password)
 
     if (!isValidPassword) {

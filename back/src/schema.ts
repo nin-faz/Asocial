@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 
 export const typeDefs = gql`
     type Query {
-        findUserById(id : ID!) : User
+        findUserById(id : ID!) : UserSummary
     }
 
     type Mutation {
@@ -14,11 +14,18 @@ export const typeDefs = gql`
         addCommentDislike(commentId: ID!, userId: ID!): Dislike
     }
     
+    type UserSummary {
+        id: ID!
+        username: String!
+        bio: String
+        createdAt: String!
+    }
+
     type CreateUserResponse {
         code: Int!
         success: Boolean!
         message: String!
-        user: User
+        user: UserSummary
     }
     type SignInResponse {
         code: Int!

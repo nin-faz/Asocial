@@ -1,13 +1,15 @@
-export type ArticleDislikeModel = {
-    id: string;
-    articleId: string;
-    userId: string;
-    createdAt: Date;
+import { Dislike, Comment, Article } from "@prisma/client";
+
+export type UserModel = {
+    id : String
+    username : String
+    articles : [Article]
+    comments : [Comment]
+    dislikes : [Dislike]
+    bio : String
+    createdAt : String
 };
 
-export type CommentDislikeModel = {
-    id: string;
-    commentId: string;
-    userId: string;
-    createdAt: Date;
-};
+export type DislikeModel = Dislike;
+export type CommentModel = Comment;
+export type ArticleModel = Article;

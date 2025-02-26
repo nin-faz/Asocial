@@ -52,14 +52,42 @@ export type Dislike = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addArticleDislike?: Maybe<Dislike>;
+  addCommentDislike?: Maybe<Dislike>;
   createUser: CreateUserResponse;
+  deleteArticleDislike?: Maybe<Dislike>;
+  deleteCommentDislike?: Maybe<Dislike>;
   signIn: SignInResponse;
+};
+
+
+export type MutationAddArticleDislikeArgs = {
+  articleId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationAddCommentDislikeArgs = {
+  commentId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 
 export type MutationCreateUserArgs = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteArticleDislikeArgs = {
+  articleId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCommentDislikeArgs = {
+  commentId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -233,7 +261,11 @@ export type DislikeResolvers<ContextType = any, ParentType extends ResolversPare
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  addArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddArticleDislikeArgs, 'articleId' | 'userId'>>;
+  addCommentDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddCommentDislikeArgs, 'commentId' | 'userId'>>;
   createUser?: Resolver<ResolversTypes['CreateUserResponse'], ParentType, ContextType, RequireFields<MutationCreateUserArgs, 'password' | 'username'>>;
+  deleteArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationDeleteArticleDislikeArgs, 'articleId' | 'userId'>>;
+  deleteCommentDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationDeleteCommentDislikeArgs, 'commentId' | 'userId'>>;
   signIn?: Resolver<ResolversTypes['SignInResponse'], ParentType, ContextType, RequireFields<MutationSignInArgs, 'password' | 'username'>>;
 };
 

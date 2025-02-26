@@ -8,6 +8,10 @@ export const typeDefs = gql`
     type Mutation {
         createUser(username: String!, password: String!): CreateUserResponse!
         signIn(username: String!, password: String!): SignInResponse!
+        deleteArticleDislike(articleId: ID!, userId: ID!): Dislike
+        deleteCommentDislike(commentId: ID!, userId: ID!): Dislike
+        addArticleDislike(articleId: ID!, userId: ID!): Dislike
+        addCommentDislike(commentId: ID!, userId: ID!): Dislike
     }
     
     type CreateUserResponse {

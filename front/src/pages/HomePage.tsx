@@ -36,18 +36,32 @@ function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5 }}
         >
-          <button
+          <motion.button
+            transition={{ delay: 0.2 }}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0px 0px 20px rgba(128, 0, 128, 0.5)",
+              transition: { duration: 0.15 },
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/auth")}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             Rejoindre le chaos
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            transition={{ delay: 0.2 }}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0px 0px 20px rgba(128, 0, 128, 0.5)",
+              transition: { duration: 0.15 },
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/about")}
             className="px-6 py-3 border border-purple-600 text-purple-400 rounded-lg hover:bg-purple-900/30 transition-colors"
           >
             En savoir plus
-          </button>
+          </motion.button>
         </motion.div>
       </div>
     </main>

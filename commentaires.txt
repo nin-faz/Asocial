@@ -1,1 +1,38 @@
 ICI TOI METTRE COMMENTAIRES, COMMANDES A FAIRE, DONNES DE TEST
+
+
+CREATE USER : 
+    CORPS : 
+        mutation CreateUser($username: String!, $password: String!) {
+            createUser(username: $username, password: $password) {
+                code
+                message
+                success
+                user {
+                    id
+                    username
+                }
+            }
+        }
+
+    Params : 
+        {
+            "username": "test",
+            "password": "test",
+        }
+
+SigInUser : 
+    CORPS : 
+        mutation SignIn($username: String!, $password: String!) {
+            signIn(username: $username, password: $password) {
+                code
+                message
+                success
+                token
+            }
+        }
+    Params : 
+        {
+            "username": "test",
+            "password": "test",
+        }

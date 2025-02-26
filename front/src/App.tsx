@@ -4,6 +4,8 @@ import HomePage from "./pages/HomePage";
 import { useEffect, useState } from "react";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
+import AuthPage from "./pages/AuthPage";
+import AboutPage from "./pages/AboutPage";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +27,8 @@ function App() {
         <div className="min-h-screen bg-black">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/about" element={<AboutPage />} />
 
             <Route
               path="*"

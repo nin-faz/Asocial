@@ -1,8 +1,13 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function HomePage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Accueil";
+  }, []);
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
@@ -22,8 +27,8 @@ function HomePage() {
           transition={{ duration: 1.5 }}
         >
           Le réseau anti-social où les pensées profondes, les idées brutes et
-          les vraies connexions prennent vie. Pas de likes, pas
-          d'algorithme—juste du contenu authentique.
+          les vraies connexions prennent vie. Pas de likes, pas d'algorithme —
+          juste du contenu authentique.
         </motion.p>
         <motion.div
           className="mt-8 flex space-x-4"

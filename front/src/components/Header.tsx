@@ -1,6 +1,5 @@
 import {
   Search,
-  Skull,
   MessageSquare,
   Menu,
   ThumbsDown,
@@ -28,8 +27,8 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
             onClick={() => navigate("/")}
           >
-            <Skull className="h-8 w-8 text-purple-500" />
-            <span className="ml-2 text-2xl font-bold text-purple-400">
+            <img src="/logo.svg" alt="Logo Asocial" className="w-14 h-14" />
+            <span className="ml-4 text-2xl font-bold text-purple-400">
               Asocial
             </span>
           </motion.div>

@@ -4,9 +4,8 @@ import { resolvers } from './resolvers.js';
 import { typeDefs } from './schema.js';
 import { getUser } from './module/auth.js';
 import db from './datasource/db.js'
-import { Context } from './context.js';
 
-const server = new ApolloServer<Context>({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
 });

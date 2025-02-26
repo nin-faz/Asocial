@@ -3,7 +3,7 @@ import gql from "graphql-tag";
 export const typeDefs = gql`
     type Query {
         findUserById(id : ID!) : UserSummary
-        findArticles: [Article!]
+        findArticles: [Article]
         findArticleById(id: ID!) : Article
     }
 

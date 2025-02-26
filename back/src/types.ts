@@ -136,7 +136,7 @@ export type MutationUpdateArticleArgs = {
 export type Query = {
   __typename?: 'Query';
   findArticleById?: Maybe<Article>;
-  findArticles?: Maybe<Array<Article>>;
+  findArticles?: Maybe<Array<Maybe<Article>>>;
   findUserById?: Maybe<UserSummary>;
 };
 
@@ -356,7 +356,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   findArticleById?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticleByIdArgs, 'id'>>;
-  findArticles?: Resolver<Maybe<Array<ResolversTypes['Article']>>, ParentType, ContextType>;
+  findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
 };
 

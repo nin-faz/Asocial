@@ -21,8 +21,8 @@ export type Article = {
   author: User;
   comments?: Maybe<Array<Maybe<Comment>>>;
   content: Scalars['String']['output'];
+  dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
-  likes?: Maybe<Array<Maybe<Like>>>;
   title: Scalars['String']['output'];
 };
 
@@ -30,8 +30,8 @@ export type Comment = {
   __typename?: 'Comment';
   author: User;
   content: Scalars['String']['output'];
+  dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
-  likes?: Maybe<Array<Maybe<Like>>>;
 };
 
 export type CreateUserResponse = {
@@ -42,8 +42,8 @@ export type CreateUserResponse = {
   user?: Maybe<User>;
 };
 
-export type Like = {
-  __typename?: 'Like';
+export type Dislike = {
+  __typename?: 'Dislike';
   article?: Maybe<Article>;
   comment?: Maybe<Comment>;
   id: Scalars['ID']['output'];
@@ -92,8 +92,8 @@ export type User = {
   bio?: Maybe<Scalars['String']['output']>;
   comments?: Maybe<Array<Maybe<Comment>>>;
   createdAt: Scalars['String']['output'];
+  dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
-  likes?: Maybe<Array<Maybe<Like>>>;
   username: Scalars['String']['output'];
 };
 
@@ -172,9 +172,9 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Comment: ResolverTypeWrapper<Comment>;
   CreateUserResponse: ResolverTypeWrapper<CreateUserResponse>;
+  Dislike: ResolverTypeWrapper<Dislike>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
-  Like: ResolverTypeWrapper<Like>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   SignInResponse: ResolverTypeWrapper<SignInResponse>;
@@ -188,9 +188,9 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   Comment: Comment;
   CreateUserResponse: CreateUserResponse;
+  Dislike: Dislike;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
-  Like: Like;
   Mutation: {};
   Query: {};
   SignInResponse: SignInResponse;
@@ -202,8 +202,8 @@ export type ArticleResolvers<ContextType = any, ParentType extends ResolversPare
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   comments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Like']>>>, ParentType, ContextType>;
   title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -211,8 +211,8 @@ export type ArticleResolvers<ContextType = any, ParentType extends ResolversPare
 export type CommentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Comment'] = ResolversParentTypes['Comment']> = {
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Like']>>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -224,7 +224,7 @@ export type CreateUserResponseResolvers<ContextType = any, ParentType extends Re
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type LikeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Like'] = ResolversParentTypes['Like']> = {
+export type DislikeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Dislike'] = ResolversParentTypes['Dislike']> = {
   article?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -254,8 +254,8 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
   bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   comments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  likes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Like']>>>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -264,7 +264,7 @@ export type Resolvers<ContextType = any> = {
   Article?: ArticleResolvers<ContextType>;
   Comment?: CommentResolvers<ContextType>;
   CreateUserResponse?: CreateUserResponseResolvers<ContextType>;
-  Like?: LikeResolvers<ContextType>;
+  Dislike?: DislikeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   SignInResponse?: SignInResponseResolvers<ContextType>;

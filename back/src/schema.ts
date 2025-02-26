@@ -28,12 +28,12 @@ export const typeDefs = gql`
         username : String!
         articles : [Article]
         comments : [Comment]
-        likes : [Like]
+        dislikes : [Dislike]
         bio : String
         createdAt : String!
     }
 
-    type Like{
+    type Dislike{
         id : ID!
         user : User!
         article : Article
@@ -45,7 +45,7 @@ export const typeDefs = gql`
         title : String!
         content : String!
         author : User!
-        likes : [Like]
+        dislikes : [Dislike]
         comments : [Comment]
     }
 
@@ -53,7 +53,7 @@ export const typeDefs = gql`
         id : ID!
         content : String!
         author : User!
-        likes : [Like]
+        dislikes : [Dislike]
     }
 `;
 

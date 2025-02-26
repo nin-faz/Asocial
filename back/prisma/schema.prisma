@@ -19,12 +19,12 @@ model User {
   password    String 
   articles Article[]
   comments Comment[]
-  likes    Like[]
+  likes    Dislike[]
   bio       String?
   createdAt DateTime @default(now())
 }
 
-model Like {
+model Dislike {
   id        String   @id @unique @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String
@@ -40,7 +40,7 @@ model Article {
   content  String
   author   User   @relation(fields: [authorId], references: [id])
   authorId String
-  likes    Like[]
+  likes    Dislike[]
 }
 
 model Comment {
@@ -48,5 +48,5 @@ model Comment {
   content  String
   author   User   @relation(fields: [authorId], references: [id])
   authorId String
-  likes    Like[]
+  likes    Dislike[]
 }

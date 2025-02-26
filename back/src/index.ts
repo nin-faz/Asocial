@@ -15,7 +15,9 @@ const { url } = await startStandaloneServer(server, {
   context: async ({req}) => {
     const {cache} = server
     const authorization = (req.headers.authorization)?.split('Bearer ')?.[1]
+    console.log("authorization", authorization)
     const user = authorization ? getUser(authorization) : null
+    console.log("user", user)
     return {
       dataSources: {
         db,

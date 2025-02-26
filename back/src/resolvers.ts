@@ -10,5 +10,6 @@ export const resolvers: Resolvers = {
     Mutation: {
         ...userMutations,
         ...dislikeMutations,
+        
     },
 }

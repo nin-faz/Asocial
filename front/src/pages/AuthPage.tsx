@@ -4,30 +4,8 @@ import { Lock, User, Eye, EyeOff, Skull, Flame } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { gql, useMutation } from "@apollo/client";
-
-const CREATE_USER = gql`
-  mutation CreateUser($username: String!, $password: String!) {
-    createUser(username: $username, password: $password) {
-      success
-      message
-      user {
-        id
-        username
-      }
-    }
-  }
-`;
-
-const LOGIN_USER = gql`
-  mutation SignIn($username: String!, $password: String!) {
-    signIn(username: $username, password: $password) {
-      success
-      message
-      token
-    }
-  }
-`;
+import { useMutation } from "@apollo/client";
+import { CREATE_USER, SIGN_IN } from "../gql/mutations";
 
 interface CreateUserResponse {
   createUser: {
@@ -62,7 +40,7 @@ function AuthPage() {
   }, [isLogin]);
 
   const [createUser] = useMutation<CreateUserResponse>(CREATE_USER);
-  const [signIn] = useMutation<SignInResponse>(LOGIN_USER);
+  const [signIn] = useMutation<SignInResponse>(SIGN_IN);
 
   const authContext = useContext(AuthContext);
   if (!authContext) {

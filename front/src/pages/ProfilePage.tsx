@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { motion } from "framer-motion";
 import {
   ThumbsDown,
@@ -9,6 +9,8 @@ import {
   Skull,
   Link as LinkIcon,
 } from "lucide-react";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const mockUserStats = {
   username: "NightmareEntity",
@@ -21,6 +23,17 @@ const mockUserStats = {
 };
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
+  const auth = useContext(AuthContext);
+
+  if (!auth) return null;
+
+  const { logout } = auth;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       {/* Profile Header */}
@@ -83,6 +96,7 @@ const ProfilePage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg"
+              onClick={handleLogout}
             >
               <LogOut className="h-6 w-6" />
             </motion.button>

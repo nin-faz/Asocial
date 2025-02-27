@@ -1,7 +1,6 @@
 import { MutationResolvers } from "../../types";
-import { Context } from "../../context";
 
-export const deleteArticle: NonNullable<MutationResolvers['deleteArticle']> = async (_, {id}, {dataSources: {db}, user}: Context) => {
+export const deleteArticle: NonNullable<MutationResolvers['deleteArticle']> = async (_, {id}, {dataSources: {db}, user}) => {
     try {
         if(!user) {
             return {
@@ -36,7 +35,7 @@ export const deleteArticle: NonNullable<MutationResolvers['deleteArticle']> = as
         await db.article.delete({
             where: {
                 id
-            }
+            },
         })
 
         return {

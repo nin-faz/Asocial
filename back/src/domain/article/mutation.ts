@@ -4,7 +4,7 @@ import { createArticle } from "./createArticle.js";
 import { deleteArticle } from "./deleteArticle.js";
 import { updateArticle } from "./updateArticle.js";
 
-type ArticleMutations = WithRequired<MutationResolvers, 'createArticle' | 'deleteArticle'>;
+type ArticleMutations = WithRequired<MutationResolvers, 'createArticle' | 'deleteArticle' | 'updateArticle'>;
 
 export const articleMutations: ArticleMutations = {
   createArticle,

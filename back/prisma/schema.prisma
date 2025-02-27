@@ -51,7 +51,7 @@ model Comment {
   content  String
   author   User   @relation(fields: [authorId], references: [id])
   authorId String
+  article  Article? @relation(fields: [articleId], references: [id])
+  articleId String?
   likes    Dislike[]
-  article Article @relation(fields: [articleId], references: [id])
-  articleId String
 }

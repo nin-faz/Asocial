@@ -71,19 +71,29 @@ export type Dislike = {
 export type Mutation = {
   __typename?: 'Mutation';
   addArticleDislike?: Maybe<Dislike>;
+  addComment?: Maybe<Comment>;
   addCommentDislike?: Maybe<Dislike>;
   createArticle: CreateArticleResponse;
   createUser: CreateUserResponse;
   deleteArticle: DeleteArticleResponse;
   deleteArticleDislike?: Maybe<Dislike>;
+  deleteComment?: Maybe<Comment>;
   deleteCommentDislike?: Maybe<Dislike>;
   signIn: SignInResponse;
   updateArticle: UpdateArticleResponse;
+  updateComment?: Maybe<Comment>;
 };
 
 
 export type MutationAddArticleDislikeArgs = {
   articleId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationAddCommentArgs = {
+  articleId: Scalars['ID']['input'];
+  content: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
 };
 
@@ -117,6 +127,11 @@ export type MutationDeleteArticleDislikeArgs = {
 };
 
 
+export type MutationDeleteCommentArgs = {
+  commentId: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteCommentDislikeArgs = {
   commentId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
@@ -133,6 +148,12 @@ export type MutationUpdateArticleArgs = {
   content?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationUpdateCommentArgs = {
+  commentId: Scalars['ID']['input'];
+  content: Scalars['String']['input'];
 };
 
 export type Query = {
@@ -346,14 +367,17 @@ export type DislikeResolvers<ContextType = Context, ParentType extends Resolvers
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddArticleDislikeArgs, 'articleId' | 'userId'>>;
+  addComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationAddCommentArgs, 'articleId' | 'content' | 'userId'>>;
   addCommentDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddCommentDislikeArgs, 'commentId' | 'userId'>>;
   createArticle?: Resolver<ResolversTypes['CreateArticleResponse'], ParentType, ContextType, RequireFields<MutationCreateArticleArgs, 'content'>>;
   createUser?: Resolver<ResolversTypes['CreateUserResponse'], ParentType, ContextType, RequireFields<MutationCreateUserArgs, 'password' | 'username'>>;
   deleteArticle?: Resolver<ResolversTypes['DeleteArticleResponse'], ParentType, ContextType, RequireFields<MutationDeleteArticleArgs, 'id'>>;
   deleteArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationDeleteArticleDislikeArgs, 'articleId' | 'userId'>>;
+  deleteComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationDeleteCommentArgs, 'commentId'>>;
   deleteCommentDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationDeleteCommentDislikeArgs, 'commentId' | 'userId'>>;
   signIn?: Resolver<ResolversTypes['SignInResponse'], ParentType, ContextType, RequireFields<MutationSignInArgs, 'password' | 'username'>>;
   updateArticle?: Resolver<ResolversTypes['UpdateArticleResponse'], ParentType, ContextType, RequireFields<MutationUpdateArticleArgs, 'id'>>;
+  updateComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationUpdateCommentArgs, 'commentId' | 'content'>>;
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {

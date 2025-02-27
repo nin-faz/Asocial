@@ -1,7 +1,6 @@
-import { Context } from "../../context";
 import { MutationResolvers } from "../../types";
 
-export const updateArticle: NonNullable<MutationResolvers['updateArticle']> = async (_, {id, title, content}, {dataSources: {db}, user}: Context) => {
+export const updateArticle: NonNullable<MutationResolvers['updateArticle']> = async (_, {id, title, content}, {dataSources: {db}, user}) => {
     try {
 
         if(!user) {

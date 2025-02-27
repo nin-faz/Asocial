@@ -1,7 +1,6 @@
 import { QueryResolvers } from "../../types";
-import { Context } from "../../context";
 
-export const findArticles: NonNullable<QueryResolvers['findArticles']> = async (_, __, {dataSources: {db}}: Context) => {
+export const findArticles: NonNullable<QueryResolvers['findArticles']> = async (_, __, {dataSources: {db}}) => {
     try {
         const articles = await db.article.findMany({include: {author: true}})
 

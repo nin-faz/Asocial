@@ -112,6 +112,8 @@ export const typeDefs = gql`
         author : User!
         dislikes : [Dislike]
         comments : [Comment]
+        createdAt : String
+        updatedAt : String
     }
 
     type Comment {

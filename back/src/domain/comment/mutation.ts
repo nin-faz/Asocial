@@ -9,15 +9,12 @@ export const addComment: NonNullable<MutationResolvers['addComment']> = async (_
                 content,
                 authorId: userId,
                 articleId
+            },
+            include: {
+                author: true
             }
         });
-
-        return {
-            id: newComment.id,
-            content,
-            authorId: userId,
-            articleId
-        }
+        return newComment;
     } catch {
         throw new Error('Comment has not been added');
     }

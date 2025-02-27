@@ -18,7 +18,11 @@ export const deleteArticleDislike: NonNullable<MutationResolvers['deleteArticleD
         };
 
     } catch {
-        return null;
+        return {
+            code: 500,
+            success: false,
+            message: `Failed to add dislike`,
+        };
     }
 }
 
@@ -64,6 +68,10 @@ export const addCommentDislike: NonNullable<MutationResolvers['addCommentDislike
             data: {
                 userId,
                 commentId
+            },
+            include: {
+                user: true,
+                comment: true
             }
         });
 

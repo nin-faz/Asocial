@@ -1,7 +1,6 @@
 import { QueryResolvers } from "../../types";
-import { Context } from "../../context";
 
-export const findArticleById: NonNullable<QueryResolvers['findArticleById']> = async (_, {id}, {dataSources: {db}}: Context) => {
+export const findArticleById: NonNullable<QueryResolvers['findArticleById']> = async (_, {id}, {dataSources: {db}}) => {
     try {
         const article = await db.article.findUnique({
             where: {
@@ -9,13 +8,6 @@ export const findArticleById: NonNullable<QueryResolvers['findArticleById']> = a
             },
             include: {
                 author: true,
-                comment: {
-                    include: {
-                        author: true,
-                        likes: true
-                    }
-                },
-                likes: true
             }
         })
 

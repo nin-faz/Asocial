@@ -6,6 +6,10 @@ import Loader from "./components/Loader";
 import Header from "./components/Header";
 import AuthPage from "./pages/AuthPage";
 import AboutPage from "./pages/AboutPage";
+import PublicationDetailsPage from "./pages/PublicationDetailsPage";
+import PublicationPage from "./pages/PublicationPage";
+import Footer from "./components/Footer";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +33,13 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/publications/*" element={<PublicationPage />} />
+            <Route
+              path="/publications/:id"
+              element={<PublicationDetailsPage />}
+            />
+
+            <ProfilePage />
 
             <Route
               path="*"
@@ -40,6 +51,7 @@ function App() {
             />
           </Routes>
         </div>
+        <Footer />
       </Router>
     </>
   );

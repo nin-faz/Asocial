@@ -20,8 +20,15 @@ export const typeDefs = gql`
         addComment(content: String!, userId: ID!, articleId: ID!): Comment
         deleteComment(commentId: ID!): Comment
         updateComment(commentId: ID!, content: String!): Comment
+        updateUser(id: ID!, body : userUpdateBody!): updateUserResponse
     }
     
+    input userUpdateBody {
+        bio: String
+        username : String
+        password : String
+    }
+
     type UserSummary {
         id: ID!
         username: String!
@@ -88,6 +95,13 @@ export const typeDefs = gql`
         content : String!
         author : User!
         dislikes : [Dislike]
+    }
+
+    type updateUserResponse {
+        code: Int!
+        success: Boolean!
+        message: String!
+        user: UserSummary
     }
 `;
 

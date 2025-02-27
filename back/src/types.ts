@@ -175,6 +175,7 @@ export type Query = {
   findArticleById?: Maybe<Article>;
   findArticles?: Maybe<Array<Maybe<Article>>>;
   findUserById?: Maybe<UserSummary>;
+  getComments?: Maybe<Array<Maybe<Comment>>>;
 };
 
 
@@ -185,6 +186,11 @@ export type QueryFindArticleByIdArgs = {
 
 export type QueryFindUserByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetCommentsArgs = {
+  articleId: Scalars['ID']['input'];
 };
 
 export type SignInResponse = {
@@ -416,6 +422,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   findArticleById?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticleByIdArgs, 'id'>>;
   findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
+  getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
 };
 
 export type SignInResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SignInResponse'] = ResolversParentTypes['SignInResponse']> = {

@@ -5,6 +5,7 @@ export const typeDefs = gql`
         findUserById(id : ID!) : UserSummary
         findArticles: [Article]
         findArticleById(id: ID!) : Article
+        getComments(articleId: ID!): [Comment]
     }
 
     type Mutation {

@@ -4,7 +4,7 @@ import { WithRequired } from "../../utils/mapped-type.js";
 // Ajouter un commentaire
 export const addComment: NonNullable<MutationResolvers['addComment']> = async (_, { content, userId, articleId }, { dataSources: { db } }) => {
     try {
-        const comment = await db.comment.create({
+        const newComment = await db.comment.create({
             data: {
                 content,
                 authorId: userId,
@@ -12,7 +12,12 @@ export const addComment: NonNullable<MutationResolvers['addComment']> = async (_
             }
         });
 
-        return comment;
+        return {
+            id: newComment.id,
+            content,
+            authorId: userId,
+            articleId
+        }
     } catch {
         throw new Error('Comment has not been added');
     }
@@ -27,7 +32,12 @@ export const deleteComment: NonNullable<MutationResolvers['deleteComment']> = as
             }
         });
 
-        return comment;
+        return {
+            code: 200,
+            success: true,
+            message: `Comment has been deleted`,
+        };
+
     } catch {
         throw new Error('Comment has not been deleted');
     }

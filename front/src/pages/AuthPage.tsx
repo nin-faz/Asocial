@@ -4,30 +4,8 @@ import { Lock, User, Eye, EyeOff, Skull, Flame } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { gql, useMutation } from "@apollo/client";
-
-const CREATE_USER = gql`
-  mutation CreateUser($username: String!, $password: String!) {
-    createUser(username: $username, password: $password) {
-      success
-      message
-      user {
-        id
-        username
-      }
-    }
-  }
-`;
-
-const LOGIN_USER = gql`
-  mutation SignIn($username: String!, $password: String!) {
-    signIn(username: $username, password: $password) {
-      success
-      message
-      token
-    }
-  }
-`;
+import { useMutation } from "@apollo/client";
+import { CREATE_USER, LOGIN_USER } from "../gql/mutations";
 
 interface CreateUserResponse {
   createUser: {
@@ -88,17 +66,11 @@ function AuthPage() {
             token: signInResponse.data.signIn.token,
           });
           toast.success(
-            "T’as fait le pire choix possible. Mais bon, bienvenue quand même.",
-            {
-              icon: <Skull size={24} color="#f0aaff" />,
-              style: { background: "#2a0134", color: "#f0aaff" },
-            }
+            "T’as fait le pire choix possible. Mais bon, bienvenue quand même."
           );
           navigate("/publications");
         } else {
-          toast.success("Inscription réussie, tu y es presque ...", {
-            style: { background: "#2a0134", color: "#f0aaff" },
-          });
+          toast.success("Inscription réussie, tu y es presque ...");
           navigate("/auth");
         }
       } else {
@@ -141,7 +113,6 @@ function AuthPage() {
           darkMessages[Math.floor(Math.random() * darkMessages.length)],
           {
             icon: <Flame size={24} color="#f0aaff" />,
-            style: { background: "#2a0134", color: "#f0aaff" },
           }
         );
         navigate("/publications");

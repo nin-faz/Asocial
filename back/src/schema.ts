@@ -10,18 +10,33 @@ export const typeDefs = gql`
     type Mutation {
         createUser(username: String!, password: String!): CreateUserResponse!
         signIn(username: String!, password: String!): SignInResponse!
+
         createArticle(title: String, content: String!): CreateArticleResponse!
         updateArticle(id: ID!, title: String, content: String): UpdateArticleResponse!
         deleteArticle(id: ID!): DeleteArticleResponse!
-        deleteArticleDislike(articleId: ID!, userId: ID!): Dislike
-        deleteCommentDislike(commentId: ID!, userId: ID!): Dislike
+
+        deleteArticleDislike(articleId: ID!, userId: ID!): DeleteDislikeResponse
+        deleteCommentDislike(commentId: ID!, userId: ID!): DeleteDislikeResponse
         addArticleDislike(articleId: ID!, userId: ID!): Dislike
         addCommentDislike(commentId: ID!, userId: ID!): Dislike
+
         addComment(content: String!, userId: ID!, articleId: ID!): Comment
-        deleteComment(commentId: ID!): Comment
+        deleteComment(commentId: ID!): DeleteCommentResponse
         updateComment(commentId: ID!, content: String!): Comment
     }
     
+    type DeleteDislikeResponse {
+        code: Int!
+        success: Boolean!
+        message: String!
+    }
+
+    type DeleteCommentResponse {
+        code: Int!
+        success: Boolean!
+        message: String!
+    }
+
     type UserSummary {
         id: ID!
         username: String!

@@ -43,6 +43,42 @@ SigInUser :
 
 
 
+UpdateUser : 
+
+    CORPS : 
+        mutation UpdateUser($updateUserId: ID!, $body: userUpdateBody!) {
+            updateUser(id: $updateUserId, body: $body) {
+                code
+                message
+                success
+                user {
+                    bio
+                    createdAt
+                    id
+                    username
+                }
+            }
+        }
+
+    Body : 
+        {  
+            "updateUserId": null,
+            "body": {
+                "bio": "val" || null,
+                "password": "val" || null,
+                "username": "val" || null
+            }
+        }
+
+Il y a une verification sur l'utilisateur connecte et l'auteur du profil, si la verification passe l'update est fait
+
+Header: 
+
+    Bearer <Token>
+
+
+
+
 createArticle : 
 
 EN AMONT, SE CONNECTER VIA LE SIGN IN PUIS RECUPERER LE TOKEN ASSOCIE

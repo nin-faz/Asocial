@@ -39,7 +39,7 @@ function App() {
               element={<PublicationDetailsPage />}
             />
 
-            <ProfilePage />
+            <Route path="/profile" element={<ProfilePage />} />
 
             <Route
               path="*"

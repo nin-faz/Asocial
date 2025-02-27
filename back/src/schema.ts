@@ -17,6 +17,9 @@ export const typeDefs = gql`
         deleteCommentDislike(commentId: ID!, userId: ID!): Dislike
         addArticleDislike(articleId: ID!, userId: ID!): Dislike
         addCommentDislike(commentId: ID!, userId: ID!): Dislike
+        addComment(content: String!, userId: ID!, articleId: ID!): Comment
+        deleteComment(commentId: ID!): Comment
+        updateComment(commentId: ID!, content: String!): Comment
     }
     
     type UserSummary {

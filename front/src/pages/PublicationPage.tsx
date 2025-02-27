@@ -115,9 +115,6 @@ function PublicationPage() {
         },
       });
 
-      console.log("date : " + response.data?.createArticle.article.createdAt);
-
-      // Gérer la réponse de la mutation
       if (response.data?.createArticle?.success) {
         toast.success(
           "Un nouveau cri dans le néant. Ton article est en ligne.",
@@ -150,39 +147,29 @@ function PublicationPage() {
     }
   };
 
-  const { data, loading, error } = useQuery(FIND_ARTICLES);
+  const { data } = useQuery(FIND_ARTICLES);
 
-  // Premièrement, on trie dès qu'on récupère de nouvelles données
   useEffect(() => {
-    if (data?.findArticles) {
+    if (data) {
       const sortedArticles = [...data.findArticles].sort((a, b) => {
-        const dateA = new Date(a.updatedAt || a.createdAt).getTime();
-        const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+        // Si updatedAt existe, on l'utilise, sinon on utilise createdAt
+        const dateA = a.updatedAt
+          ? new Date(parseInt(a.updatedAt, 10))
+          : new Date(parseInt(a.createdAt, 10));
+        const dateB = b.updatedAt
+          ? new Date(parseInt(b.updatedAt, 10))
+          : new Date(parseInt(b.createdAt, 10));
 
-        return dateA - dateB; // Tri du plus ancien au plus récent
+        // Pour un tri décroissant (le plus récent en premier)
+        return dateB.getTime() - dateA.getTime();
       });
-
       setArticles(sortedArticles);
     }
   }, [data]);
 
-  // Ensuite, on réorganise à chaque modification de `articles`
-  useEffect(() => {
-    if (articles?.length > 0) {
-      const sortedArticles = [...articles].sort((b, a) => {
-        const dateA = new Date(a.updatedAt || a.createdAt).getTime();
-        const dateB = new Date(b.updatedAt || b.createdAt).getTime();
-
-        return dateB - dateA; // Tri du plus ancien au plus récent
-      });
-
-      setArticles(sortedArticles);
-    }
-  }, [articles]); // Trie les articles à chaque mise à jour de `articles`
-
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
-      {/* Create Article Section */}
+      {/* Créer un article */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -233,7 +220,6 @@ function PublicationPage() {
             className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
             onClick={() => handlePostClick(articleData.id)}
           >
-            {/* Article Header */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
@@ -244,7 +230,13 @@ function PublicationPage() {
                     {articleData.author.username}
                   </h3>
                   <p className="text-gray-500 text-sm">
-                    {new Date(parseInt(articleData.createdAt)).toLocaleString()}
+                    {articleData.updatedAt
+                      ? new Date(
+                          parseInt(articleData.updatedAt, 10)
+                        ).toLocaleString()
+                      : new Date(
+                          parseInt(articleData.createdAt, 10)
+                        ).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -258,12 +250,10 @@ function PublicationPage() {
               </button>
             </div>
 
-            {/* Article Content */}
             <p className="text-gray-300 mb-4 whitespace-pre-wrap">
               {articleData.content}
             </p>
 
-            {/* Article Actions */}
             <div className="flex items-center space-x-6 text-gray-500">
               <motion.button
                 whileHover={{ scale: 1.1 }}

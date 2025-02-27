@@ -112,6 +112,7 @@ export const typeDefs = gql`
         content : String!
         author : User!
         dislikes : [Dislike]
+        NbOfDislikes : Int
         comments : [Comment]
         createdAt : String
         updatedAt : String
@@ -122,5 +123,6 @@ export const typeDefs = gql`
         content : String!
         author : User!
         dislikes : [Dislike]
+        NbOfDislikes : Int
     }
 `;

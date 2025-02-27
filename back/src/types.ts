@@ -21,6 +21,7 @@ export type Scalars = {
 
 export type Article = {
   __typename?: 'Article';
+  NbOfDislikes?: Maybe<Scalars['Int']['output']>;
   author: User;
   comments?: Maybe<Array<Maybe<Comment>>>;
   content: Scalars['String']['output'];
@@ -33,6 +34,7 @@ export type Article = {
 
 export type Comment = {
   __typename?: 'Comment';
+  NbOfDislikes?: Maybe<Scalars['Int']['output']>;
   author: User;
   content: Scalars['String']['output'];
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
@@ -369,6 +371,7 @@ export type ResolversParentTypes = {
 };
 
 export type ArticleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Article'] = ResolversParentTypes['Article']> = {
+  NbOfDislikes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   comments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -381,6 +384,7 @@ export type ArticleResolvers<ContextType = Context, ParentType extends Resolvers
 };
 
 export type CommentResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Comment'] = ResolversParentTypes['Comment']> = {
+  NbOfDislikes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;

@@ -8,6 +8,7 @@ export const findArticleById: NonNullable<QueryResolvers['findArticleById']> = a
             },
             include: {
                 author: true,
+                _count: { select: { dislikes: true }}
             }
         })
 
@@ -15,7 +16,10 @@ export const findArticleById: NonNullable<QueryResolvers['findArticleById']> = a
             return null
         }
 
-        return article
+        return {
+            ...article,
+            NbOfDislikes: article._count.dislikes 
+        };
 
     } catch (error) {
         throw new Error(`Failed to fetch articles : ${error}`);

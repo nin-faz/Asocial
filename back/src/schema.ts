@@ -11,7 +11,7 @@ export const typeDefs = gql`
         createUser(username: String!, password: String!): CreateUserResponse!
         signIn(username: String!, password: String!): SignInResponse!
         createArticle(title: String, content: String!): CreateArticleResponse!
-        updateArticle(id: ID!): UpdateArticleResponse!
+        updateArticle(id: ID!, title: String, content: String): UpdateArticleResponse!
         deleteArticle(id: ID!): DeleteArticleResponse!
         deleteArticleDislike(articleId: ID!, userId: ID!): Dislike
         deleteCommentDislike(commentId: ID!, userId: ID!): Dislike

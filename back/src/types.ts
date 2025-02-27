@@ -130,7 +130,9 @@ export type MutationSignInArgs = {
 
 
 export type MutationUpdateArticleArgs = {
+  content?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Query = {

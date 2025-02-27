@@ -6,6 +6,7 @@ export const typeDefs = gql`
         findArticles: [Article]
         findArticleById(id: ID!) : Article
         getComments(articleId: ID!): [Comment]
+        findArticleByMostDisliked: [Article]
     }
 
     type Mutation {

@@ -11,8 +11,7 @@ export const resolvers: Resolvers = {
     Query: {
         ...userQueries,
         ...articleQueries, 
-        ...commentQueries
-        
+        ...commentQueries   
     },
     Mutation: {
         ...userMutations,
@@ -27,7 +26,7 @@ export const resolvers: Resolvers = {
             where: { articleId: parent.id },
             include: {
               author: true,
-              likes: true
+              dislikes: true
             }
           });
         },

@@ -2,7 +2,7 @@ ICI TOI METTRE COMMENTAIRES, COMMANDES A FAIRE, DONNES DE TEST
 
 TOI NPM RUN CODEGEN FAIRE A CHAQUE MODIFICATION SHCEMA : 
 
-TOI FAIRE UN npm run prisma migrate dev --name init A CHAQUE MODIFICATION DANS PRISMA 
+TOI FAIRE UN npm run prisma migrate dev --name  A CHAQUE MODIFICATION DANS PRISMA 
 
 
 CREATE USER : 
@@ -40,5 +40,33 @@ SigInUser :
             "username": "test",
             "password": "test",
         }
+
+
+
+createArticle : 
+
+EN AMONT, SE CONNECTER VIA LE SIGN IN PUIS RECUPERER LE TOKEN ASSOCIE
+
+
+
+    CORPS : 
+        mutation CreateArticle($content: String!) {
+            createArticle(content: $content) {
+                code
+                message
+                success
+            }
+        }
+
+
+    Variables : 
+    {
+        "content": "Ceci est un contenu d'un article"
+    }
+
+
+    Header: 
+
+    Bearer <Token>
 
 

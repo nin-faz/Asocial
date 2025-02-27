@@ -96,7 +96,7 @@ export type Mutation = {
   signIn: SignInResponse;
   updateArticle: UpdateArticleResponse;
   updateComment?: Maybe<Comment>;
-  updateUser?: Maybe<UpdateUserResponse>;
+  updateUser: UpdateUserResponse;
 };
 
 
@@ -441,7 +441,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   signIn?: Resolver<ResolversTypes['SignInResponse'], ParentType, ContextType, RequireFields<MutationSignInArgs, 'password' | 'username'>>;
   updateArticle?: Resolver<ResolversTypes['UpdateArticleResponse'], ParentType, ContextType, RequireFields<MutationUpdateArticleArgs, 'id'>>;
   updateComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationUpdateCommentArgs, 'commentId' | 'content'>>;
-  updateUser?: Resolver<Maybe<ResolversTypes['updateUserResponse']>, ParentType, ContextType, RequireFields<MutationUpdateUserArgs, 'body' | 'id'>>;
+  updateUser?: Resolver<ResolversTypes['updateUserResponse'], ParentType, ContextType, RequireFields<MutationUpdateUserArgs, 'body' | 'id'>>;
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {

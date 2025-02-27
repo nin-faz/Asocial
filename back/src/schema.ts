@@ -59,6 +59,13 @@ export const typeDefs = gql`
         token: String
     }
 
+    type updateUserResponse {
+        code: Int!
+        success: Boolean!
+        message: String!
+        user: UserSummary
+    }
+
     input userUpdateBody {
         bio: String
         username : String

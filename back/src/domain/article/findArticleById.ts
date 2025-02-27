@@ -8,7 +8,14 @@ export const findArticleById: NonNullable<QueryResolvers['findArticleById']> = a
                 id
             },
             include: {
-                author: true
+                author: true,
+                comment: {
+                    include: {
+                        author: true,
+                        likes: true
+                    }
+                },
+                likes: true
             }
         })
 

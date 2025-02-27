@@ -12,11 +12,11 @@ export const deleteArticleDislike: NonNullable<MutationResolvers['deleteArticleD
         })
 
         return {
-            id: '',
-            userId,
-            articleId: null,
-            commentId: null,
+            code: 200,
+            success: true,
+            message: `Dislike has been deleted`,
         };
+
     } catch {
         return null;
     }
@@ -27,7 +27,7 @@ export const addArticleDislike: NonNullable<MutationResolvers['addArticleDislike
         const dislike = await db.dislike.create({
             data: {
                 userId,
-                articleId
+                articleId,
             }
         });
 
@@ -48,11 +48,11 @@ export const deleteCommentDislike: NonNullable<MutationResolvers['deleteCommentD
         })
 
         return {
-            id: '',
-            userId,
-            articleId: null,
-            commentId
+            code: 200,
+            success: true,
+            message: `Dislike has been deleted`,
         };
+
     } catch {
         return null;
     }

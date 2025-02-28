@@ -186,6 +186,7 @@ export type Query = {
   findArticles?: Maybe<Array<Maybe<Article>>>;
   findUserById?: Maybe<UserSummary>;
   getComments?: Maybe<Array<Maybe<Comment>>>;
+  getUserbyToken?: Maybe<UserToken>;
 };
 
 
@@ -201,6 +202,11 @@ export type QueryFindUserByIdArgs = {
 
 export type QueryGetCommentsArgs = {
   articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetUserbyTokenArgs = {
+  token: Scalars['String']['input'];
 };
 
 export type SignInResponse = {
@@ -233,6 +239,12 @@ export type UserSummary = {
   __typename?: 'UserSummary';
   bio?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  username: Scalars['String']['output'];
+};
+
+export type UserToken = {
+  __typename?: 'UserToken';
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
 };
@@ -340,6 +352,7 @@ export type ResolversTypes = {
   UpdateArticleResponse: ResolverTypeWrapper<UpdateArticleResponse>;
   User: ResolverTypeWrapper<UserModel>;
   UserSummary: ResolverTypeWrapper<UserSummary>;
+  UserToken: ResolverTypeWrapper<UserToken>;
   updateUserResponse: ResolverTypeWrapper<UpdateUserResponse>;
   userUpdateBody: UserUpdateBody;
 };
@@ -364,6 +377,7 @@ export type ResolversParentTypes = {
   UpdateArticleResponse: UpdateArticleResponse;
   User: UserModel;
   UserSummary: UserSummary;
+  UserToken: UserToken;
   updateUserResponse: UpdateUserResponse;
   userUpdateBody: UserUpdateBody;
 };
@@ -455,6 +469,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
+  getUserbyToken?: Resolver<Maybe<ResolversTypes['UserToken']>, ParentType, ContextType, RequireFields<QueryGetUserbyTokenArgs, 'token'>>;
 };
 
 export type SignInResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SignInResponse'] = ResolversParentTypes['SignInResponse']> = {
@@ -491,6 +506,12 @@ export type UserSummaryResolvers<ContextType = Context, ParentType extends Resol
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type UserTokenResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserToken'] = ResolversParentTypes['UserToken']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type UpdateUserResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['updateUserResponse'] = ResolversParentTypes['updateUserResponse']> = {
   code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -514,6 +535,7 @@ export type Resolvers<ContextType = Context> = {
   UpdateArticleResponse?: UpdateArticleResponseResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserSummary?: UserSummaryResolvers<ContextType>;
+  UserToken?: UserTokenResolvers<ContextType>;
   updateUserResponse?: UpdateUserResponseResolvers<ContextType>;
 };
 

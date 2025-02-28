@@ -8,6 +8,9 @@ export const typeDefs = gql`
         getComments(articleId: ID!): [Comment]
         findArticleByMostDisliked: [Article]
         getUserbyToken(token: String!): UserToken
+        getDislikesByArticleId(articleId: ID!): [Dislike]
+        getDislikesByCommentId(commentId: ID!): [Dislike]
+        getDislikesByUserId(userId: ID!): [Dislike]
     }
 
     type Mutation {

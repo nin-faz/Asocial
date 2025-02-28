@@ -15,7 +15,7 @@ export const commentQueries: CommentQueries = {
 
         return comments.map(comment => ({
             ...comment,
-            nbOfDislikes: comment._count?.dislikes ?? 0 
+            NbOfDislikes: comment._count?.dislikes !== undefined ? comment._count.dislikes : 0
         }));
     }
     

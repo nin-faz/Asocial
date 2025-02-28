@@ -1,10 +1,10 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import { FIND_ARTICLE_BY_ID } from "../gql/queries/articleQuery";
 import { GET_COMMENTS } from "../gql/queries/commentQuery";
-import { ADD_COMMENT } from "../gql/mutations/commentMutation";
+import { ADD_COMMENT, DELETE_COMMENT } from "../gql/mutations/commentMutation";
 import {
   ThumbsDown,
   MessageSquare,
@@ -13,8 +13,8 @@ import {
   ArrowLeft,
   Send,
   MoreVertical,
+  Trash2,
 } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
 interface Comment {
@@ -44,7 +44,24 @@ const PublicationDetailsPage = () => {
   });
   
   const [createComment] = useMutation(ADD_COMMENT, {
-    variables: { articleId: id, content: newComment, userId: userToken?.id },
+    onCompleted: () => {
+      setNewComment("");
+      toast.success("Commentaire ajouté avec succès");
+    },
+    onError: (error) => {
+      console.error("Erreur lors de l'ajout du commentaire :", error);
+      toast.error("Une erreur est survenue lors de l'ajout du commentaire");
+    }
+  });
+
+  const [deleteComment] = useMutation(DELETE_COMMENT, {
+    onCompleted: () => {
+      toast.success("Commentaire supprimé avec succès");
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de la suppression du commentaire");
+      console.error(error);
+    },
     refetchQueries: [{ query: GET_COMMENTS, variables: { articleId: id } }],
   });
 
@@ -62,22 +79,30 @@ const PublicationDetailsPage = () => {
     }
 
     try {
-      const response = await createComment({
+      await createComment({
         variables: {
           content: newComment,
-          articleId: id,
-        },
+          userId: userToken.id,
+          articleId: id
+        }
       });
-
-      if (response.data?.createComment?.success) {
-        setNewComment("");
-        toast.success("Commentaire ajouté avec succès");
-      } else {
-        toast.error(response.data?.createComment?.message || "Erreur lors de l'ajout du commentaire");
-      }
     } catch (err) {
       console.error("Erreur lors de l'ajout du commentaire :", err);
-      toast.error("Une erreur est survenue lors de l'ajout du commentaire");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!userToken) {
+      toast.error("Vous devez être connecté pour supprimer un commentaire.");
+      return;
+    }
+
+    try {
+      await deleteComment({
+        variables: { commentId }
+      });
+    } catch (err) {
+      console.error("Erreur lors de la suppression du commentaire :", err);
     }
   };
 
@@ -206,7 +231,7 @@ const PublicationDetailsPage = () => {
       {/* Comments Section */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-purple-400 mb-4">
-          Commentaires ({commentList.length})
+          Commentaires ({comments?.length || 0})
         </h2>
 
         {comments.map((comment: Comment, index: number) => (
@@ -230,9 +255,14 @@ const PublicationDetailsPage = () => {
                       {comment.author.username}
                     </span>
                   </div>
-                  <button className="text-gray-500 hover:text-gray-400">
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
+                  {comment.author.id === userToken?.id && (
+                    <button 
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="text-gray-500 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
                 <p className="text-gray-300 mb-2">{comment.content}</p>
                 <div className="flex items-center text-gray-500">

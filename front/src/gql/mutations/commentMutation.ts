@@ -13,21 +13,12 @@ export const ADD_COMMENT = gql`
   }
 `;
 
-export const CREATE_COMMENT = gql`
-  mutation CreateComment($articleId: ID!, $content: String!) {
-    createComment(articleId: $articleId, content: $content) {
+export const DELETE_COMMENT = gql`
+  mutation DeleteComment($commentId: ID!) {
+    deleteComment(commentId: $commentId) {
       code
       success
       message
-      comment {
-        id
-        content
-        author {
-          id
-          username
-        }
-        createdAt
-      }
     }
   }
 `;

@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@apollo/client";
+import { FIND_ARTICLE_BY_ID } from "../gql/queries/articleQuery";
 import {
   ThumbsDown,
   MessageSquare,
@@ -46,48 +48,20 @@ const mockComments: Comment[] = [
   },
 ];
 
-// Mock posts data (same as in PublicationPage)
-const mockPosts = [
-  {
-    id: 1,
-    username: "ChaosLord",
-    content:
-      "La société n'est qu'une illusion collective que nous maintenons par peur du vide. #Nihilisme",
-    timestamp: "Il y a 2 heures",
-    dislikes: 666,
-    comments: 13,
-  },
-  {
-    id: 2,
-    username: "DarkPhilosopher",
-    content:
-      "Plus je côtoie les humains, plus j'apprécie ma solitude. Les réseaux sociaux sont la preuve de notre décadence collective.",
-    timestamp: "Il y a 5 heures",
-    dislikes: 421,
-    comments: 42,
-    image:
-      "https://images.unsplash.com/photo-1516410529446-2c777cb7366d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-  },
-  {
-    id: 3,
-    username: "DigitalAnarchist",
-    content:
-      "Vos likes sont le symbole de votre besoin pathétique d'approbation. Ici, nous célébrons la désapprobation. 🖤",
-    timestamp: "Il y a 8 heures",
-    dislikes: 1337,
-    comments: 89,
-  },
-];
-
 const PublicationDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState(mockComments);
 
-  // Find the post based on the ID from URL
-  const postId = parseInt(id || "1");
-  const post = mockPosts.find((p) => p.id === postId) || mockPosts[0];
+  const { loading, error, data } = useQuery(FIND_ARTICLE_BY_ID, {
+    variables: { id },
+  });
+
+  if (loading) return <div className="text-white">Chargement...</div>;
+  if (error) return <div className="text-white">Erreur : {error.message}</div>;
+
+  const post = data.findArticleById;
 
   const handleAddComment = () => {
     if (newComment.trim() === "") return;
@@ -106,7 +80,7 @@ const PublicationDetailsPage = () => {
 
   const handleDislike = () => {
     // In a real app, this would update the post's dislikes in the database
-    console.log("Disliked post", postId);
+    console.log("Disliked post", post.id);
   };
 
   const handleDislikeComment = (commentId: number) => {
@@ -146,9 +120,11 @@ const PublicationDetailsPage = () => {
             </div>
             <div>
               <h3 className="text-purple-400 font-semibold text-lg">
-                {post.username}
+                {post.author.username}
               </h3>
-              <p className="text-gray-500 text-sm">{post.timestamp}</p>
+              <p className="text-gray-500 text-sm">
+                {new Date(post.createdAt).toLocaleDateString()}
+              </p>
             </div>
           </div>
           <button className="text-gray-500 hover:text-purple-400">
@@ -178,7 +154,7 @@ const PublicationDetailsPage = () => {
               className="flex items-center space-x-2 hover:text-purple-400"
             >
               <ThumbsDown className="h-5 w-5" />
-              <span>{post.dislikes}</span>
+              <span>0</span>
             </motion.button>
 
             <div className="flex items-center space-x-2">

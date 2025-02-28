@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { ThumbsDown, MessageSquare, Settings, LogOut, Users, Skull, Link as LinkIcon, Save, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
@@ -7,11 +7,10 @@ import { useMutation } from '@apollo/client';
 import { useQuery } from '@apollo/client';
 import { UPDATE_USER } from '../gql/mutations/userMutation';
 import { useNavigate } from 'react-router-dom';
-import { FIND_ARTICLES, GET_USER_BY_ID, GET_USER_BY_TOKEN, FIND_DISLIKES_BY_USER_ID } from '../gql/queries';
-import { Article, UserToken } from '../gql/graphql';
+import { FIND_ARTICLES, GET_USER_BY_ID, FIND_DISLIKES_BY_USER_ID } from '../gql/queries';
+import { Article } from '../gql/graphql';
 import { UserSummary } from '../gql/graphql';
 import { Dislike } from '../gql/graphql';
-import { Maybe } from 'graphql/jsutils/Maybe';
 
 
 
@@ -45,7 +44,6 @@ const ProfilePage = () => {
     variables: userToken ? { id: userToken.id } : undefined,
     skip: !userToken,
   });
-  
 
   const user: UserSummary | undefined = userInfos.data?.findUserById;
 
@@ -67,19 +65,9 @@ const ProfilePage = () => {
   }, [article.data, user]);
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    if(article.data) {
-      setNumberOfPosts(0);
-      for(let i = 0; i < article.data?.findArticles.length; i++) {
-        if(article.data?.findArticles[i]?.author.id === user?.id) {
-          setNumberOfPosts(numberOfPosts => numberOfPosts + 1);
-        }
-      }
-=======
     if(articleLiked.data && user) {
       setNumberOfPostDisliked(articleLiked.data.getDislikesByUserId.length)
       setArticleDisliked(articleLiked.data.getDislikesByUserId.map(dislike => dislike.article).filter((article): article is Article => article !== null))
->>>>>>> Stashed changes
     }
   },[articleLiked.data, user])
 
@@ -311,7 +299,7 @@ const ProfilePage = () => {
       {/* Feed */}
       <div className="mt-8 space-y-6">
         {/* Example Post */}
-        {activeTab === 'dislikes' && articleDisliked.map((article) => (
+        {activeTab === 'dislikes' && articleDisliked ? articleDisliked.map((article) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -342,7 +330,7 @@ const ProfilePage = () => {
             </div>
           </div>
         </motion.div>
-        ))}
+        )): null}
         {activeTab === 'publications' && articles.map((article) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

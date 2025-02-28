@@ -10,12 +10,14 @@ export const commentQueries: CommentQueries = {
     getComments: async (_, { articleId }, _context) => {      
         const comments = await prisma.comment.findMany({
             where: { articleId },
-            include: { _count: { select: { dislikes: true } }}
+            include: { 
+                _count: { select: { dislikes: true } }
+            }
         });
 
         return comments.map(comment => ({
             ...comment,
-            nbOfDislikes: comment._count?.dislikes ?? 0 
+            NbOfDislikes: comment._count?.dislikes !== undefined ? comment._count.dislikes : 0
         }));
     }
     

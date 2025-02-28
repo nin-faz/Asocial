@@ -12,6 +12,7 @@ export const FIND_ARTICLES = gql`
       }
       createdAt
       updatedAt
+      NbOfDislikes
     }
   }
 `;
@@ -28,6 +29,32 @@ export const FIND_ARTICLE_BY_ID = gql`
       }
       createdAt
       updatedAt
+    }
+  }
+`;
+
+export const FIND_ARTICLE_BY_MOST_DISLIKED = gql`
+  query FindArticleByMostDisliked {
+    findArticleByMostDisliked {
+      id
+      title
+      content
+      createdAt
+      updatedAt
+      author {
+        id
+        username
+      }
+      dislikes {
+        id
+        user {
+          id
+          username
+        }
+      }
+      _count {
+        dislikes
+      }
     }
   }
 `;

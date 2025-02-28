@@ -8,6 +8,7 @@ import {
   Skull,
   MoreVertical,
   Megaphone,
+  SortDesc,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
@@ -16,7 +17,7 @@ import {
   CREATE_ARTICLE,
   DELETE_ARTICLE_DISLIKE,
 } from "../gql/mutations";
-import { FIND_ARTICLES } from "../gql/queries";
+import { FIND_ARTICLE_BY_MOST_DISLIKED, FIND_ARTICLES } from "../gql/queries";
 import { AuthContext } from "../context/AuthContext";
 
 interface CreateArticleResponse {
@@ -36,8 +37,9 @@ interface Article {
   author: {
     username: string;
   };
-  dislikes: Dislike[];
-  comments: Comment[];
+  dislikes?: Dislike[];
+  comments?: Comment[];
+  NbOfDislikes?: number;
 }
 
 interface Dislike {
@@ -48,32 +50,128 @@ interface Dislike {
   };
 }
 
+interface FindArticleByMostDislikedData {
+  findArticleByMostDisliked: {
+    id: string;
+    title?: string;
+    content: string;
+    createdAt: string;
+    updatedAt?: string;
+    author: {
+      id: string;
+      username: string;
+    };
+    dislikes: {
+      id: string;
+      user: {
+        id: string;
+        username: string;
+      };
+    }[];
+    _count: {
+      dislikes: number;
+    };
+  }[];
+}
+
+interface FindArticlesData {
+  findArticles: {
+    id: string;
+    title?: string;
+    content: string;
+    createdAt: string;
+    updatedAt?: string;
+    NbOfDislikes?: number;
+    author: {
+      id: string;
+      username: string;
+    };
+    dislikes: Dislike[];
+  }[];
+}
+
 function PublicationPage() {
-  const [articles, setArticles] = useState<Article[]>([]);
-
-  const navigate = useNavigate();
-
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-
-  const handlePostClick = (postId: string) => {
-    navigate(`/publications/${postId}`);
-  };
-
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error("AuthContext is null");
   }
 
   const { token, user } = authContext;
+  const navigate = useNavigate();
+
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [popularArticles, setPopularArticles] = useState<Set<string>>(
+    new Set()
+  );
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  const [sortOption, setSortOption] = useState<string>("recent");
+
+  const mostDislikedArticlesData = useQuery<FindArticleByMostDislikedData>(
+    FIND_ARTICLE_BY_MOST_DISLIKED,
+    { skip: sortOption !== "popular" }
+  );
+
+  const dataArticles = useQuery<FindArticlesData>(FIND_ARTICLES);
+
+  const articlesList =
+    sortOption === "popular"
+      ? mostDislikedArticlesData.data?.findArticleByMostDisliked
+      : dataArticles.data?.findArticles;
+
+  useEffect(() => {
+    if (articlesList) {
+      let sortedArticles;
+
+      if (sortOption !== "popular") {
+        // Tri des articles par date lorsque sortOption n'est pas "popular"
+        sortedArticles = [...(dataArticles.data?.findArticles || [])].sort(
+          (a, b) => {
+            const dateA = a.updatedAt
+              ? new Date(parseInt(a.updatedAt, 10))
+              : new Date(parseInt(a.createdAt, 10));
+            const dateB = b.updatedAt
+              ? new Date(parseInt(b.updatedAt, 10))
+              : new Date(parseInt(b.createdAt, 10));
+
+            return dateB.getTime() - dateA.getTime();
+          }
+        );
+      } else {
+        // Si sortOption est "popular", utilise les articles les plus détestés
+        sortedArticles =
+          mostDislikedArticlesData.data?.findArticleByMostDisliked || [];
+      }
+
+      setArticles(sortedArticles);
+
+      setArticles(sortedArticles);
+
+      if (user) {
+        const dislikesMap: Record<string, boolean> = {};
+        sortedArticles.forEach((article) => {
+          dislikesMap[article.id] =
+            article.dislikes?.some(
+              (dislike: Dislike) => dislike.user.id === user.id
+            ) ?? false;
+        });
+        setUserDislikes(dislikesMap);
+      }
+    }
+  }, [dataArticles, user, sortOption]);
+
+  const handlePostClick = (postId: string) => {
+    navigate(`/publications/${postId}`);
+  };
 
   console.log("user : ", user);
 
   const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
-  const [userDislikes, setUserDislikes] = useState<Record<string, boolean>>({});
 
-  const [alreadyDisliked, setAlreadyDisliked] = useState<boolean>(false);
+  const [userDislikes, setUserDislikes] = useState<Record<string, boolean>>({});
 
   const handleDislike = async (articleId: string) => {
     if (!token || !user) {
@@ -94,7 +192,7 @@ function PublicationPage() {
             article.id === articleId
               ? {
                   ...article,
-                  dislikes: article.dislikes.filter(
+                  dislikes: (article.dislikes || []).filter(
                     (dislike) => dislike.user.id !== user.id
                   ),
                 }
@@ -108,12 +206,18 @@ function PublicationPage() {
         });
         if (data) {
           toast.success("Dislike ajouté.");
-          const newDislike = { id: data.addArticleDislike.id, user: user };
+          const newDislike = {
+            id: data.addArticleDislike.id,
+            user: { id: user.id!, username: user.username },
+          };
 
           setArticles((prevArticles) =>
             prevArticles.map((article) =>
               article.id === articleId
-                ? { ...article, dislikes: [...article.dislikes, newDislike] }
+                ? {
+                    ...article,
+                    dislikes: [...(article.dislikes || []), newDislike],
+                  }
                 : article
             )
           );
@@ -184,56 +288,41 @@ function PublicationPage() {
     }
   };
 
-  const { data } = useQuery(FIND_ARTICLES);
-
-  // useEffect(() => {
-  //   if (data) {
-  //     const sortedArticles = [...data.findArticles].sort((a, b) => {
-  //       // Si updatedAt existe, on l'utilise, sinon on utilise createdAt
-  //       const dateA = a.updatedAt
-  //         ? new Date(parseInt(a.updatedAt, 10))
-  //         : new Date(parseInt(a.createdAt, 10));
-  //       const dateB = b.updatedAt
-  //         ? new Date(parseInt(b.updatedAt, 10))
-  //         : new Date(parseInt(b.createdAt, 10));
-
-  //       // Pour un tri décroissant (le plus récent en premier)
-  //       return dateB.getTime() - dateA.getTime();
-  //     });
-  //     setArticles(sortedArticles);
-  //   }
-  // }, [data]);
-
-  useEffect(() => {
-    if (data) {
-      const sortedArticles = [...data.findArticles].sort((a, b) => {
-        const dateA = a.updatedAt
-          ? new Date(parseInt(a.updatedAt, 10))
-          : new Date(parseInt(a.createdAt, 10));
-        const dateB = b.updatedAt
-          ? new Date(parseInt(b.updatedAt, 10))
-          : new Date(parseInt(b.createdAt, 10));
-
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      setArticles(sortedArticles);
-
-      if (user) {
-        const dislikesMap: Record<string, boolean> = {};
-        sortedArticles.forEach((article) => {
-          dislikesMap[article.id] =
-            article.dislikes?.some(
-              (dislike: Dislike) => dislike.user.id === user.id
-            ) ?? false;
-        });
-        setUserDislikes(dislikesMap);
-      }
-    }
-  }, [data, user]);
-
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-purple-400">Publications</h2>
+        <div className="relative flex items-center">
+          <SortDesc className="absolute left-3 text-gray-500 h-4 w-4" />
+          <select
+            value={sortOption}
+            onChange={(e) => {
+              setSortOption(e.target.value);
+              console.log(e.target.value); // Affiche la nouvelle valeur de sortOption
+            }}
+            className="bg-gray-800 text-gray-300 pl-10 pr-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+          >
+            <option value="recent">Les plus récentes</option>
+            <option value="popular">Les plus détestées</option>
+          </select>
+          <div className="absolute right-3 pointer-events-none">
+            <svg
+              className="h-4 w-4 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
       {/* Créer un article */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -334,7 +423,7 @@ function PublicationPage() {
                 }}
               >
                 <ThumbsDown className="h-5 w-5" />
-                <span>{articleData?.dislikes?.length}</span>
+                <span>{articleData?.NbOfDislikes}</span>
               </motion.button>
 
               <button

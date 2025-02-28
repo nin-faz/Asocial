@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { ThumbsDown, MessageSquare, Settings, LogOut, Users, Skull, Link as LinkIcon, Save, X } from 'lucide-react';
@@ -6,8 +7,8 @@ import { useMutation } from '@apollo/client';
 import { useQuery } from '@apollo/client';
 import { UPDATE_USER } from '../gql/mutations/userMutation';
 import { useNavigate } from 'react-router-dom';
-import { GET_USER_BY_ID, GET_USER_BY_TOKEN } from '../gql/queries';
-import { UserToken } from '../gql/graphql';
+import { FIND_ARTICLES, GET_USER_BY_ID, GET_USER_BY_TOKEN } from '../gql/queries';
+import { Article, UserToken } from '../gql/graphql';
 import { UserSummary } from '../gql/graphql';
 
 
@@ -18,6 +19,8 @@ const ProfilePage = () => {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [error, setError] = useState('');
+  const [numberOfPosts, setNumberOfPosts] = useState(0);
+  
 
   console.log('auth', auth);
 // Requête GraphQL pour récupérer les infos utilisateur
@@ -36,7 +39,19 @@ const ProfilePage = () => {
     skip: !userToken,
   });
 
-  const user = userInfos.data?.findUserById as UserSummary;
+  const user: UserSummary | undefined = userInfos.data?.findUserById;
+
+  const article = useQuery<{findArticles: Article[]}>(FIND_ARTICLES);
+
+  useEffect(() => {
+    if(article.data) {
+      for(let i = 0; i < article.data?.findArticles.length; i++) {
+        if(article.data?.findArticles[i]?.author.id === user?.id) {
+          setNumberOfPosts(numberOfPosts => numberOfPosts + 1);
+        }
+      }
+    }
+  }, [article, user]);
 
 
   const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
@@ -78,7 +93,7 @@ const ProfilePage = () => {
       }
     } catch (err) {
       setError('Une erreur est survenue lors de la mise à jour du profil.');
-      console.error(err);
+      console.error(error, err);
     }
   };
 
@@ -181,7 +196,7 @@ const ProfilePage = () => {
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    <span>{mockUserStats.publications} publications</span>
+                    <span>{numberOfPosts} publications</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ThumbsDown className="h-5 w-5" />

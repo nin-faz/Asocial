@@ -11,7 +11,11 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
-import { CREATE_ARTICLE } from "../gql/mutations";
+import {
+  ADD_ARTICLE_DISLIKE,
+  CREATE_ARTICLE,
+  DELETE_ARTICLE_DISLIKE,
+} from "../gql/mutations";
 import { FIND_ARTICLES } from "../gql/queries";
 import { AuthContext } from "../context/AuthContext";
 
@@ -19,69 +23,38 @@ interface CreateArticleResponse {
   createArticle: {
     success: boolean;
     message: string;
-    article: {
-      id: string;
-      title?: string;
-      content: string;
-      createdAt: string;
-      updatedAt?: string;
-      author: {
-        username: string;
-      };
-      dislikes: number;
-      comments: number;
-    };
+    article: Article;
   };
 }
 
-// const mockPosts: Post[] = [
-//   {
-//     id: 1,
-//     username: "ChaosLord",
-//     content:
-//       "La société n'est qu'une illusion collective que nous maintenons par peur du vide. #Nihilisme",
-//     timestamp: "Il y a 2 heures",
-//     dislikes: 666,
-//     comments: 13,
-//   },
-//   {
-//     id: 2,
-//     username: "DarkPhilosopher",
-//     content:
-//       "Plus je côtoie les humains, plus j'apprécie ma solitude. Les réseaux sociaux sont la preuve de notre décadence collective.",
-//     timestamp: "Il y a 5 heures",
-//     dislikes: 421,
-//     comments: 42,
-//     image:
-//       "https://images.unsplash.com/photo-1516410529446-2c777cb7366d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-//   },
-//   {
-//     id: 3,
-//     username: "DigitalAnarchist",
-//     content:
-//       "Vos likes sont le symbole de votre besoin pathétique d'approbation. Ici, nous célébrons la désapprobation. 🖤",
-//     timestamp: "Il y a 8 heures",
-//     dislikes: 1337,
-//     comments: 89,
-//   },
-// ];
+interface Article {
+  id: string;
+  title?: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  author: {
+    username: string;
+  };
+  dislikes: Dislike[];
+  comments: Comment[];
+}
+
+interface Dislike {
+  id: string;
+  user: {
+    id: string;
+    username: string;
+  };
+}
 
 function PublicationPage() {
-  const [articles, setArticles] = useState<
-    CreateArticleResponse["createArticle"]["article"][]
-  >([]);
+  const [articles, setArticles] = useState<Article[]>([]);
+
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-
-  // const handleDislike = (postId: string) => {
-  //   setPosts(
-  //     posts.map((post) =>
-  //       post.id === postId ? { ...post, dislikes: post.dislikes + 1 } : post
-  //     )
-  //   );
-  // };
 
   const handlePostClick = (postId: string) => {
     navigate(`/publications/${postId}`);
@@ -92,7 +65,71 @@ function PublicationPage() {
     throw new Error("AuthContext is null");
   }
 
-  const { token } = authContext;
+  const { token, user } = authContext;
+
+  console.log("user : ", user);
+
+  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
+  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+  const [userDislikes, setUserDislikes] = useState<Record<string, boolean>>({});
+
+  const [alreadyDisliked, setAlreadyDisliked] = useState<boolean>(false);
+
+  const handleDislike = async (articleId: string) => {
+    if (!token || !user) {
+      toast.error("Vous devez être connecté pour disliker un article.");
+      return;
+    }
+
+    try {
+      if (userDislikes[articleId]) {
+        await deleteArticleDislike({
+          variables: { articleId, userId: user.id },
+          context: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        toast.info("Dislike retiré.");
+
+        setArticles((prevArticles) =>
+          prevArticles.map((article) =>
+            article.id === articleId
+              ? {
+                  ...article,
+                  dislikes: article.dislikes.filter(
+                    (dislike) => dislike.user.id !== user.id
+                  ),
+                }
+              : article
+          )
+        );
+      } else {
+        const { data } = await addArticleDislike({
+          variables: { articleId, userId: user.id },
+          context: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        if (data) {
+          toast.success("Dislike ajouté.");
+          const newDislike = { id: data.addArticleDislike.id, user: user };
+
+          setArticles((prevArticles) =>
+            prevArticles.map((article) =>
+              article.id === articleId
+                ? { ...article, dislikes: [...article.dislikes, newDislike] }
+                : article
+            )
+          );
+        }
+      }
+
+      // Mettre à jour l'état du dislike pour cet article
+      setUserDislikes((prev) => ({
+        ...prev,
+        [articleId]: !prev[articleId],
+      }));
+    } catch (err) {
+      console.error(err);
+      toast.error("Une erreur est survenue lors de la gestion du dislike.");
+    }
+  };
 
   const [createArticle] = useMutation<CreateArticleResponse>(CREATE_ARTICLE);
 
@@ -149,10 +186,27 @@ function PublicationPage() {
 
   const { data } = useQuery(FIND_ARTICLES);
 
+  // useEffect(() => {
+  //   if (data) {
+  //     const sortedArticles = [...data.findArticles].sort((a, b) => {
+  //       // Si updatedAt existe, on l'utilise, sinon on utilise createdAt
+  //       const dateA = a.updatedAt
+  //         ? new Date(parseInt(a.updatedAt, 10))
+  //         : new Date(parseInt(a.createdAt, 10));
+  //       const dateB = b.updatedAt
+  //         ? new Date(parseInt(b.updatedAt, 10))
+  //         : new Date(parseInt(b.createdAt, 10));
+
+  //       // Pour un tri décroissant (le plus récent en premier)
+  //       return dateB.getTime() - dateA.getTime();
+  //     });
+  //     setArticles(sortedArticles);
+  //   }
+  // }, [data]);
+
   useEffect(() => {
     if (data) {
       const sortedArticles = [...data.findArticles].sort((a, b) => {
-        // Si updatedAt existe, on l'utilise, sinon on utilise createdAt
         const dateA = a.updatedAt
           ? new Date(parseInt(a.updatedAt, 10))
           : new Date(parseInt(a.createdAt, 10));
@@ -160,12 +214,23 @@ function PublicationPage() {
           ? new Date(parseInt(b.updatedAt, 10))
           : new Date(parseInt(b.createdAt, 10));
 
-        // Pour un tri décroissant (le plus récent en premier)
         return dateB.getTime() - dateA.getTime();
       });
+
       setArticles(sortedArticles);
+
+      if (user) {
+        const dislikesMap: Record<string, boolean> = {};
+        sortedArticles.forEach((article) => {
+          dislikesMap[article.id] =
+            article.dislikes?.some(
+              (dislike: Dislike) => dislike.user.id === user.id
+            ) ?? false;
+        });
+        setUserDislikes(dislikesMap);
+      }
     }
-  }, [data]);
+  }, [data, user]);
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
@@ -258,10 +323,18 @@ function PublicationPage() {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center space-x-2 hover:text-purple-400"
+                className={`flex items-center space-x-2 ${
+                  userDislikes[articleData.id]
+                    ? "text-purple-400"
+                    : "text-gray-500"
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDislike(articleData.id);
+                }}
               >
                 <ThumbsDown className="h-5 w-5" />
-                <span>{articleData.dislikes}</span>
+                <span>{articleData?.dislikes?.length}</span>
               </motion.button>
 
               <button
@@ -272,7 +345,7 @@ function PublicationPage() {
                 }}
               >
                 <MessageSquare className="h-5 w-5" />
-                <span>{articleData.comments}</span>
+                <span>{articleData?.comments?.length}</span>
               </button>
 
               <button

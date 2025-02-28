@@ -1,4 +1,6 @@
 import React, { useState, createContext, ReactNode } from "react";
+import { jwtDecode } from "jwt-decode";
+import { User } from "lucide-react";
 
 interface User {
   username: string;
@@ -8,7 +10,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (value: { user: User; token: string }) => void;
+  login: (token: string) => void;
   logout: () => void;
 }
 
@@ -18,34 +20,55 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const decodeToken = (token: string): User | null => {
+  if (!token) {
+    console.error("Aucun token fourni pour le décodage.");
+    return null;
+  }
+
+  try {
+    console.log("Token  :" + JSON.stringify(token));
+    const decoded: any = jwtDecode(token);
+    return { id: decoded.id, username: decoded.username };
+  } catch (error) {
+    console.error("Erreur lors du décodage du token :", error);
+    return null;
+  }
+};
+
+
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const storedToken = sessionStorage.getItem("token");
+  const storedUser = sessionStorage.getItem("user");
+
+  const [token, setToken] = useState<string | null>(storedToken);
   const [user, setUser] = useState<User | null>(
-    localStorage.getItem("user")
-      ? JSON.parse(localStorage.getItem("user")!)
-      : null
-  );
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token") ?? null
+    storedUser ? JSON.parse(storedUser) : null
   );
 
-  const login = (value: { user: User; token: string }) => {
-    localStorage.setItem("token", value.token);
-    localStorage.setItem("user", JSON.stringify(value.user));
-    setToken(value.token);
-    setUser(value.user);
+  const login = (token: string) => {
+    const decodedUser = decodeToken(token);
+
+    if (!decodedUser) {
+      console.error("Token invalide, impossible de se connecter.");
+      return;
+    }
+
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("user", JSON.stringify(decodedUser));
+
+    setToken(token);
+    setUser(decodedUser);
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("token");
   };
 
-  const value = React.useMemo(
-    () => ({ user, token, login, logout }),
-    [user, token]
-  );
+  const value = React.useMemo(() => ({ user, token, login, logout }), [user, token]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

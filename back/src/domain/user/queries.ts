@@ -1,11 +1,10 @@
 import { QueryResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
 import { PrismaClient } from "@prisma/client";
-import { getUserByToken } from "./getUser.js";
 
 const prisma = new PrismaClient();
 
-type UserQueries = WithRequired<QueryResolvers, 'findUserById' | 'getUserbyToken'>;
+type UserQueries = WithRequired<QueryResolvers, 'findUserById'>;
 
 
 export const userQueries: UserQueries = {
@@ -22,6 +21,5 @@ export const userQueries: UserQueries = {
             ...user,
             createdAt: user.createdAt.toISOString()
         };
-    },
-    getUserbyToken: getUserByToken
+    }
 };

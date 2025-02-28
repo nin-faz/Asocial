@@ -8,6 +8,7 @@ export const FIND_ARTICLES = gql`
       content
       author {
         username
+        id
       }
       createdAt
       updatedAt

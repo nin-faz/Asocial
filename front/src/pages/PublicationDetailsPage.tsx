@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import { FIND_ARTICLE_BY_ID } from "../gql/queries/articleQuery";
+import { GET_COMMENTS } from "../gql/queries/commentQuery";
+import { ADD_COMMENT } from "../gql/mutations/commentMutation";
 import {
   ThumbsDown,
   MessageSquare,
@@ -12,86 +14,87 @@ import {
   Send,
   MoreVertical,
 } from "lucide-react";
+import { AuthContext } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 interface Comment {
-  id: number;
-  username: string;
+  id: string;
   content: string;
-  timestamp: string;
-  dislikes: number;
+  author: {
+    username: string;
+    id: string;
+  };
+  createdAt?: string;
 }
 
-const mockComments: Comment[] = [
-  {
-    id: 1,
-    username: "VoidWalker",
-    content:
-      "Complètement d'accord. La société n'est qu'une construction fragile.",
-    timestamp: "Il y a 1 heure",
-    dislikes: 42,
-  },
-  {
-    id: 2,
-    username: "DigitalNihilist",
-    content:
-      "Tu touches à quelque chose de profond ici. Les réseaux sociaux ont créé une génération d'esclaves dopaminergiques.",
-    timestamp: "Il y a 2 heures",
-    dislikes: 28,
-  },
-  {
-    id: 3,
-    username: "ChaosEmperor",
-    content:
-      "Je préfère ma solitude numérique à vos connections superficielles.",
-    timestamp: "Il y a 3 heures",
-    dislikes: 76,
-  },
-];
-
 const PublicationDetailsPage = () => {
+
+  const storedUser = sessionStorage.getItem("user");
+  const userToken = storedUser ? JSON.parse(storedUser) : null;
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState(mockComments);
-
+  const [commentList, setCommentList] = useState<Comment[]>([]);
+  const { loading: loadingComments, error: errorComments, data: commentsData } = useQuery(GET_COMMENTS, {
+    variables: { articleId: id },
+  });
   const { loading, error, data } = useQuery(FIND_ARTICLE_BY_ID, {
     variables: { id },
   });
+  
+  const [createComment] = useMutation(ADD_COMMENT, {
+    variables: { articleId: id, content: newComment, userId: userToken?.id },
+    refetchQueries: [{ query: GET_COMMENTS, variables: { articleId: id } }],
+  });
 
-  if (loading) return <div className="text-white">Chargement...</div>;
-  if (error) return <div className="text-white">Erreur : {error.message}</div>;
+  if (loading || loadingComments) return <div className="text-white">Chargement...</div>;
+  if (error || errorComments) return <div className="text-white">Erreur : {error?.message || errorComments?.message}</div>;
 
   const post = data.findArticleById;
+  const comments = commentsData.getComments;
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (newComment.trim() === "") return;
+    if (!userToken) {
+      toast.error("Vous devez être connecté pour commenter.");
+      return;
+    }
 
-    const newCommentObj = {
-      id: comments.length + 1,
-      username: "NightmareEntity", // Current user
-      content: newComment,
-      timestamp: "À l'instant",
-      dislikes: 0,
-    };
+    try {
+      const response = await createComment({
+        variables: {
+          content: newComment,
+          articleId: id,
+        },
+      });
 
-    setComments([newCommentObj, ...comments]);
-    setNewComment("");
+      if (response.data?.createComment?.success) {
+        setNewComment("");
+        toast.success("Commentaire ajouté avec succès");
+      } else {
+        toast.error(response.data?.createComment?.message || "Erreur lors de l'ajout du commentaire");
+      }
+    } catch (err) {
+      console.error("Erreur lors de l'ajout du commentaire :", err);
+      toast.error("Une erreur est survenue lors de l'ajout du commentaire");
+    }
   };
 
   const handleDislike = () => {
     // In a real app, this would update the post's dislikes in the database
-    console.log("Disliked post", post.id);
+    console.log("Disliked post", id);
   };
 
-  const handleDislikeComment = (commentId: number) => {
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, dislikes: comment.dislikes + 1 }
-          : comment
-      )
-    );
-  };
+  // const handleDislikeComment = (commentId: number) => {
+  //   setCommentList(
+  //     commentList.map((comment) =>
+  //       comment.id === commentId
+  //         ? { ...comment, dislikes: comment.dislikes + 1 }
+  //         : comment
+  //     )
+  //   );
+  // };
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
@@ -159,7 +162,7 @@ const PublicationDetailsPage = () => {
 
             <div className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5" />
-              <span>{comments.length}</span>
+              <span>{commentList.length}</span>
             </div>
           </div>
 
@@ -203,10 +206,10 @@ const PublicationDetailsPage = () => {
       {/* Comments Section */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-purple-400 mb-4">
-          Commentaires ({comments.length})
+          Commentaires ({commentList.length})
         </h2>
 
-        {comments.map((comment, index) => (
+        {comments.map((comment: Comment, index: number) => (
           <motion.div
             key={comment.id}
             initial={{ opacity: 0, y: 20 }}
@@ -224,10 +227,7 @@ const PublicationDetailsPage = () => {
                 <div className="flex items-center justify-between mb-1">
                   <div>
                     <span className="text-purple-400 font-medium">
-                      {comment.username}
-                    </span>
-                    <span className="text-gray-500 text-sm ml-2">
-                      {comment.timestamp}
+                      {comment.author.username}
                     </span>
                   </div>
                   <button className="text-gray-500 hover:text-gray-400">
@@ -239,11 +239,10 @@ const PublicationDetailsPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleDislikeComment(comment.id)}
                     className="flex items-center space-x-1 hover:text-purple-400"
                   >
                     <ThumbsDown className="h-4 w-4" />
-                    <span className="text-sm">{comment.dislikes}</span>
+                    <span className="text-sm">0</span>
                   </motion.button>
                 </div>
               </div>

@@ -67,19 +67,9 @@ const ProfilePage = () => {
   }, [article.data, user]);
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    if(article.data) {
-      setNumberOfPosts(0);
-      for(let i = 0; i < article.data?.findArticles.length; i++) {
-        if(article.data?.findArticles[i]?.author.id === user?.id) {
-          setNumberOfPosts(numberOfPosts => numberOfPosts + 1);
-        }
-      }
-=======
     if(articleLiked.data && user) {
       setNumberOfPostDisliked(articleLiked.data.getDislikesByUserId.length)
       setArticleDisliked(articleLiked.data.getDislikesByUserId.map(dislike => dislike.article).filter((article): article is Article => article !== null))
->>>>>>> Stashed changes
     }
   },[articleLiked.data, user])
 

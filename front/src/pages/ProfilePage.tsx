@@ -20,11 +20,8 @@ const ProfilePage = () => {
   const [bio, setBio] = useState('');
   const [error, setError] = useState('');
   const [numberOfPosts, setNumberOfPosts] = useState(0);
+  const [articles, setArticles] = useState<Article[]>([]);
   
-
-  console.log('auth', auth);
-// Requête GraphQL pour récupérer les infos utilisateur
-
   const token = auth?.token || '';
 
   const { data } = useQuery<{ getUserbyToken: UserToken }>(GET_USER_BY_TOKEN, {
@@ -42,10 +39,19 @@ const ProfilePage = () => {
   const user: UserSummary | undefined = userInfos.data?.findUserById;
 
   const article = useQuery<{findArticles: Article[]}>(FIND_ARTICLES);
+  
+  useEffect(() => {
+    if(article.data && user) {
+      const userArticles = article.data.findArticles.filter(article => article.author.id === user.id);
+      setArticles(userArticles);
+    }
+  }, [article.data, user]);
 
   useEffect(() => {
     if(article.data) {
+      setNumberOfPosts(0);
       for(let i = 0; i < article.data?.findArticles.length; i++) {
+        console.log(`article${i} : `,article.data?.findArticles[i])
         if(article.data?.findArticles[i]?.author.id === user?.id) {
           setNumberOfPosts(numberOfPosts => numberOfPosts + 1);
         }
@@ -261,6 +267,7 @@ const ProfilePage = () => {
       {/* Feed */}
       <div className="mt-8 space-y-6">
         {/* Example Post */}
+        {articles.map((article) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -273,11 +280,10 @@ const ProfilePage = () => {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-purple-400 font-semibold">{user?.username}</span>
-                <span className="text-gray-500">· 2h</span>
+                <span className="text-gray-500">· {article.updatedAt ? new Date(parseInt(article.updatedAt ?? '0', 10)).toLocaleString() : new Date(parseInt(article.createdAt ?? '0', 10)).toLocaleString()}</span>
               </div>
               <p className="text-gray-300 mb-4">
-                Les réseaux sociaux sont une expérience de conformité massive. 
-                Ici, nous célébrons la divergence. #Asocial #DigitalNihilism
+                {article.content}
               </p>
               <div className="flex items-center gap-6 text-gray-500">
                 <button className="flex items-center gap-2 hover:text-purple-400">
@@ -292,6 +298,7 @@ const ProfilePage = () => {
             </div>
           </div>
         </motion.div>
+        ))}
       </div>
     </main>
   );

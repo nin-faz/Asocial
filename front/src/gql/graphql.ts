@@ -17,6 +17,7 @@ export type Scalars = {
 
 export type Article = {
   __typename?: 'Article';
+  NbOfDislikes: Maybe<Scalars['Int']['output']>;
   author: User;
   comments: Maybe<Array<Maybe<Comment>>>;
   content: Scalars['String']['output'];
@@ -29,6 +30,7 @@ export type Article = {
 
 export type Comment = {
   __typename?: 'Comment';
+  NbOfDislikes: Maybe<Scalars['Int']['output']>;
   author: User;
   content: Scalars['String']['output'];
   dislikes: Maybe<Array<Maybe<Dislike>>>;

@@ -61,10 +61,7 @@ function AuthPage() {
         });
 
         if (signInResponse.data?.signIn?.success) {
-          login({
-            user: response.data.createUser.user,
-            token: signInResponse.data.signIn.token,
-          });
+          login(signInResponse.data.signIn.token);
           toast.success(
             "T’as fait le pire choix possible. Mais bon, bienvenue quand même.",
             {
@@ -103,10 +100,7 @@ function AuthPage() {
       });
 
       if (response.data?.signIn?.success) {
-        login({
-          user: { username },
-          token: response.data.signIn.token,
-        });
+        login(response.data.signIn.token);
         const darkMessages = [
           "Revoilà l'anti-héros... enfin, juste un type paumé.",
           "Bienvenue dans l'abîme. L'espoir n'a jamais eu sa place ici.",

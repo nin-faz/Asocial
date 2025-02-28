@@ -4,7 +4,7 @@ import { createUser } from "./createUser.js";
 import { signIn } from "./signIn.js";
 import { updateUser } from "./updateuser.js";
 
-type UserMutations = WithRequired<MutationResolvers, 'createUser' | 'signIn'>
+type UserMutations = WithRequired<MutationResolvers, 'createUser' | 'signIn' | 'updateUser'>;
 
 export const userMutations: UserMutations = {
   createUser,

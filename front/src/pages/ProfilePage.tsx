@@ -24,17 +24,21 @@ const ProfilePage = () => {
   
   const token = auth?.token || '';
 
-  const { data } = useQuery<{ getUserbyToken: UserToken }>(GET_USER_BY_TOKEN, {
-    variables: { token },
-    skip: !token, 
-  });
+  const storedUser = sessionStorage.getItem("user");
+  const userToken = storedUser ? JSON.parse(storedUser) : null;
 
-  const userToken = data?.getUserbyToken;
+  useEffect(() => {
+    if (!auth?.token || !userToken) {
+      console.warn("Utilisateur déconnecté, redirection...");
+      navigate("/");
+    }
+  }, [auth?.token, userToken, navigate]);
 
   const userInfos = useQuery<{ findUserById: UserSummary }>(GET_USER_BY_ID, {
-    variables: { id: userToken?.id },
+    variables: userToken ? { id: userToken.id } : undefined,
     skip: !userToken,
   });
+  
 
   const user: UserSummary | undefined = userInfos.data?.findUserById;
 
@@ -51,7 +55,6 @@ const ProfilePage = () => {
     if(article.data) {
       setNumberOfPosts(0);
       for(let i = 0; i < article.data?.findArticles.length; i++) {
-        console.log(`article${i} : `,article.data?.findArticles[i])
         if(article.data?.findArticles[i]?.author.id === user?.id) {
           setNumberOfPosts(numberOfPosts => numberOfPosts + 1);
         }

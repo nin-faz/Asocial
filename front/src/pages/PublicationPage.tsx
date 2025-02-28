@@ -140,15 +140,14 @@ function PublicationPage() {
           }
         );
       } else {
-        // Si sortOption est "popular", utilise les articles les plus détestés
+        // Articles populaires
         sortedArticles =
           mostDislikedArticlesData.data?.findArticleByMostDisliked || [];
       }
 
       setArticles(sortedArticles);
 
-      setArticles(sortedArticles);
-
+      // Gérer les dislikes de l'utilisateur
       if (user) {
         const dislikesMap: Record<string, boolean> = {};
         sortedArticles.forEach((article) => {
@@ -158,6 +157,15 @@ function PublicationPage() {
             ) ?? false;
         });
         setUserDislikes(dislikesMap);
+      }
+
+      // Mise à jour de popularArticles si tri par popularité
+      if (sortOption === "popular") {
+        const popularArticleIds = new Set<string>();
+        sortedArticles.forEach((article) => {
+          popularArticleIds.add(article.id);
+        });
+        setPopularArticles(popularArticleIds);
       }
     }
   }, [dataArticles, user, sortOption]);

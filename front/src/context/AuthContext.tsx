@@ -2,7 +2,7 @@ import React, { useState, createContext, ReactNode } from "react";
 
 interface User {
   username: string;
-  bio?: string;
+  id?: string;
 }
 
 interface AuthContextType {

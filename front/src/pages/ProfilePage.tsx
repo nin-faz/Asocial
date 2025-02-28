@@ -7,9 +7,12 @@ import { useMutation } from '@apollo/client';
 import { useQuery } from '@apollo/client';
 import { UPDATE_USER } from '../gql/mutations/userMutation';
 import { useNavigate } from 'react-router-dom';
-import { FIND_ARTICLES, GET_USER_BY_ID, GET_USER_BY_TOKEN } from '../gql/queries';
+import { FIND_ARTICLES, GET_USER_BY_ID, GET_USER_BY_TOKEN, FIND_DISLIKES_BY_USER_ID } from '../gql/queries';
 import { Article, UserToken } from '../gql/graphql';
 import { UserSummary } from '../gql/graphql';
+import { Dislike } from '../gql/graphql';
+import { Maybe } from 'graphql/jsutils/Maybe';
+
 
 
 const ProfilePage = () => {
@@ -21,6 +24,10 @@ const ProfilePage = () => {
   const [error, setError] = useState('');
   const [numberOfPosts, setNumberOfPosts] = useState(0);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [articleDisliked, setArticleDisliked] = useState<Article[] | null>([]);
+  const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
+  const [activeTab, setActiveTab] = useState('publications'); // State for active tab
+
   
   const token = auth?.token || '';
 
@@ -43,15 +50,24 @@ const ProfilePage = () => {
   const user: UserSummary | undefined = userInfos.data?.findUserById;
 
   const article = useQuery<{findArticles: Article[]}>(FIND_ARTICLES);
+  const articleLiked = useQuery<{getDislikesByUserId: Dislike[]}>(FIND_DISLIKES_BY_USER_ID, {
+    variables: { userId: user?.id },
+  });
+
+  console.log('articleLiked : ', articleLiked.data?.getDislikesByUserId);
   
   useEffect(() => {
+    setNumberOfPosts(0);
     if(article.data && user) {
       const userArticles = article.data.findArticles.filter(article => article.author.id === user.id);
+      console.log('userArticles : ', userArticles);
       setArticles(userArticles);
+      setNumberOfPosts(userArticles.length);
     }
   }, [article.data, user]);
 
   useEffect(() => {
+<<<<<<< Updated upstream
     if(article.data) {
       setNumberOfPosts(0);
       for(let i = 0; i < article.data?.findArticles.length; i++) {
@@ -59,8 +75,13 @@ const ProfilePage = () => {
           setNumberOfPosts(numberOfPosts => numberOfPosts + 1);
         }
       }
+=======
+    if(articleLiked.data && user) {
+      setNumberOfPostDisliked(articleLiked.data.getDislikesByUserId.length)
+      setArticleDisliked(articleLiked.data.getDislikesByUserId.map(dislike => dislike.article).filter((article): article is Article => article !== null))
+>>>>>>> Stashed changes
     }
-  }, [article, user]);
+  },[articleLiked.data, user])
 
 
   const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
@@ -209,7 +230,7 @@ const ProfilePage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <ThumbsDown className="h-5 w-5" />
-                    <span>{mockUserStats.dislikes} dislikes reçus</span>
+                    <span>{numberOfPostDisliked} dislikes reçus</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
@@ -259,18 +280,70 @@ const ProfilePage = () => {
 
       {/* Tabs */}
       <div className="mt-8 border-b border-purple-900">
-        <nav className="flex gap-8">
-          <button className="text-purple-400 border-b-2 border-purple-500 pb-4">Publications</button>
-          <button className="text-gray-500 hover:text-gray-300 pb-4">Réponses</button>
-          <button className="text-gray-500 hover:text-gray-300 pb-4">Médias</button>
-          <button className="text-gray-500 hover:text-gray-300 pb-4">Dislikes</button>
+      <nav className="flex gap-8">
+          <button
+            className={`pb-4 ${activeTab === 'publications' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('publications')}
+          >
+            Publications
+          </button>
+          <button
+            className={`pb-4 ${activeTab === 'dislikes' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('dislikes')}
+          >
+            Dislikes
+          </button>
+          <button
+            className={`pb-4 ${activeTab === 'reponses' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('reponses')}
+          >
+            Réponses
+          </button>
+          <button
+            className={`pb-4 ${activeTab === 'medias' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('medias')}
+          >
+            Médias
+          </button>
         </nav>
       </div>
 
       {/* Feed */}
       <div className="mt-8 space-y-6">
         {/* Example Post */}
-        {articles.map((article) => (
+        {activeTab === 'dislikes' && articleDisliked.map((article) => (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center flex-shrink-0">
+              <Skull className="h-6 w-6 text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-purple-400 font-semibold">{user?.username}</span>
+                <span className="text-gray-500">· {article.updatedAt ? new Date(parseInt(article.updatedAt ?? '0', 10)).toLocaleString() : new Date(parseInt(article.createdAt ?? '0', 10)).toLocaleString()}</span>
+              </div>
+              <p className="text-gray-300 mb-4">
+                {article.content}
+              </p>
+              <div className="flex items-center gap-6 text-gray-500">
+                <button className="flex items-center gap-2 hover:text-purple-400">
+                  <ThumbsDown className="h-5 w-5" />
+                  <span>1.3K</span>
+                </button>
+                <button className="flex items-center gap-2 hover:text-purple-400">
+                  <MessageSquare className="h-5 w-5" />
+                  <span>42</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        ))}
+        {activeTab === 'publications' && articles.map((article) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

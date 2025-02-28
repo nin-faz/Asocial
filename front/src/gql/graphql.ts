@@ -184,6 +184,9 @@ export type Query = {
   findArticles: Maybe<Array<Maybe<Article>>>;
   findUserById: Maybe<UserSummary>;
   getComments: Maybe<Array<Maybe<Comment>>>;
+  getDislikesByArticleId: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByCommentId: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByUserId: Maybe<Array<Maybe<Dislike>>>;
   getUserbyToken: Maybe<UserToken>;
 };
 
@@ -200,6 +203,21 @@ export type QueryFindUserByIdArgs = {
 
 export type QueryGetCommentsArgs = {
   articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByArticleIdArgs = {
+  articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByCommentIdArgs = {
+  commentId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByUserIdArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 

@@ -188,6 +188,9 @@ export type Query = {
   findArticles?: Maybe<Array<Maybe<Article>>>;
   findUserById?: Maybe<UserSummary>;
   getComments?: Maybe<Array<Maybe<Comment>>>;
+  getDislikesByArticleId?: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByCommentId?: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByUserId?: Maybe<Array<Maybe<Dislike>>>;
   getUserbyToken?: Maybe<UserToken>;
 };
 
@@ -204,6 +207,21 @@ export type QueryFindUserByIdArgs = {
 
 export type QueryGetCommentsArgs = {
   articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByArticleIdArgs = {
+  articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByCommentIdArgs = {
+  commentId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByUserIdArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -473,6 +491,9 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
+  getDislikesByArticleId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByArticleIdArgs, 'articleId'>>;
+  getDislikesByCommentId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByCommentIdArgs, 'commentId'>>;
+  getDislikesByUserId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdArgs, 'userId'>>;
   getUserbyToken?: Resolver<Maybe<ResolversTypes['UserToken']>, ParentType, ContextType, RequireFields<QueryGetUserbyTokenArgs, 'token'>>;
 };
 

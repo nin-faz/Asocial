@@ -6,12 +6,14 @@ import { Resolvers } from "./types.js";
 import { articleQueries } from "./domain/article/queries.js";
 import { commentQueries } from "./domain/comment/queries.js";
 import { commentMutations } from "./domain/comment/mutation.js";
+import { dislikeQueries } from "./domain/dislike/queries.js";
 
 export const resolvers: Resolvers = {
     Query: {
         ...userQueries,
         ...articleQueries, 
-        ...commentQueries   
+        ...commentQueries,
+        ...dislikeQueries   
     },
     Mutation: {
         ...userMutations,
@@ -34,7 +36,7 @@ export const resolvers: Resolvers = {
           return db.dislike.findMany({
             where: { articleId: parent.id }
           });
-        }
+        },
     },
     Comment: {
         dislikes: (parent, _, { dataSources: { db } }) => {
@@ -48,7 +50,10 @@ export const resolvers: Resolvers = {
             console.log("parent", parent);
             if(!parent.articleId) return null;
             return db.article.findUnique({
-                where: { id: parent.articleId }
+                where: { id: parent.articleId },
+                include: {
+                  author: true
+                }
             });
         },
         comment: (parent, _, { dataSources: { db } }) => {

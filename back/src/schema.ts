@@ -29,7 +29,7 @@ export const typeDefs = gql`
 
         addComment(content: String!, userId: ID!, articleId: ID!): Comment
         deleteComment(commentId: ID!): DeleteCommentResponse
-        updateComment(commentId: ID!, content: String!): Comment
+        updateComment(commentId: ID!, content: String!): CommentUpdateResponse
     }
     
     type DeleteDislikeResponse {
@@ -133,5 +133,11 @@ export const typeDefs = gql`
         author : User!
         dislikes : [Dislike]
         NbOfDislikes : Int
+    }
+
+    type CommentUpdateResponse {
+        code: Int!
+        success: Boolean!
+        message: String!
     }
 `;

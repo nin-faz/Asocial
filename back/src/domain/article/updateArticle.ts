@@ -8,7 +8,23 @@ export const updateArticle: NonNullable<MutationResolvers['updateArticle']> = as
                 code: 403,
                 success: false,
                 message: `Unauthorized`,
-                article: null
+            }
+        }
+
+        const existArticle  = await db.article.findFirst({where: {id}});
+        if(!existArticle) {
+            return {
+                code: 404,
+                success: false,
+                message: `Article not found`,
+            }
+        }
+
+        if(user.id !== existArticle.authorId) {
+            return {
+                code: 401,
+                success: false,
+                message: `You are not the author of this article`,
             }
         }
 

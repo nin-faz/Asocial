@@ -21,13 +21,40 @@ export const addComment: NonNullable<MutationResolvers['addComment']> = async (_
 }
 
 // Supprimer un commentaire
-export const deleteComment: NonNullable<MutationResolvers['deleteComment']> = async (_, { commentId }, { dataSources: { db } }) => {
+export const deleteComment: NonNullable<MutationResolvers['deleteComment']> = async (_, { commentId }, { dataSources: { db }, user }) => {
     try {
+
+        if(!user) {
+            return {
+                code: 403,
+                success: false,
+                message: `Unauthorized`,
+            }
+        }
+
+        const existComment  = await db.comment.findFirst({where: {id: commentId}});
+        if(!existComment) {
+            return {
+                code: 404,
+                success: false,
+                message: `Comment not found`,
+            }
+        }
+
+        if(user.id !== existComment.authorId) {
+            return {
+                code: 401,
+                success: false,
+                message: `You are not the author of this comment`,
+            }
+        }
+
         const comment = await db.comment.delete({
             where: {
                 id: commentId
             }
         });
+
 
         return {
             code: 200,
@@ -41,8 +68,34 @@ export const deleteComment: NonNullable<MutationResolvers['deleteComment']> = as
 }
 
 // Modifier un commentaire
-export const updateComment: NonNullable<MutationResolvers['updateComment']> = async (_, { commentId, content }, { dataSources: { db } }) => {
+export const updateComment: NonNullable<MutationResolvers['updateComment']> = async (_, { commentId, content }, { dataSources: { db }, user }) => {
     try {
+
+        if(!user) {
+            return {
+                code: 403,
+                success: false,
+                message: `Unauthorized`,
+            }
+        }
+
+        const existComment  = await db.comment.findFirst({where: {id: commentId}});
+        if(!existComment) {
+            return {
+                code: 404,
+                success: false,
+                message: `Comment not found`,
+            }
+        }
+
+        if(user.id !== existComment.authorId) {
+            return {
+                code: 401,
+                success: false,
+                message: `You are not the author of this comment`,
+            }
+        }
+
         const comment = await db.comment.update({
             where: {
                 id: commentId
@@ -52,7 +105,11 @@ export const updateComment: NonNullable<MutationResolvers['updateComment']> = as
             }
         });
 
-        return comment;
+        return {
+            code: 214,
+            success: true,
+            message: `update Succeded`,
+        }
     } catch {
         throw new Error('Comment has not been updated');
     }

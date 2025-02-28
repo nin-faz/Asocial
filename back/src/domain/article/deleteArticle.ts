@@ -10,6 +10,23 @@ export const deleteArticle: NonNullable<MutationResolvers['deleteArticle']> = as
             }
         }
 
+        const existArticle  = await db.article.findFirst({where: {id}});
+        if(!existArticle) {
+            return {
+                code: 404,
+                success: false,
+                message: `Article not found`,
+            }
+        }
+
+        if(user.id !== existArticle.authorId) {
+            return {
+                code: 401,
+                success: false,
+                message: `You are not the author of this article`,
+            }
+        }
+
         const article = await db.article.findUnique({
             where: {
                 id

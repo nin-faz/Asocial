@@ -7,6 +7,7 @@ export const typeDefs = gql`
         findArticleById(id: ID!) : Article
         getComments(articleId: ID!): [Comment]
         findArticleByMostDisliked: [Article]
+        getUserbyToken(token: String!): UserToken
     }
 
     type Mutation {
@@ -97,6 +98,11 @@ export const typeDefs = gql`
         dislikes : [Dislike]
         bio : String
         createdAt : String
+    }
+
+    type UserToken {
+        id : ID!
+        username : String!
     }
 
     type Dislike{

@@ -182,6 +182,7 @@ export type Query = {
   findArticles: Maybe<Array<Maybe<Article>>>;
   findUserById: Maybe<UserSummary>;
   getComments: Maybe<Array<Maybe<Comment>>>;
+  getUserbyToken: Maybe<UserToken>;
 };
 
 
@@ -197,6 +198,11 @@ export type QueryFindUserByIdArgs = {
 
 export type QueryGetCommentsArgs = {
   articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetUserbyTokenArgs = {
+  token: Scalars['String']['input'];
 };
 
 export type SignInResponse = {
@@ -229,6 +235,12 @@ export type UserSummary = {
   __typename?: 'UserSummary';
   bio: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  username: Scalars['String']['output'];
+};
+
+export type UserToken = {
+  __typename?: 'UserToken';
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
 };

@@ -186,24 +186,6 @@ function PublicationPage() {
 
   const { data } = useQuery(FIND_ARTICLES);
 
-  // useEffect(() => {
-  //   if (data) {
-  //     const sortedArticles = [...data.findArticles].sort((a, b) => {
-  //       // Si updatedAt existe, on l'utilise, sinon on utilise createdAt
-  //       const dateA = a.updatedAt
-  //         ? new Date(parseInt(a.updatedAt, 10))
-  //         : new Date(parseInt(a.createdAt, 10));
-  //       const dateB = b.updatedAt
-  //         ? new Date(parseInt(b.updatedAt, 10))
-  //         : new Date(parseInt(b.createdAt, 10));
-
-  //       // Pour un tri décroissant (le plus récent en premier)
-  //       return dateB.getTime() - dateA.getTime();
-  //     });
-  //     setArticles(sortedArticles);
-  //   }
-  // }, [data]);
-
   useEffect(() => {
     if (data) {
       const sortedArticles = [...data.findArticles].sort((a, b) => {

@@ -296,36 +296,6 @@ function PublicationPage() {
     }
   };
 
-  const { data } = useQuery(FIND_ARTICLES);
-
-  useEffect(() => {
-    if (data) {
-      const sortedArticles = [...data.findArticles].sort((a, b) => {
-        const dateA = a.updatedAt
-          ? new Date(parseInt(a.updatedAt, 10))
-          : new Date(parseInt(a.createdAt, 10));
-        const dateB = b.updatedAt
-          ? new Date(parseInt(b.updatedAt, 10))
-          : new Date(parseInt(b.createdAt, 10));
-
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      setArticles(sortedArticles);
-
-      if (user) {
-        const dislikesMap: Record<string, boolean> = {};
-        sortedArticles.forEach((article) => {
-          dislikesMap[article.id] =
-            article.dislikes?.some(
-              (dislike: Dislike) => dislike.user.id === user.id
-            ) ?? false;
-        });
-        setUserDislikes(dislikesMap);
-      }
-    }
-  }, [data, user]);
-
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">

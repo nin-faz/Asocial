@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
+import { graphql } from "../gql";
 
-export const FIND_ARTICLES = gql`
+export const FIND_ARTICLES = graphql(`
   query FindArticles {
     findArticles {
       id
@@ -12,10 +13,11 @@ export const FIND_ARTICLES = gql`
       }
       createdAt
       updatedAt
-      NbOfDislikes
+      TotalDislikes
+      TotalComments
     }
   }
-`;
+`);
 
 export const FIND_ARTICLE_BY_ID = gql`
   query FindArticleById($id: ID!) {

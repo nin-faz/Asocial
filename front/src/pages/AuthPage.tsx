@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
-import { CREATE_USER, SIGN_IN } from "../gql/mutations";
+import { CREATE_USER, SIGN_IN } from "../mutations";
 
 interface CreateUserResponse {
   createUser: {

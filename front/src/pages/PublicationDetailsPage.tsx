@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
-import { FIND_ARTICLE_BY_ID } from "../gql/queries/articleQuery";
-import { GET_COMMENTS } from "../gql/queries/commentQuery";
-import { ADD_COMMENT, DELETE_COMMENT } from "../gql/mutations/commentMutation";
+import { FIND_ARTICLE_BY_ID } from "../queries";
+import { GET_COMMENTS } from "../queries";
+import { ADD_COMMENT, DELETE_COMMENT } from "../mutations";
 import {
   ThumbsDown,
   MessageSquare,
@@ -28,7 +28,6 @@ interface Comment {
 }
 
 const PublicationDetailsPage = () => {
-
   const storedUser = sessionStorage.getItem("user");
   const userToken = storedUser ? JSON.parse(storedUser) : null;
 
@@ -36,13 +35,17 @@ const PublicationDetailsPage = () => {
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
   const [commentList, setCommentList] = useState<Comment[]>([]);
-  const { loading: loadingComments, error: errorComments, data: commentsData } = useQuery(GET_COMMENTS, {
+  const {
+    loading: loadingComments,
+    error: errorComments,
+    data: commentsData,
+  } = useQuery(GET_COMMENTS, {
     variables: { articleId: id },
   });
   const { loading, error, data } = useQuery(FIND_ARTICLE_BY_ID, {
     variables: { id },
   });
-  
+
   const [createComment] = useMutation(ADD_COMMENT, {
     onCompleted: () => {
       setNewComment("");
@@ -51,7 +54,7 @@ const PublicationDetailsPage = () => {
     onError: (error) => {
       console.error("Erreur lors de l'ajout du commentaire :", error);
       toast.error("Une erreur est survenue lors de l'ajout du commentaire");
-    }
+    },
   });
 
   const [deleteComment] = useMutation(DELETE_COMMENT, {
@@ -65,8 +68,14 @@ const PublicationDetailsPage = () => {
     refetchQueries: [{ query: GET_COMMENTS, variables: { articleId: id } }],
   });
 
-  if (loading || loadingComments) return <div className="text-white">Chargement...</div>;
-  if (error || errorComments) return <div className="text-white">Erreur : {error?.message || errorComments?.message}</div>;
+  if (loading || loadingComments)
+    return <div className="text-white">Chargement...</div>;
+  if (error || errorComments)
+    return (
+      <div className="text-white">
+        Erreur : {error?.message || errorComments?.message}
+      </div>
+    );
 
   const post = data.findArticleById;
   const comments = commentsData.getComments;
@@ -83,8 +92,8 @@ const PublicationDetailsPage = () => {
         variables: {
           content: newComment,
           userId: userToken.id,
-          articleId: id
-        }
+          articleId: id,
+        },
       });
     } catch (err) {
       console.error("Erreur lors de l'ajout du commentaire :", err);
@@ -99,7 +108,7 @@ const PublicationDetailsPage = () => {
 
     try {
       await deleteComment({
-        variables: { commentId }
+        variables: { commentId },
       });
     } catch (err) {
       console.error("Erreur lors de la suppression du commentaire :", err);
@@ -256,7 +265,7 @@ const PublicationDetailsPage = () => {
                     </span>
                   </div>
                   {comment.author.id === userToken?.id && (
-                    <button 
+                    <button
                       onClick={() => handleDeleteComment(comment.id)}
                       className="text-gray-500 hover:text-red-400 transition-colors"
                     >

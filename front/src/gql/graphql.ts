@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -17,29 +18,37 @@ export type Scalars = {
 
 export type Article = {
   __typename?: 'Article';
-  NbOfDislikes: Maybe<Scalars['Int']['output']>;
+  TotalComments?: Maybe<Scalars['Int']['output']>;
+  TotalDislikes?: Maybe<Scalars['Int']['output']>;
   author: User;
-  comments: Maybe<Array<Maybe<Comment>>>;
+  comments?: Maybe<Array<Maybe<Comment>>>;
   content: Scalars['String']['output'];
-  createdAt: Maybe<Scalars['String']['output']>;
-  dislikes: Maybe<Array<Maybe<Dislike>>>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
-  title: Maybe<Scalars['String']['output']>;
-  updatedAt: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
 export type Comment = {
   __typename?: 'Comment';
-  NbOfDislikes: Maybe<Scalars['Int']['output']>;
+  TotalDislikes?: Maybe<Scalars['Int']['output']>;
   author: User;
   content: Scalars['String']['output'];
-  dislikes: Maybe<Array<Maybe<Dislike>>>;
+  dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
+};
+
+export type CommentUpdateResponse = {
+  __typename?: 'CommentUpdateResponse';
+  code: Scalars['Int']['output'];
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
 };
 
 export type CreateArticleResponse = {
   __typename?: 'CreateArticleResponse';
-  article: Maybe<Article>;
+  article?: Maybe<Article>;
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
@@ -50,7 +59,7 @@ export type CreateUserResponse = {
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
-  user: Maybe<UserSummary>;
+  user?: Maybe<UserSummary>;
 };
 
 export type DeleteArticleResponse = {
@@ -76,26 +85,26 @@ export type DeleteDislikeResponse = {
 
 export type Dislike = {
   __typename?: 'Dislike';
-  article: Maybe<Article>;
-  comment: Maybe<Comment>;
+  article?: Maybe<Article>;
+  comment?: Maybe<Comment>;
   id: Scalars['ID']['output'];
   user: User;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addArticleDislike: Maybe<Dislike>;
-  addComment: Maybe<Comment>;
-  addCommentDislike: Maybe<Dislike>;
+  addArticleDislike?: Maybe<Dislike>;
+  addComment?: Maybe<Comment>;
+  addCommentDislike?: Maybe<Dislike>;
   createArticle: CreateArticleResponse;
   createUser: CreateUserResponse;
   deleteArticle: DeleteArticleResponse;
-  deleteArticleDislike: Maybe<DeleteDislikeResponse>;
-  deleteComment: Maybe<DeleteCommentResponse>;
-  deleteCommentDislike: Maybe<DeleteDislikeResponse>;
+  deleteArticleDislike?: Maybe<DeleteDislikeResponse>;
+  deleteComment?: Maybe<DeleteCommentResponse>;
+  deleteCommentDislike?: Maybe<DeleteDislikeResponse>;
   signIn: SignInResponse;
   updateArticle: UpdateArticleResponse;
-  updateComment: Maybe<Comment>;
+  updateComment?: Maybe<CommentUpdateResponse>;
   updateUser: UpdateUserResponse;
 };
 
@@ -121,7 +130,7 @@ export type MutationAddCommentDislikeArgs = {
 
 export type MutationCreateArticleArgs = {
   content: Scalars['String']['input'];
-  title: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -160,9 +169,9 @@ export type MutationSignInArgs = {
 
 
 export type MutationUpdateArticleArgs = {
-  content: InputMaybe<Scalars['String']['input']>;
+  content?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
-  title: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -179,15 +188,15 @@ export type MutationUpdateUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
-  findArticleById: Maybe<Article>;
-  findArticleByMostDisliked: Maybe<Array<Maybe<Article>>>;
-  findArticles: Maybe<Array<Maybe<Article>>>;
-  findUserById: Maybe<UserSummary>;
-  getComments: Maybe<Array<Maybe<Comment>>>;
-  getDislikesByArticleId: Maybe<Array<Maybe<Dislike>>>;
-  getDislikesByCommentId: Maybe<Array<Maybe<Dislike>>>;
-  getDislikesByUserId: Maybe<Array<Maybe<Dislike>>>;
-  getUserbyToken: Maybe<UserToken>;
+  findArticleById?: Maybe<Article>;
+  findArticleByMostDisliked?: Maybe<Array<Maybe<Article>>>;
+  findArticles?: Maybe<Array<Maybe<Article>>>;
+  findUserById?: Maybe<UserSummary>;
+  getComments?: Maybe<Array<Maybe<Comment>>>;
+  getDislikesByArticleId?: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByCommentId?: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByUserId?: Maybe<Array<Maybe<Dislike>>>;
+  getUserbyToken?: Maybe<UserToken>;
 };
 
 
@@ -230,7 +239,7 @@ export type SignInResponse = {
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
-  token: Maybe<Scalars['String']['output']>;
+  token?: Maybe<Scalars['String']['output']>;
 };
 
 export type UpdateArticleResponse = {
@@ -242,18 +251,18 @@ export type UpdateArticleResponse = {
 
 export type User = {
   __typename?: 'User';
-  articles: Maybe<Array<Maybe<Article>>>;
-  bio: Maybe<Scalars['String']['output']>;
-  comments: Maybe<Array<Maybe<Comment>>>;
-  createdAt: Maybe<Scalars['String']['output']>;
-  dislikes: Maybe<Array<Maybe<Dislike>>>;
+  articles?: Maybe<Array<Maybe<Article>>>;
+  bio?: Maybe<Scalars['String']['output']>;
+  comments?: Maybe<Array<Maybe<Comment>>>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
 };
 
 export type UserSummary = {
   __typename?: 'UserSummary';
-  bio: Maybe<Scalars['String']['output']>;
+  bio?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
@@ -270,11 +279,28 @@ export type UpdateUserResponse = {
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
-  user: Maybe<UserSummary>;
+  user?: Maybe<UserSummary>;
 };
 
 export type UserUpdateBody = {
-  bio: InputMaybe<Scalars['String']['input']>;
-  password: InputMaybe<Scalars['String']['input']>;
-  username: InputMaybe<Scalars['String']['input']>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  password?: InputMaybe<Scalars['String']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type CreateArticleMutationVariables = Exact<{
+  title?: InputMaybe<Scalars['String']['input']>;
+  content: Scalars['String']['input'];
+}>;
+
+
+export type CreateArticleMutation = { __typename?: 'Mutation', createArticle: { __typename?: 'CreateArticleResponse', code: number, success: boolean, message: string, article?: { __typename?: 'Article', id: string, title?: string | null, content: string, createdAt?: string | null, updatedAt?: string | null, author: { __typename?: 'User', id: string, username: string } } | null } };
+
+export type FindArticlesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type FindArticlesQuery = { __typename?: 'Query', findArticles?: Array<{ __typename?: 'Article', id: string, title?: string | null, content: string, createdAt?: string | null, updatedAt?: string | null, TotalDislikes?: number | null, TotalComments?: number | null, author: { __typename?: 'User', username: string, id: string } } | null> | null };
+
+
+export const CreateArticleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateArticle"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"title"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"content"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createArticle"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"title"},"value":{"kind":"Variable","name":{"kind":"Name","value":"title"}}},{"kind":"Argument","name":{"kind":"Name","value":"content"},"value":{"kind":"Variable","name":{"kind":"Name","value":"content"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateArticleMutation, CreateArticleMutationVariables>;
+export const FindArticlesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"FindArticles"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"findArticles"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"TotalDislikes"}},{"kind":"Field","name":{"kind":"Name","value":"TotalComments"}}]}}]}}]} as unknown as DocumentNode<FindArticlesQuery, FindArticlesQueryVariables>;

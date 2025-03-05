@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,83 +12,80 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
-import {
-  ADD_ARTICLE_DISLIKE,
-  CREATE_ARTICLE,
-  DELETE_ARTICLE_DISLIKE,
-} from "../gql/mutations";
-import { FIND_ARTICLE_BY_MOST_DISLIKED, FIND_ARTICLES } from "../gql/queries";
+// import { FIND_ARTICLE_BY_MOST_DISLIKED, FIND_ARTICLES } from "../gql/queries";
 import { AuthContext } from "../context/AuthContext";
+import { CREATE_ARTICLE } from "../mutations";
+import { FIND_ARTICLES } from "../queries";
 
-interface CreateArticleResponse {
-  createArticle: {
-    success: boolean;
-    message: string;
-    article: Article;
-  };
-}
+// interface CreateArticleResponse {
+//   createArticle: {
+//     success: boolean;
+//     message: string;
+//     article: Article;
+//   };
+// }
 
-interface Article {
-  id: string;
-  title?: string;
-  content: string;
-  createdAt: string;
-  updatedAt?: string;
-  author: {
-    username: string;
-  };
-  dislikes?: Dislike[];
-  comments?: Comment[];
-  NbOfDislikes?: number;
-}
+// interface Article {
+//   id: string;
+//   title?: string;
+//   content: string;
+//   createdAt: string;
+//   updatedAt?: string;
+//   author: {
+//     username: string;
+//   };
+//   dislikes?: Dislike[];
+//   comments?: Comment[];
+//   TotalDislikes?: number;
+// }
 
-interface Dislike {
-  id: string;
-  user: {
-    id: string;
-    username: string;
-  };
-}
+// interface Dislike {
+//   id: string;
+//   user: {
+//     id: string;
+//     username: string;
+//   };
+// }
 
-interface FindArticleByMostDislikedData {
-  findArticleByMostDisliked: {
-    id: string;
-    title?: string;
-    content: string;
-    createdAt: string;
-    updatedAt?: string;
-    author: {
-      id: string;
-      username: string;
-    };
-    dislikes: {
-      id: string;
-      user: {
-        id: string;
-        username: string;
-      };
-    }[];
-    _count: {
-      dislikes: number;
-    };
-  }[];
-}
+// interface FindArticleByMostDislikedData {
+//   findArticleByMostDisliked: {
+//     id: string;
+//     title?: string;
+//     content: string;
+//     createdAt: string;
+//     updatedAt?: string;
+//     author: {
+//       id: string;
+//       username: string;
+//     };
+//     dislikes: {
+//       id: string;
+//       user: {
+//         id: string;
+//         username: string;
+//       };
+//     }[];
+//     _count: {
+//       dislikes: number;
+//     };
+//   }[];
+// }
 
-interface FindArticlesData {
-  findArticles: {
-    id: string;
-    title?: string;
-    content: string;
-    createdAt: string;
-    updatedAt?: string;
-    NbOfDislikes?: number;
-    author: {
-      id: string;
-      username: string;
-    };
-    dislikes: Dislike[];
-  }[];
-}
+// interface FindArticlesData {
+//   findArticles: {
+//     id: string;
+//     title?: string;
+//     content: string;
+//     createdAt: string;
+//     updatedAt?: string;
+//     TotalDislikes?: number;
+//     author: {
+//       id: string;
+//       username: string;
+//     };
+//     dislikes: Dislike[];
+//   }[];
+// }
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -99,151 +96,188 @@ function PublicationPage() {
   const { token, user } = authContext;
   const navigate = useNavigate();
 
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [popularArticles, setPopularArticles] = useState<Set<string>>(
-    new Set()
-  );
+  // const [articles] = useQuery(FIND_ARTICLES);
+  const { data, loading, error } = useQuery(FIND_ARTICLES);
+
+  const articles = data?.findArticles || [];
+
+  const [sortedArticles, setSortedArticles] = useState([]);
+
+  useEffect(() => {
+    if (data?.findArticles) {
+      console.log("Articles récupérés:", data.findArticles); // Vérifie ce qui est récupéré
+
+      // Copie les articles et trie les par date
+      const sorted = [...data.findArticles].sort((a, b) => {
+        // Assure-toi que les dates existent et sont valides
+        const dateA = a?.updatedAt
+          ? new Date(parseInt(a.updatedAt, 10))
+          : a?.createdAt
+          ? new Date(parseInt(a.createdAt, 10))
+          : new Date(0); // Date par défaut si pas de date
+
+        const dateB = b?.updatedAt
+          ? new Date(parseInt(b.updatedAt, 10))
+          : b?.createdAt
+          ? new Date(parseInt(b.createdAt, 10))
+          : new Date(0); // Date par défaut si pas de date
+
+        console.log("Comparaison des dates:", dateA, dateB); // Vérifie les dates utilisées
+
+        return dateB.getTime() - dateA.getTime(); // Tri décroissant
+      });
+
+      // Mets à jour l'état avec les articles triés
+      setSortedArticles(sorted);
+    }
+  }, [data]);
+
+  // const [popularArticles, setPopularArticles] = useState<Set<string>>(
+  //   new Set()
+  // );
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  const [sortOption, setSortOption] = useState<string>("recent");
+  // const [sortOption, setSortOption] = useState<string>("recent");
 
-  const mostDislikedArticlesData = useQuery<FindArticleByMostDislikedData>(
-    FIND_ARTICLE_BY_MOST_DISLIKED,
-    { skip: sortOption !== "popular" }
-  );
+  // const mostDislikedArticlesData = useQuery<FindArticleByMostDislikedData>(
+  //   FIND_ARTICLE_BY_MOST_DISLIKED,
+  //   { skip: sortOption !== "popular" }
+  // );
 
-  const dataArticles = useQuery<FindArticlesData>(FIND_ARTICLES);
+  // const dataArticles = useQuery<FindArticlesData>(FIND_ARTICLES);
 
-  const articlesList =
-    sortOption === "popular"
-      ? mostDislikedArticlesData.data?.findArticleByMostDisliked
-      : dataArticles.data?.findArticles;
+  // const articlesList =
+  //   sortOption === "popular"
+  //     ? mostDislikedArticlesData.data?.findArticleByMostDisliked
+  //     : dataArticles.data?.findArticles;
 
-  useEffect(() => {
-    if (articlesList) {
-      let sortedArticles;
+  // useEffect(() => {
+  //   if (articlesList) {
+  //     let sortedArticles;
 
-      if (sortOption !== "popular") {
-        // Tri des articles par date lorsque sortOption n'est pas "popular"
-        sortedArticles = [...(dataArticles.data?.findArticles || [])].sort(
-          (a, b) => {
-            const dateA = a.updatedAt
-              ? new Date(parseInt(a.updatedAt, 10))
-              : new Date(parseInt(a.createdAt, 10));
-            const dateB = b.updatedAt
-              ? new Date(parseInt(b.updatedAt, 10))
-              : new Date(parseInt(b.createdAt, 10));
+  //     if (sortOption !== "popular") {
+  //       // Tri des articles par date lorsque sortOption n'est pas "popular"
+  //       sortedArticles = [...(dataArticles.data?.findArticles || [])].sort(
+  //         (a, b) => {
+  //           const dateA = a.updatedAt
+  //             ? new Date(parseInt(a.updatedAt, 10))
+  //             : new Date(parseInt(a.createdAt, 10));
+  //           const dateB = b.updatedAt
+  //             ? new Date(parseInt(b.updatedAt, 10))
+  //             : new Date(parseInt(b.createdAt, 10));
 
-            return dateB.getTime() - dateA.getTime();
-          }
-        );
-      } else {
-        // Articles populaires
-        sortedArticles =
-          mostDislikedArticlesData.data?.findArticleByMostDisliked || [];
-      }
+  //           return dateB.getTime() - dateA.getTime();
+  //         }
+  //       );
+  //     } else {
+  //       // Articles populaires
+  //       sortedArticles =
+  //         mostDislikedArticlesData.data?.findArticleByMostDisliked || [];
+  //     }
 
-      setArticles(sortedArticles);
+  //     setArticles(sortedArticles);
 
-      // Gérer les dislikes de l'utilisateur
-      if (user) {
-        const dislikesMap: Record<string, boolean> = {};
-        sortedArticles.forEach((article) => {
-          dislikesMap[article.id] =
-            article.dislikes?.some(
-              (dislike: Dislike) => dislike.user.id === user.id
-            ) ?? false;
-        });
-        setUserDislikes(dislikesMap);
-      }
+  //     // Gérer les dislikes de l'utilisateur
+  //     if (user) {
+  //       const dislikesMap: Record<string, boolean> = {};
+  //       sortedArticles.forEach((article) => {
+  //         dislikesMap[article.id] =
+  //           article.dislikes?.some(
+  //             (dislike: Dislike) => dislike.user.id === user.id
+  //           ) ?? false;
+  //       });
+  //       setUserDislikes(dislikesMap);
+  //     }
 
-      // Mise à jour de popularArticles si tri par popularité
-      if (sortOption === "popular") {
-        const popularArticleIds = new Set<string>();
-        sortedArticles.forEach((article) => {
-          popularArticleIds.add(article.id);
-        });
-        setPopularArticles(popularArticleIds);
-      }
-    }
-  }, [dataArticles, user, sortOption]);
+  //     // Mise à jour de popularArticles si tri par popularité
+  //     if (sortOption === "popular") {
+  //       const popularArticleIds = new Set<string>();
+  //       sortedArticles.forEach((article) => {
+  //         popularArticleIds.add(article.id);
+  //       });
+  //       setPopularArticles(popularArticleIds);
+  //     }
+  //   }
+  // }, [dataArticles, user, sortOption]);
 
-  const handlePostClick = (postId: string) => {
-    navigate(`/publications/${postId}`);
-  };
+  // const handlePostClick = (postId: string) => {
+  //   navigate(`/publications/${postId}`);
+  // };
 
-  console.log("user : ", user);
+  // console.log("user : ", user);
 
-  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
-  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+  // const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
+  // const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
 
-  const [userDislikes, setUserDislikes] = useState<Record<string, boolean>>({});
+  // const [userDislikes, setUserDislikes] = useState<Record<string, boolean>>({});
 
-  const handleDislike = async (articleId: string) => {
-    if (!token || !user) {
-      toast.error("Vous devez être connecté pour disliker un article.");
-      return;
-    }
+  // const handleDislike = async (articleId: string) => {
+  //   if (!token || !user) {
+  //     toast.error("Vous devez être connecté pour disliker un article.");
+  //     return;
+  //   }
 
-    try {
-      if (userDislikes[articleId]) {
-        await deleteArticleDislike({
-          variables: { articleId, userId: user.id },
-          context: { headers: { Authorization: `Bearer ${token}` } },
-        });
-        toast.info("Dislike retiré.");
+  //   try {
+  //     if (userDislikes[articleId]) {
+  //       await deleteArticleDislike({
+  //         variables: { articleId, userId: user.id },
+  //         context: { headers: { Authorization: `Bearer ${token}` } },
+  //       });
+  //       toast.info("Dislike retiré.");
 
-        setArticles((prevArticles) =>
-          prevArticles.map((article) =>
-            article.id === articleId
-              ? {
-                  ...article,
-                  dislikes: (article.dislikes || []).filter(
-                    (dislike) => dislike.user.id !== user.id
-                  ),
-                }
-              : article
-          )
-        );
-      } else {
-        const { data } = await addArticleDislike({
-          variables: { articleId, userId: user.id },
-          context: { headers: { Authorization: `Bearer ${token}` } },
-        });
-        if (data) {
-          toast.success("Dislike ajouté.");
-          const newDislike = {
-            id: data.addArticleDislike.id,
-            user: { id: user.id!, username: user.username },
-          };
+  //       setArticles((prevArticles) =>
+  //         prevArticles.map((article) =>
+  //           article.id === articleId
+  //             ? {
+  //                 ...article,
+  //                 dislikes: (article.dislikes || []).filter(
+  //                   (dislike) => dislike.user.id !== user.id
+  //                 ),
+  //               }
+  //             : article
+  //         )
+  //       );
+  //     } else {
+  //       const { data } = await addArticleDislike({
+  //         variables: { articleId, userId: user.id },
+  //         context: { headers: { Authorization: `Bearer ${token}` } },
+  //       });
+  //       if (data) {
+  //         toast.success("Dislike ajouté.");
+  //         const newDislike = {
+  //           id: data.addArticleDislike.id,
+  //           user: { id: user.id!, username: user.username },
+  //         };
 
-          setArticles((prevArticles) =>
-            prevArticles.map((article) =>
-              article.id === articleId
-                ? {
-                    ...article,
-                    dislikes: [...(article.dislikes || []), newDislike],
-                  }
-                : article
-            )
-          );
-        }
-      }
+  //         setArticles((prevArticles) =>
+  //           prevArticles.map((article) =>
+  //             article.id === articleId
+  //               ? {
+  //                   ...article,
+  //                   dislikes: [...(article.dislikes || []), newDislike],
+  //                 }
+  //               : article
+  //           )
+  //         );
+  //       }
+  //     }
 
-      // Mettre à jour l'état du dislike pour cet article
-      setUserDislikes((prev) => ({
-        ...prev,
-        [articleId]: !prev[articleId],
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.error("Une erreur est survenue lors de la gestion du dislike.");
-    }
-  };
+  //     // Mettre à jour l'état du dislike pour cet article
+  //     setUserDislikes((prev) => ({
+  //       ...prev,
+  //       [articleId]: !prev[articleId],
+  //     }));
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Une erreur est survenue lors de la gestion du dislike.");
+  //   }
+  // };
 
-  const [createArticle] = useMutation<CreateArticleResponse>(CREATE_ARTICLE);
+  const [createArticle] = useMutation(CREATE_ARTICLE, {
+    variables: { title, content },
+  });
 
   const handleCreateArticle = async () => {
     if (!token) {
@@ -273,10 +307,10 @@ function PublicationPage() {
         );
         console.log("Article created successfully!");
 
-        setArticles((prevArticles) => [
-          response.data!.createArticle.article,
-          ...prevArticles,
-        ]);
+        // setArticles((prevArticles) => [
+        //   response.data!.createArticle.article,
+        //   ...prevArticles,
+        // ]);
 
         setTitle("");
         setContent("");
@@ -302,7 +336,7 @@ function PublicationPage() {
         <h2 className="text-xl font-semibold text-purple-400">Publications</h2>
         <div className="relative flex items-center">
           <SortDesc className="absolute left-3 text-gray-500 h-4 w-4" />
-          <select
+          {/* <select
             value={sortOption}
             onChange={(e) => {
               setSortOption(e.target.value);
@@ -312,7 +346,7 @@ function PublicationPage() {
           >
             <option value="recent">Les plus récentes</option>
             <option value="popular">Les plus détestées</option>
-          </select>
+          </select> */}
           <div className="absolute right-3 pointer-events-none">
             <svg
               className="h-4 w-4 text-gray-500"
@@ -364,98 +398,115 @@ function PublicationPage() {
 
       {/* Articles List */}
       <div className="space-y-10">
-        {articles.map((articleData) => (
-          <motion.div
-            key={articleData.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
-              transition: {
-                duration: 0.2,
-                ease: "easeOut",
-              },
-            }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
-            onClick={() => handlePostClick(articleData.id)}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-                  <Skull className="h-6 w-6 text-purple-400" />
+        {sortedArticles
+          .filter((article) => article !== null)
+          .map(
+            ({
+              id,
+              title,
+              content,
+              author,
+              createdAt,
+              updatedAt,
+              TotalDislikes,
+              TotalComments,
+            }) => (
+              <motion.div
+                key={id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+                  transition: {
+                    duration: 0.2,
+                    ease: "easeOut",
+                  },
+                }}
+                whileTap={{ scale: 0.98 }}
+                className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
+                // onClick={() => handlePostClick(id)}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                      <Skull className="h-6 w-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-purple-400 font-semibold">
+                        {author.username}
+                      </h3>
+                      <p className="text-gray-500 text-sm">
+                        {/* {updatedAt
+                          ? new Date(updatedAt).toLocaleString()
+                          : createdAt
+                          ? new Date(createdAt).toLocaleString()
+                          : "Date non valide"} */}
+                        Le {""}
+                        {updatedAt
+                          ? new Date(parseInt(updatedAt, 10))
+                              .toLocaleString()
+                              .replace(" ", " à ")
+                          : new Date(parseInt(createdAt, 10))
+                              .toLocaleString()
+                              .replace(" ", " à ")}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    className="text-gray-500 hover:text-purple-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
                 </div>
-                <div>
-                  <h3 className="text-purple-400 font-semibold">
-                    {articleData.author.username}
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    {articleData.updatedAt
-                      ? new Date(
-                          parseInt(articleData.updatedAt, 10)
-                        ).toLocaleString()
-                      : new Date(
-                          parseInt(articleData.createdAt, 10)
-                        ).toLocaleString()}
-                  </p>
+
+                <p className="text-gray-300 mb-4 whitespace-pre-wrap">
+                  {content}
+                </p>
+
+                <div className="flex items-center space-x-6 text-gray-500">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    // className={`flex items-center space-x-2 ${
+                    //   userDislikes[id] ? "text-purple-400" : "text-gray-500"
+                    // }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // handleDislike(id);
+                    }}
+                  >
+                    <ThumbsDown className="h-5 w-5" />
+                    <span>{TotalDislikes}</span>
+                  </motion.button>
+
+                  <button
+                    className="flex items-center space-x-2 hover:text-purple-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // handlePostClick(id);
+                    }}
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    <span>{TotalComments}</span>
+                  </button>
+
+                  <button
+                    className="flex items-center space-x-2 hover:text-purple-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
                 </div>
-              </div>
-              <button
-                className="text-gray-500 hover:text-purple-400"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <MoreVertical className="h-5 w-5" />
-              </button>
-            </div>
-
-            <p className="text-gray-300 mb-4 whitespace-pre-wrap">
-              {articleData.content}
-            </p>
-
-            <div className="flex items-center space-x-6 text-gray-500">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`flex items-center space-x-2 ${
-                  userDislikes[articleData.id]
-                    ? "text-purple-400"
-                    : "text-gray-500"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDislike(articleData.id);
-                }}
-              >
-                <ThumbsDown className="h-5 w-5" />
-                <span>{articleData?.NbOfDislikes}</span>
-              </motion.button>
-
-              <button
-                className="flex items-center space-x-2 hover:text-purple-400"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePostClick(articleData.id);
-                }}
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span>{articleData?.comments?.length}</span>
-              </button>
-
-              <button
-                className="flex items-center space-x-2 hover:text-purple-400"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <Share2 className="h-5 w-5" />
-              </button>
-            </div>
-          </motion.div>
-        ))}
+              </motion.div>
+            )
+          )}
       </div>
     </main>
   );

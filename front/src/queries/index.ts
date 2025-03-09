@@ -4,7 +4,7 @@ import {
   FIND_ARTICLE_BY_ID,
   FIND_ARTICLE_BY_MOST_DISLIKED,
 } from "./articleQuery";
-import { FIND_DISLIKES_BY_USER_ID } from "./dislikesQuery";
+import { FIND_DISLIKES_BY_USER_ID } from "./dislikeQuery";
 import { GET_COMMENTS } from "./commentQuery";
 
 export {

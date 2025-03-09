@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client";
+import { graphql } from "../gql";
 
-export const FIND_DISLIKES_BY_USER_ID = gql`
+export const FIND_DISLIKES_BY_USER_ID = graphql(`
   query FindDislikesByArticleId($userId: ID!) {
     getDislikesByUserId(userId: $userId) {
       user {
@@ -20,4 +20,4 @@ export const FIND_DISLIKES_BY_USER_ID = gql`
       }
     }
   }
-`;
+`);

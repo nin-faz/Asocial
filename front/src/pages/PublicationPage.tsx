@@ -14,16 +14,35 @@ import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
 // import { FIND_ARTICLE_BY_MOST_DISLIKED, FIND_ARTICLES } from "../gql/queries";
 import { AuthContext } from "../context/AuthContext";
-import { CREATE_ARTICLE } from "../mutations";
-import { FIND_ARTICLES } from "../queries";
+import {
+  CREATE_ARTICLE,
+  ADD_ARTICLE_DISLIKE,
+  DELETE_ARTICLE_DISLIKE,
+} from "../mutations";
+import { FIND_ARTICLES, FIND_DISLIKES_BY_USER_ID } from "../queries";
 
-// interface CreateArticleResponse {
-//   createArticle: {
-//     success: boolean;
-//     message: string;
-//     article: Article;
-//   };
-// }
+import { graphql } from "../gql";
+
+// const CREATE_ARTICLE = graphql(`
+//   mutation CreateArticle($title: String, $content: String!) {
+//     createArticle(title: $title, content: $content) {
+//       code
+//       success
+//       message
+//       article {
+//         id
+//         title
+//         content
+//         createdAt
+//         updatedAt
+//         author {
+//           id
+//           username
+//         }
+//       }
+//     }
+//   }
+// `);
 
 // interface Article {
 //   id: string;
@@ -94,6 +113,7 @@ function PublicationPage() {
   }
 
   const { token, user } = authContext;
+
   const navigate = useNavigate();
 
   // const [articles] = useQuery(FIND_ARTICLES);
@@ -121,8 +141,6 @@ function PublicationPage() {
           : b?.createdAt
           ? new Date(parseInt(b.createdAt, 10))
           : new Date(0); // Date par défaut si pas de date
-
-        console.log("Comparaison des dates:", dateA, dateB); // Vérifie les dates utilisées
 
         return dateB.getTime() - dateA.getTime(); // Tri décroissant
       });
@@ -210,8 +228,6 @@ function PublicationPage() {
 
   // const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   // const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
-
-  // const [userDislikes, setUserDislikes] = useState<Record<string, boolean>>({});
 
   // const handleDislike = async (articleId: string) => {
   //   if (!token || !user) {
@@ -330,6 +346,93 @@ function PublicationPage() {
     }
   };
 
+  const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
+    {}
+  );
+
+  useEffect(() => {
+    // Remplit l'état avec les articles déjà dislikés par l'utilisateur
+    const dislikesMap: { [key: string]: boolean } = {};
+    sortedArticles.forEach(
+      ({
+        id,
+        dislikes = [],
+      }: {
+        id: string;
+        dislikes?: { userId: string }[];
+      }) => {
+        if (
+          dislikes.some(
+            (dislike: { userId: string }) => dislike.userId === user?.id
+          )
+        ) {
+          dislikesMap[id] = true;
+        }
+      }
+    );
+    setUserDislikes(dislikesMap);
+  }, [sortedArticles, user?.id]);
+
+  const { data: dislikeUser, refetch } = useQuery(FIND_DISLIKES_BY_USER_ID, {
+    variables: { userId: user?.id! },
+    skip: !user?.id,
+  });
+
+  const [hasDisliked, setHasDisliked] = useState<{ [key: string]: boolean }>(
+    {}
+  );
+
+  useEffect(() => {
+    if (dislikeUser?.getDislikesByUserId) {
+      const dislikesMap: { [key: string]: boolean } = {};
+
+      dislikeUser.getDislikesByUserId.forEach(
+        (dislike: { article: { id: string } }) => {
+          dislikesMap[dislike.article.id] = true;
+        }
+      );
+
+      setUserDislikes(dislikesMap);
+    }
+  }, [dislikeUser, hasDisliked]);
+
+  const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);
+  const [deleteDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+
+  const handleDislike = async (e: React.MouseEvent, articleId: string) => {
+    e.stopPropagation();
+
+    if (!articleId) {
+      console.error("ID article manquant !");
+      return;
+    }
+
+    if (!user) {
+      toast.error("Veuillez vous connecter pour disliker un article !");
+      return;
+    }
+
+    try {
+      if (userDislikes[articleId]) {
+        // Supprime le dislike
+        await deleteDislike({ variables: { articleId, userId: user.id! } });
+        setUserDislikes((prev) => ({ ...prev, [articleId]: false }));
+        setHasDisliked((prev) => ({ ...prev, [articleId]: false }));
+        console.log(user.username, "a retiré son dislike.");
+      } else {
+        // Ajoute le dislike
+        await addDislike({ variables: { articleId, userId: user.id! } });
+        setUserDislikes((prev) => ({ ...prev, [articleId]: true }));
+        setHasDisliked((prev) => ({ ...prev, [articleId]: true }));
+        console.log(user.username, "a disliké l'article.");
+      }
+      await refetch();
+      console.log("Dislikes mis à jour.", userDislikes);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout/suppression du dislike :", error);
+    }
+  };
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -402,7 +505,7 @@ function PublicationPage() {
           .filter((article) => article !== null)
           .map(
             ({
-              id,
+              id: articleId,
               title,
               content,
               author,
@@ -412,7 +515,7 @@ function PublicationPage() {
               TotalComments,
             }) => (
               <motion.div
-                key={id}
+                key={articleId}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
@@ -426,7 +529,7 @@ function PublicationPage() {
                 }}
                 whileTap={{ scale: 0.98 }}
                 className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
-                // onClick={() => handlePostClick(id)}
+                // onClick={() => handlePostClick(articleId)}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center space-x-3">
@@ -438,11 +541,6 @@ function PublicationPage() {
                         {author.username}
                       </h3>
                       <p className="text-gray-500 text-sm">
-                        {/* {updatedAt
-                          ? new Date(updatedAt).toLocaleString()
-                          : createdAt
-                          ? new Date(createdAt).toLocaleString()
-                          : "Date non valide"} */}
                         Le {""}
                         {updatedAt
                           ? new Date(parseInt(updatedAt, 10))
@@ -463,6 +561,9 @@ function PublicationPage() {
                     <MoreVertical className="h-5 w-5" />
                   </button>
                 </div>
+                <h1 className="text-2xl font-semibold text-gray-100 mb-4">
+                  {title}
+                </h1>
 
                 <p className="text-gray-300 mb-4 whitespace-pre-wrap">
                   {content}
@@ -472,23 +573,24 @@ function PublicationPage() {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    // className={`flex items-center space-x-2 ${
-                    //   userDislikes[id] ? "text-purple-400" : "text-gray-500"
-                    // }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // handleDislike(id);
-                    }}
+                    className={`flex items-center space-x-2 ${
+                      userDislikes[articleId]
+                        ? "text-purple-400"
+                        : "text-gray-500"
+                    }`}
+                    onClick={(e) => handleDislike(e, articleId)}
                   >
                     <ThumbsDown className="h-5 w-5" />
-                    <span>{TotalDislikes}</span>
+                    <span>
+                      {TotalDislikes + (hasDisliked[articleId] ? 1 : 0)}
+                    </span>
                   </motion.button>
 
                   <button
                     className="flex items-center space-x-2 hover:text-purple-400"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // handlePostClick(id);
+                      // handlePostClick(articleId);
                     }}
                   >
                     <MessageSquare className="h-5 w-5" />

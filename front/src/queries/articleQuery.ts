@@ -19,7 +19,7 @@ export const FIND_ARTICLES = graphql(`
   }
 `);
 
-export const FIND_ARTICLE_BY_ID = gql`
+export const FIND_ARTICLE_BY_ID = graphql(`
   query FindArticleById($id: ID!) {
     findArticleById(id: $id) {
       id
@@ -33,9 +33,9 @@ export const FIND_ARTICLE_BY_ID = gql`
       updatedAt
     }
   }
-`;
+`);
 
-export const FIND_ARTICLE_BY_MOST_DISLIKED = gql`
+export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
   query FindArticleByMostDisliked {
     findArticleByMostDisliked {
       id
@@ -59,4 +59,4 @@ export const FIND_ARTICLE_BY_MOST_DISLIKED = gql`
       }
     }
   }
-`;
+`);

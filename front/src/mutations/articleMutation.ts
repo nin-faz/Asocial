@@ -1,4 +1,3 @@
-import { gql } from "@apollo/client";
 import { graphql } from "../gql";
 
 export const CREATE_ARTICLE = graphql(`

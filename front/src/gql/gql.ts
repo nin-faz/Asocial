@@ -15,11 +15,17 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
     "\n  mutation CreateArticle($title: String, $content: String!) {\n    createArticle(title: $title, content: $content) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n": typeof types.CreateArticleDocument,
+    "\n  mutation AddArticleDislike($articleId: ID!, $userId: ID!) {\n    addArticleDislike(articleId: $articleId, userId: $userId) {\n      id\n      article {\n        id\n      }\n      user {\n        id\n        username\n      }\n    }\n  }\n": typeof types.AddArticleDislikeDocument,
+    "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteArticleDislikeDocument,
     "\n  query FindArticles {\n    findArticles {\n      id\n      title\n      content\n      author {\n        username\n        id\n      }\n      createdAt\n      updatedAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n": typeof types.FindArticlesDocument,
+    "\n  query FindDislikesByArticleId($userId: ID!) {\n    getDislikesByUserId(userId: $userId) {\n      user {\n        id\n        username\n      }\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          username\n          id\n        }\n      }\n    }\n  }\n": typeof types.FindDislikesByArticleIdDocument,
 };
 const documents: Documents = {
     "\n  mutation CreateArticle($title: String, $content: String!) {\n    createArticle(title: $title, content: $content) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n": types.CreateArticleDocument,
+    "\n  mutation AddArticleDislike($articleId: ID!, $userId: ID!) {\n    addArticleDislike(articleId: $articleId, userId: $userId) {\n      id\n      article {\n        id\n      }\n      user {\n        id\n        username\n      }\n    }\n  }\n": types.AddArticleDislikeDocument,
+    "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteArticleDislikeDocument,
     "\n  query FindArticles {\n    findArticles {\n      id\n      title\n      content\n      author {\n        username\n        id\n      }\n      createdAt\n      updatedAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n": types.FindArticlesDocument,
+    "\n  query FindDislikesByArticleId($userId: ID!) {\n    getDislikesByUserId(userId: $userId) {\n      user {\n        id\n        username\n      }\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          username\n          id\n        }\n      }\n    }\n  }\n": types.FindDislikesByArticleIdDocument,
 };
 
 /**
@@ -43,7 +49,19 @@ export function graphql(source: "\n  mutation CreateArticle($title: String, $con
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation AddArticleDislike($articleId: ID!, $userId: ID!) {\n    addArticleDislike(articleId: $articleId, userId: $userId) {\n      id\n      article {\n        id\n      }\n      user {\n        id\n        username\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation AddArticleDislike($articleId: ID!, $userId: ID!) {\n    addArticleDislike(articleId: $articleId, userId: $userId) {\n      id\n      article {\n        id\n      }\n      user {\n        id\n        username\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query FindArticles {\n    findArticles {\n      id\n      title\n      content\n      author {\n        username\n        id\n      }\n      createdAt\n      updatedAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n"): (typeof documents)["\n  query FindArticles {\n    findArticles {\n      id\n      title\n      content\n      author {\n        username\n        id\n      }\n      createdAt\n      updatedAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query FindDislikesByArticleId($userId: ID!) {\n    getDislikesByUserId(userId: $userId) {\n      user {\n        id\n        username\n      }\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          username\n          id\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query FindDislikesByArticleId($userId: ID!) {\n    getDislikesByUserId(userId: $userId) {\n      user {\n        id\n        username\n      }\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          username\n          id\n        }\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

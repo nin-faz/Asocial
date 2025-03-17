@@ -14,6 +14,7 @@ import {
   FilterIcon,
   Bomb,
   Flame,
+  EllipsisVertical,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
@@ -80,6 +81,27 @@ function PublicationPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [articlesPerPage] = useState(5);
+
+  // Calculer le nombre total de pages
+  const totalPages = Math.ceil(displayedArticles.length / articlesPerPage);
+
+  // Récupérer les articles à afficher sur la page courante
+  const currentArticles = displayedArticles.slice(
+    (currentPage - 1) * articlesPerPage,
+    currentPage * articlesPerPage
+  );
+
+  // Gérer le changement de page
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
 
   const [createArticle] = useMutation(CREATE_ARTICLE, {
     variables: { title, content },
@@ -326,7 +348,7 @@ function PublicationPage() {
 
       {/* Articles List */}
       <div className="space-y-10">
-        {displayedArticles
+        {currentArticles
           .filter((article) => article !== null)
           .map(
             ({
@@ -469,12 +491,33 @@ function PublicationPage() {
                       e.stopPropagation();
                     }}
                   >
-                    <Share2 className="h-5 w-5" />
+                    {/* <Share2 className="h-5 w-5" /> */}
                   </button>
                 </div>
               </motion.div>
             )
           )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-6">
+        <button
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+        >
+          Précédent
+        </button>
+        <span>
+          Page {currentPage} sur {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+        >
+          Suivant
+        </button>
       </div>
     </main>
   );

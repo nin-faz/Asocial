@@ -9,6 +9,7 @@ export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
     const articles = await db.article.findMany({
       include: {
         author: true,
+        dislikes: true,
         _count: { select: { dislikes: true, comments: true } },
       },
     });

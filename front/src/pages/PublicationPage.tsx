@@ -117,18 +117,23 @@ function PublicationPage() {
   const navigate = useNavigate();
 
   // const [articles] = useQuery(FIND_ARTICLES);
-  const { data, loading, error } = useQuery(FIND_ARTICLES);
+  const {
+    data,
+    loading,
+    error,
+    refetch: refetchArticles,
+  } = useQuery(FIND_ARTICLES);
 
   const articles = data?.findArticles || [];
 
   const [sortedArticles, setSortedArticles] = useState([]);
 
   useEffect(() => {
-    if (data?.findArticles) {
-      console.log("Articles récupérés:", data.findArticles); // Vérifie ce qui est récupéré
+    if (articles) {
+      console.log("Articles récupérés:", articles); // Vérifie ce qui est récupéré
 
       // Copie les articles et trie les par date
-      const sorted = [...data.findArticles].sort((a, b) => {
+      const sorted = [...articles].sort((a, b) => {
         // Assure-toi que les dates existent et sont valides
         const dateA = a?.updatedAt
           ? new Date(parseInt(a.updatedAt, 10))
@@ -346,55 +351,35 @@ function PublicationPage() {
     }
   };
 
-  const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
-    {}
-  );
-
-  useEffect(() => {
-    // Remplit l'état avec les articles déjà dislikés par l'utilisateur
-    const dislikesMap: { [key: string]: boolean } = {};
-    sortedArticles.forEach(
-      ({
-        id,
-        dislikes = [],
-      }: {
-        id: string;
-        dislikes?: { userId: string }[];
-      }) => {
-        if (
-          dislikes.some(
-            (dislike: { userId: string }) => dislike.userId === user?.id
-          )
-        ) {
-          dislikesMap[id] = true;
-        }
-      }
-    );
-    setUserDislikes(dislikesMap);
-  }, [sortedArticles, user?.id]);
-
   const { data: dislikeUser, refetch } = useQuery(FIND_DISLIKES_BY_USER_ID, {
     variables: { userId: user?.id! },
     skip: !user?.id,
   });
 
-  const [hasDisliked, setHasDisliked] = useState<{ [key: string]: boolean }>(
+  const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
     {}
   );
 
+  // Met à jour userDislikes en fonction des articles et des dislikes de l'utilisateur
   useEffect(() => {
+    const dislikesMap: { [key: string]: boolean } = {};
+
+    // Vérifie les articles dislikés dans sortedArticles
+    sortedArticles.forEach(({ id, dislikes = [] }) => {
+      if (dislikes.some(({ userId }) => userId === user?.id)) {
+        dislikesMap[id] = true;
+      }
+    });
+
+    // Vérifie les dislikes récupérés depuis la requête GraphQL
     if (dislikeUser?.getDislikesByUserId) {
-      const dislikesMap: { [key: string]: boolean } = {};
-
-      dislikeUser.getDislikesByUserId.forEach(
-        (dislike: { article: { id: string } }) => {
-          dislikesMap[dislike.article.id] = true;
-        }
-      );
-
-      setUserDislikes(dislikesMap);
+      dislikeUser.getDislikesByUserId.forEach(({ article }) => {
+        dislikesMap[article.id] = true;
+      });
     }
-  }, [dislikeUser, hasDisliked]);
+
+    setUserDislikes(dislikesMap);
+  }, [sortedArticles, dislikeUser, user?.id]);
 
   const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   const [deleteDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
@@ -408,7 +393,7 @@ function PublicationPage() {
     }
 
     if (!user) {
-      toast.error("Veuillez vous connecter pour disliker un article !");
+      toast.warn("Veuillez vous connecter pour disliker un article !");
       return;
     }
 
@@ -417,16 +402,15 @@ function PublicationPage() {
         // Supprime le dislike
         await deleteDislike({ variables: { articleId, userId: user.id! } });
         setUserDislikes((prev) => ({ ...prev, [articleId]: false }));
-        setHasDisliked((prev) => ({ ...prev, [articleId]: false }));
         console.log(user.username, "a retiré son dislike.");
       } else {
         // Ajoute le dislike
         await addDislike({ variables: { articleId, userId: user.id! } });
         setUserDislikes((prev) => ({ ...prev, [articleId]: true }));
-        setHasDisliked((prev) => ({ ...prev, [articleId]: true }));
         console.log(user.username, "a disliké l'article.");
       }
       await refetch();
+      await refetchArticles();
       console.log("Dislikes mis à jour.", userDislikes);
     } catch (error) {
       console.error("Erreur lors de l'ajout/suppression du dislike :", error);
@@ -582,7 +566,19 @@ function PublicationPage() {
                   >
                     <ThumbsDown className="h-5 w-5" />
                     <span>
-                      {TotalDislikes + (hasDisliked[articleId] ? 1 : 0)}
+                      {
+                        TotalDislikes
+                        // + (userDislikes[articleId] ? 1 : 0)
+                        // (userDislikes[articleId] &&
+                        // !sortedArticles.some(({ dislikes }) =>
+                        //   (dislikes || []).some(
+                        //     ({ userId }: { userId: string }) =>
+                        //       userId === user?.id
+                        //   )
+                        // )
+                        //   ? 0
+                        //   : 1)
+                      }
                     </span>
                   </motion.button>
 

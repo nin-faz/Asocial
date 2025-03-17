@@ -15,6 +15,9 @@ export const FIND_ARTICLES = graphql(`
       updatedAt
       TotalDislikes
       TotalComments
+      dislikes {
+        id
+      }
     }
   }
 `);

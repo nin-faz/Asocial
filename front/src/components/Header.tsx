@@ -47,7 +47,8 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
             onClick={() => navigate("/")}
           >
-            <Skull className="h-8 w-8 text-purple-500" />
+            <img src="/logo.svg" alt="Logo" className="h-9 w-10" />
+
             <span className="ml-2 text-2xl font-bold text-purple-400">
               Asocial
             </span>
@@ -64,7 +65,7 @@ const Header = () => {
               whileHover={{ scale: 1.1 }}
               onClick={() => navigate("/publications")}
             >
-              <Home className="h-5 w-5" />
+              <Home className="h-7 w-7" />
               <span className="ml-1">Publications</span>
             </motion.div>
             {!user ? (
@@ -77,7 +78,7 @@ const Header = () => {
                 whileHover={{ scale: 1.1 }}
                 onClick={() => navigate("/auth")}
               >
-                <Bomb className="h-5 w-5" />
+                <Bomb className="h-7 w-7" />
                 <span className="ml-1">Chaos</span>
               </motion.div>
             ) : null}
@@ -137,9 +138,6 @@ const Header = () => {
                       <div className="p-3 border-b border-gray-800">
                         <p className="text-purple-400 font-medium">
                           {user?.username}
-                        </p>
-                        <p className="text-gray-500 text-sm truncate">
-                          {user?.bio}
                         </p>
                       </div>
                       <div className="py-1">

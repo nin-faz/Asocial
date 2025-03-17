@@ -8,8 +8,8 @@ export const FIND_ARTICLES = graphql(`
       title
       content
       author {
-        username
         id
+        username
       }
       createdAt
       updatedAt
@@ -17,6 +17,9 @@ export const FIND_ARTICLES = graphql(`
       TotalComments
       dislikes {
         id
+        user {
+          id
+        }
       }
     }
   }
@@ -44,21 +47,16 @@ export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
       id
       title
       content
-      createdAt
-      updatedAt
       author {
         id
         username
       }
+      createdAt
+      updatedAt
+      TotalDislikes
+      TotalComments
       dislikes {
         id
-        user {
-          id
-          username
-        }
-      }
-      _count {
-        dislikes
       }
     }
   }

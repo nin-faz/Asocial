@@ -91,7 +91,7 @@ export type Dislike = {
   article?: Maybe<Article>;
   comment?: Maybe<Comment>;
   id: Scalars['ID']['output'];
-  user: User;
+  user?: Maybe<User>;
 };
 
 export type Mutation = {
@@ -483,7 +483,7 @@ export type DislikeResolvers<ContextType = Context, ParentType extends Resolvers
   article?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

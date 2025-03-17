@@ -12,14 +12,18 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
-// import { FIND_ARTICLE_BY_MOST_DISLIKED, FIND_ARTICLES } from "../gql/queries";
 import { AuthContext } from "../context/AuthContext";
 import {
   CREATE_ARTICLE,
   ADD_ARTICLE_DISLIKE,
   DELETE_ARTICLE_DISLIKE,
 } from "../mutations";
-import { FIND_ARTICLES, FIND_DISLIKES_BY_USER_ID } from "../queries";
+import {
+  FIND_ARTICLES,
+  FIND_DISLIKES_BY_USER_ID,
+  FIND_ARTICLE_BY_MOST_DISLIKED,
+} from "../queries";
+import { FindArticlesQuery } from "../gql/graphql"; // adapte le chemin
 
 import { graphql } from "../gql";
 
@@ -114,46 +118,62 @@ function PublicationPage() {
 
   const { token, user } = authContext;
 
+  const isNotLogin = (action: "dislike" | "publish") => {
+    const messages = {
+      dislike: [
+        "Tu veux semer le chaos ? Connecte-toi d'abord, rebelle.",
+        "Pas de dislike sans identité... Connecte-toi et libère ta haine.",
+        "L'anarchie a ses règles : connecte-toi pour disliker.",
+        "Tu crois pouvoir disliker incognito ? Rejoins le désordre connecté.",
+      ],
+      publish: [
+        "Pas de publication sans identité... Connecte-toi et crée du chaos.",
+        "Les idées n'ont pas de visage sans connexion... Connecte-toi pour publier.",
+        "Pour faire entendre ta voix, tu dois être connecté.",
+        "Rejoins le mouvement, publie ton cri dans le néant après t'être connecté.",
+      ],
+    };
+
+    const randomMessage =
+      messages[action][Math.floor(Math.random() * messages[action].length)];
+    toast.warn(randomMessage);
+  };
+
   const navigate = useNavigate();
 
-  // const [articles] = useQuery(FIND_ARTICLES);
-  const {
-    data,
-    loading,
-    error,
-    refetch: refetchArticles,
-  } = useQuery(FIND_ARTICLES);
-
+  const { data, error, refetch: refetchArticles } = useQuery(FIND_ARTICLES);
   const articles = data?.findArticles || [];
 
-  const [sortedArticles, setSortedArticles] = useState([]);
+  const { data: mostDislikedArticles } = useQuery(
+    FIND_ARTICLE_BY_MOST_DISLIKED
+  );
+  const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
-  useEffect(() => {
-    if (articles) {
-      console.log("Articles récupérés:", articles); // Vérifie ce qui est récupéré
+  type ArticleType = NonNullable<
+    NonNullable<FindArticlesQuery["findArticles"]>[number]
+  >;
 
-      // Copie les articles et trie les par date
-      const sorted = [...articles].sort((a, b) => {
-        // Assure-toi que les dates existent et sont valides
-        const dateA = a?.updatedAt
-          ? new Date(parseInt(a.updatedAt, 10))
-          : a?.createdAt
-          ? new Date(parseInt(a.createdAt, 10))
-          : new Date(0); // Date par défaut si pas de date
+  const [sortOption, setSortOption] = useState("recent");
+  const displayedArticles: ArticleType[] =
+    sortOption === "recent" ? articles : mostDisliked;
 
-        const dateB = b?.updatedAt
-          ? new Date(parseInt(b.updatedAt, 10))
-          : b?.createdAt
-          ? new Date(parseInt(b.createdAt, 10))
-          : new Date(0); // Date par défaut si pas de date
+  // useEffect(() => {
+  //   console.log("Articles récupérés:", articles);
 
-        return dateB.getTime() - dateA.getTime(); // Tri décroissant
-      });
+  //   let sorted: ArticleType[] = [];
 
-      // Mets à jour l'état avec les articles triés
-      setSortedArticles(sorted);
-    }
-  }, [data]);
+  //   // Copie les articles et trie par date ou popularité
+  //   if (sortOption === "recent") {
+  //     sorted = [...articles];
+  //     // sorted.sort(sortByDate);
+  //   } else if (sortOption === "popular") {
+  //     sorted = [...mostDisliked];
+  //     // sorted = sorted.sort(sortByDate);
+  //   }
+
+  //   // Mets à jour l'état avec les articles triés
+  //   setSortedArticles(sorted);
+  // }, [data, sortOption, mostDisliked]);
 
   // const [popularArticles, setPopularArticles] = useState<Set<string>>(
   //   new Set()
@@ -161,13 +181,6 @@ function PublicationPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-
-  // const [sortOption, setSortOption] = useState<string>("recent");
-
-  // const mostDislikedArticlesData = useQuery<FindArticleByMostDislikedData>(
-  //   FIND_ARTICLE_BY_MOST_DISLIKED,
-  //   { skip: sortOption !== "popular" }
-  // );
 
   // const dataArticles = useQuery<FindArticlesData>(FIND_ARTICLES);
 
@@ -301,8 +314,8 @@ function PublicationPage() {
   });
 
   const handleCreateArticle = async () => {
-    if (!token) {
-      toast.error("Vous devez être connecté pour publier un article.");
+    if (!user) {
+      isNotLogin("publish");
       return;
     }
 
@@ -328,10 +341,7 @@ function PublicationPage() {
         );
         console.log("Article created successfully!");
 
-        // setArticles((prevArticles) => [
-        //   response.data!.createArticle.article,
-        //   ...prevArticles,
-        // ]);
+        await refetchArticles();
 
         setTitle("");
         setContent("");
@@ -362,11 +372,16 @@ function PublicationPage() {
 
   // Met à jour userDislikes en fonction des articles et des dislikes de l'utilisateur
   useEffect(() => {
+    if (!user) {
+      setUserDislikes({});
+      return;
+    }
+
     const dislikesMap: { [key: string]: boolean } = {};
 
     // Vérifie les articles dislikés dans sortedArticles
-    sortedArticles.forEach(({ id, dislikes = [] }) => {
-      if (dislikes.some(({ userId }) => userId === user?.id)) {
+    displayedArticles.forEach(({ id, dislikes = [] }) => {
+      if (dislikes?.some((dislike) => dislike?.user?.id === user?.id)) {
         dislikesMap[id] = true;
       }
     });
@@ -379,7 +394,7 @@ function PublicationPage() {
     }
 
     setUserDislikes(dislikesMap);
-  }, [sortedArticles, dislikeUser, user?.id]);
+  }, [articles, mostDisliked, dislikeUser, user?.id, sortOption]);
 
   const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   const [deleteDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
@@ -393,7 +408,7 @@ function PublicationPage() {
     }
 
     if (!user) {
-      toast.warn("Veuillez vous connecter pour disliker un article !");
+      isNotLogin("dislike");
       return;
     }
 
@@ -423,17 +438,17 @@ function PublicationPage() {
         <h2 className="text-xl font-semibold text-purple-400">Publications</h2>
         <div className="relative flex items-center">
           <SortDesc className="absolute left-3 text-gray-500 h-4 w-4" />
-          {/* <select
+          <select
             value={sortOption}
             onChange={(e) => {
               setSortOption(e.target.value);
-              console.log(e.target.value); // Affiche la nouvelle valeur de sortOption
+              console.log("Nouveau tri : ", e.target.value);
             }}
-            className="bg-gray-800 text-gray-300 pl-10 pr-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+            className="bg-gray-800 text-gray-300 px-10 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
           >
             <option value="recent">Les plus récentes</option>
-            <option value="popular">Les plus détestées</option>
-          </select> */}
+            <option value="popular">Les plus populaires</option>
+          </select>
           <div className="absolute right-3 pointer-events-none">
             <svg
               className="h-4 w-4 text-gray-500"
@@ -485,7 +500,7 @@ function PublicationPage() {
 
       {/* Articles List */}
       <div className="space-y-10">
-        {sortedArticles
+        {displayedArticles
           .filter((article) => article !== null)
           .map(
             ({
@@ -558,7 +573,7 @@ function PublicationPage() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className={`flex items-center space-x-2 ${
-                      userDislikes[articleId]
+                      user && userDislikes[articleId]
                         ? "text-purple-400"
                         : "text-gray-500"
                     }`}

@@ -114,7 +114,7 @@ export const typeDefs = gql`
 
   type Dislike {
     id: ID!
-    user: User!
+    user: User
     article: Article
     comment: Comment
   }

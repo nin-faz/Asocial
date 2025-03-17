@@ -20,3 +20,13 @@ export const CREATE_ARTICLE = graphql(`
     }
   }
 `);
+
+export const DELETE_ARTICLE = graphql(`
+  mutation deleteArticle($id: ID!) {
+    deleteArticle(id: $id) {
+      code
+      success
+      message
+    }
+  }
+`);

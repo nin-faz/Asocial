@@ -6,7 +6,7 @@ const config: CodegenConfig = {
   documents: [
     "src/queries/articleQuery.ts",
     "src/mutations/articleMutation.ts",
-    // "src/pages/PublicationPage.tsx",
+    "src/mutations/userMutation.ts",
     "src/queries/dislikeQuery.ts",
     "src/mutations/dislikeMutation.ts",
   ],

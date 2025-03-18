@@ -11,14 +11,9 @@ import {
   SortDesc,
   Trash2,
   Edit2,
-  FilterIcon,
   Bomb,
-  Flame,
-  EllipsisVertical,
 } from "lucide-react";
-import { toast } from "react-toastify";
 import { useMutation, useQuery } from "@apollo/client";
-import { AuthContext } from "../context/AuthContext";
 import {
   CREATE_ARTICLE,
   ADD_ARTICLE_DISLIKE,
@@ -31,6 +26,9 @@ import {
   FIND_ARTICLE_BY_MOST_DISLIKED,
 } from "../queries";
 import { FindArticlesQuery } from "../gql/graphql";
+import { toast } from "react-toastify";
+import { AuthContext } from "../context/AuthContext";
+import { useSearch } from "../context/SearchContext";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -66,9 +64,8 @@ function PublicationPage() {
   const { data, refetch: refetchArticles } = useQuery(FIND_ARTICLES);
   const articles = data?.findArticles || [];
 
-  const { data: mostDislikedArticles } = useQuery(
-    FIND_ARTICLE_BY_MOST_DISLIKED
-  );
+  const { data: mostDislikedArticles, refetch: refetechMostDislikedArticles } =
+    useQuery(FIND_ARTICLE_BY_MOST_DISLIKED);
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
   type ArticleType = NonNullable<
@@ -85,14 +82,29 @@ function PublicationPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [articlesPerPage] = useState(5);
 
-  // Calculer le nombre total de pages
-  const totalPages = Math.ceil(displayedArticles.length / articlesPerPage);
+  const { searchTerm } = useSearch();
+
+  const filteredArticles = searchTerm.trim()
+    ? displayedArticles.filter((article) => {
+        const titleMatch = article?.title
+          ? article.title.toLowerCase().includes(searchTerm.toLowerCase())
+          : false;
+        const authorMatch = article.author.username
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        return titleMatch || authorMatch;
+      })
+    : displayedArticles;
 
   // Récupérer les articles à afficher sur la page courante
-  const currentArticles = displayedArticles.slice(
+  const currentArticles = filteredArticles.slice(
     (currentPage - 1) * articlesPerPage,
     currentPage * articlesPerPage
   );
+
+  const hasArticles = filteredArticles.length > 0;
+
+  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
 
   // Gérer le changement de page
   const handleNextPage = () => {
@@ -136,6 +148,7 @@ function PublicationPage() {
         console.log("Article created successfully!");
 
         await refetchArticles();
+        await refetechMostDislikedArticles();
 
         setTitle("");
         setContent("");
@@ -188,7 +201,12 @@ function PublicationPage() {
           icon: <Bomb size={24} color="#f0aaff" />,
           style: { background: "#2a0134", color: "#f0aaff" },
         });
-        await refetchArticles();
+        if (sortOption === "popular") {
+          await refetechMostDislikedArticles();
+        } else {
+          await refetchArticles();
+        }
+        console.log("Article supprimé avec succès !");
       } else {
         console.error(
           response?.data?.deleteArticle?.message ||
@@ -209,10 +227,13 @@ function PublicationPage() {
     navigate(`/publications/${articleId}`);
   };
 
-  const { data: dislikeUser, refetch } = useQuery(FIND_DISLIKES_BY_USER_ID, {
-    variables: { userId: user?.id! },
-    skip: !user?.id,
-  });
+  const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
+    FIND_DISLIKES_BY_USER_ID,
+    {
+      variables: { userId: user?.id! },
+      skip: !user?.id,
+    }
+  );
 
   const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
     {}
@@ -272,7 +293,7 @@ function PublicationPage() {
         setUserDislikes((prev) => ({ ...prev, [articleId]: true }));
         console.log(user.username, "a disliké l'article.");
       }
-      await refetch();
+      await refetchDislikeUser();
       await refetchArticles();
       console.log("Dislikes mis à jour.", userDislikes);
     } catch (error) {
@@ -295,7 +316,7 @@ function PublicationPage() {
             className="bg-gray-800 text-gray-300 px-10 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
           >
             <option value="recent">Les plus récentes</option>
-            <option value="popular">Les plus populaires</option>
+            <option value="popular">Les plus impopulaires</option>
           </select>
           <div className="absolute right-3 pointer-events-none">
             <svg
@@ -348,162 +369,166 @@ function PublicationPage() {
 
       {/* Articles List */}
       <div className="space-y-10">
-        {currentArticles
-          .filter((article) => article !== null)
-          .map(
-            ({
-              id: articleId,
-              title,
-              content,
-              author,
-              createdAt,
-              updatedAt,
-              TotalDislikes,
-              TotalComments,
-            }) => (
-              <motion.div
-                key={articleId}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
-                  transition: {
-                    duration: 0.2,
-                    ease: "easeOut",
-                  },
-                }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
-                onClick={() => handlePostClick(articleId)}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-                      <Skull className="h-6 w-6 text-purple-400" />
+        {hasArticles ? (
+          currentArticles
+            .filter((article) => article !== null)
+            .map(
+              ({
+                id: articleId,
+                title,
+                content,
+                author,
+                createdAt,
+                updatedAt,
+                TotalDislikes,
+                TotalComments,
+              }) => (
+                <motion.div
+                  key={articleId}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                  whileHover={{
+                    scale: 1.05,
+                    boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+                    transition: {
+                      duration: 0.2,
+                      ease: "easeOut",
+                    },
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
+                  onClick={() => handlePostClick(articleId)}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                        <Skull className="h-6 w-6 text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-purple-400 font-semibold">
+                          {author.username}
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                          Le {""}
+                          {updatedAt
+                            ? new Date(parseInt(updatedAt, 10))
+                                .toLocaleString()
+                                .replace(" ", " à ")
+                            : new Date(parseInt(createdAt ?? "0", 10))
+                                .toLocaleString()
+                                .replace(" ", " à ")}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-purple-400 font-semibold">
-                        {author.username}
-                      </h3>
-                      <p className="text-gray-500 text-sm">
-                        Le {""}
-                        {updatedAt
-                          ? new Date(parseInt(updatedAt, 10))
-                              .toLocaleString()
-                              .replace(" ", " à ")
-                          : new Date(parseInt(createdAt ?? "0", 10))
-                              .toLocaleString()
-                              .replace(" ", " à ")}
-                      </p>
-                    </div>
-                  </div>
 
-                  {author.id === user?.id && (
-                    <div className="relative">
-                      <button
-                        className="text-gray-500 hover:text-purple-400"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowMenu(
-                            articleId === showMenu ? null : articleId
-                          );
-                        }}
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
-
-                      {showMenu === articleId && (
-                        <motion.div
-                          ref={menuRef}
-                          initial={{ opacity: 0, scale: 0.95, x: 20 }}
-                          animate={{ opacity: 1, scale: 1, x: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, x: 20 }}
-                          transition={{ duration: 0.2, ease: "easeOut" }}
-                          className="absolute top-0 right-5 w-36 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-2 z-10"
+                    {author.id === user?.id && (
+                      <div className="relative">
+                        <button
+                          className="text-gray-500 hover:text-purple-400"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(
+                              articleId === showMenu ? null : articleId
+                            );
+                          }}
                         >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteArticle(articleId);
-                              setShowMenu(null);
-                            }}
-                            className="flex items-center space-x-2 text-red-500 hover:text-red-400"
+                          <MoreVertical className="h-5 w-5" />
+                        </button>
+
+                        {showMenu === articleId && (
+                          <motion.div
+                            ref={menuRef}
+                            initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                            animate={{ opacity: 1, scale: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, x: 20 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="absolute top-0 right-5 w-36 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-2 z-10"
                           >
-                            <Trash2 className="h-5 w-5" />
-                            <span>Supprimer</span>
-                          </button>
-                          <hr className="border-gray-700" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Gérer la modification
-                              setShowMenu(null);
-                            }}
-                            className="flex items-center space-x-2 text-purple-500 hover:text-purple-400"
-                          >
-                            <Edit2 className="h-5 w-5" />
-                            <span>Modifier</span>
-                          </button>
-                        </motion.div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <h1 className="text-2xl font-semibold text-gray-100 mb-4">
-                  {title}
-                </h1>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteArticle(articleId);
+                                setShowMenu(null);
+                              }}
+                              className="flex items-center space-x-2 text-red-500 hover:text-red-400 w-full"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                              <span>Supprimer</span>
+                            </button>
+                            <hr className="border-gray-700" />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Gérer la modification
+                                setShowMenu(null);
+                              }}
+                              className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
+                            >
+                              <Edit2 className="h-5 w-5" />
+                              <span>Modifier</span>
+                            </button>
+                          </motion.div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <h1 className="text-2xl font-semibold text-gray-100 mb-4">
+                    {title}
+                  </h1>
 
-                <p className="text-gray-300 mb-4 whitespace-pre-wrap">
-                  {content}
-                </p>
+                  <p className="text-gray-300 mb-4 whitespace-pre-wrap">
+                    {content}
+                  </p>
 
-                <div className="flex items-center space-x-6 text-gray-500">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex items-center space-x-2 ${
-                      user && userDislikes[articleId]
-                        ? "text-purple-400"
-                        : "text-gray-500"
-                    }`}
-                    onClick={(e) => handleDislike(e, articleId)}
-                  >
-                    <ThumbsDown className="h-5 w-5" />
-                    <span>{TotalDislikes}</span>
-                  </motion.button>
+                  <div className="flex items-center space-x-6 text-gray-500">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`flex items-center space-x-2 ${
+                        user && userDislikes[articleId]
+                          ? "text-purple-400"
+                          : "text-gray-500"
+                      }`}
+                      onClick={(e) => handleDislike(e, articleId)}
+                    >
+                      <ThumbsDown className="h-5 w-5" />
+                      <span>{TotalDislikes}</span>
+                    </motion.button>
 
-                  <button
-                    className="flex items-center space-x-2 hover:text-purple-400"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePostClick(articleId);
-                    }}
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                    <span>{TotalComments}</span>
-                  </button>
+                    <button
+                      className="flex items-center space-x-2 hover:text-purple-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePostClick(articleId);
+                      }}
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                      <span>{TotalComments}</span>
+                    </button>
 
-                  <button
-                    className="flex items-center space-x-2 hover:text-purple-400"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    {/* <Share2 className="h-5 w-5" /> */}
-                  </button>
-                </div>
-              </motion.div>
+                    <button
+                      className="flex items-center space-x-2 hover:text-purple-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      {/* <Share2 className="h-5 w-5" /> */}
+                    </button>
+                  </div>
+                </motion.div>
+              )
             )
-          )}
+        ) : (
+          <p className="text-center text-gray-400">Aucun article trouvé.</p>
+        )}
       </div>
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">
         <button
           onClick={handlePrevPage}
-          disabled={currentPage === 1}
+          disabled={!hasArticles || currentPage === 1}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
           Précédent
@@ -513,7 +538,7 @@ function PublicationPage() {
         </span>
         <button
           onClick={handleNextPage}
-          disabled={currentPage === totalPages}
+          disabled={!hasArticles || currentPage === totalPages}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
           Suivant

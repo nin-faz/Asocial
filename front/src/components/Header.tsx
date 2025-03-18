@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Search,
   Skull,
@@ -9,11 +9,11 @@ import {
   Bomb,
   LogOut,
   User,
-  PenSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useSearch } from "../context/SearchContext";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -32,6 +32,16 @@ const Header = () => {
     navigate("/");
     setShowUserMenu(false);
   };
+
+  const { pathname } = useLocation();
+  const { searchTerm, setSearchTerm } = useSearch();
+
+  // Vide le champ quand on quitte /publications
+  useEffect(() => {
+    if (pathname !== "/publications" && searchTerm !== "") {
+      setSearchTerm("");
+    }
+  }, [pathname]);
 
   return (
     <motion.header
@@ -54,46 +64,52 @@ const Header = () => {
             </span>
           </motion.div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <motion.div
-              className={`flex items-center transition-colors cursor-pointer ${
-                location.pathname === "/publications"
-                  ? "text-purple-400"
-                  : "text-gray-400 hover:text-purple-400"
-              }`}
-              whileHover={{ scale: 1.1 }}
-              onClick={() => navigate("/publications")}
-            >
-              <Home className="h-7 w-7" />
-              <span className="ml-1">Publications</span>
-            </motion.div>
-            {!user ? (
+          <div className="hidden md:flex items-center justify-between w-full px-14">
+            {/* Navigation */}
+            <nav className="flex items-center space-x-8">
               <motion.div
                 className={`flex items-center transition-colors cursor-pointer ${
-                  location.pathname === "/auth"
+                  pathname === "/publications"
                     ? "text-purple-400"
                     : "text-gray-400 hover:text-purple-400"
                 }`}
                 whileHover={{ scale: 1.1 }}
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/publications")}
               >
-                <Bomb className="h-7 w-7" />
-                <span className="ml-1">Chaos</span>
+                <Home className="h-7 w-7" />
+                <span className="ml-1">Publications</span>
               </motion.div>
-            ) : null}
-          </nav>
+              {!user ? (
+                <motion.div
+                  className={`flex items-center transition-colors cursor-pointer ${
+                    pathname === "/auth"
+                      ? "text-purple-400"
+                      : "text-gray-400 hover:text-purple-400"
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => navigate("/auth")}
+                >
+                  <Bomb className="h-7 w-7" />
+                  <span className="ml-1">Chaos</span>
+                </motion.div>
+              ) : null}
+            </nav>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search for chaos..."
-                className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
-              />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-            </div>
+            {/* Search Bar */}
+            {pathname === "/publications" && (
+              <div className="flex-auto max-w-lg mr-24">
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder="Search for chaos..."
+                    className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Actions */}
@@ -115,9 +131,7 @@ const Header = () => {
               <div className="relative">
                 <motion.button
                   className={`flex items-center justify-center h-8 w-8 rounded-full bg-gray-800 hover:bg-purple-900 ${
-                    location.pathname === "/profile"
-                      ? "ring-2 ring-purple-500"
-                      : ""
+                    pathname === "/profile" ? "ring-2 ring-purple-500" : ""
                   }`}
                   whileHover={{ scale: 1.1 }}
                   onClick={() => setShowUserMenu(!showUserMenu)}

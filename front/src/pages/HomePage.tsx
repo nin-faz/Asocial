@@ -1,9 +1,17 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 function HomePage() {
   const navigate = useNavigate();
+
+  const authContext = useContext(AuthContext);
+  if (!authContext) {
+    throw new Error("AuthContext is null");
+  }
+
+  const { user } = authContext;
 
   useEffect(() => {
     document.title = "Accueil";
@@ -44,10 +52,12 @@ function HomePage() {
               transition: { duration: 0.15 },
             }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/auth")}
+            onClick={() => {
+              !user ? navigate("/auth") : navigate("/publications");
+            }}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Rejoindre le chaos
+            {!user ? "Rejoindre le" : "Participier au"} chaos
           </motion.button>
           <motion.button
             transition={{ delay: 0.2 }}

@@ -10,6 +10,7 @@ export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
       include: {
         author: true,
         dislikes: true,
+        comments: true,
         _count: { select: { dislikes: true, comments: true } },
       },
     });

@@ -22,13 +22,18 @@ import {
 } from "../mutations";
 import {
   FIND_ARTICLES,
-  FIND_DISLIKES_BY_USER_ID,
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
   FIND_ARTICLE_BY_MOST_DISLIKED,
 } from "../queries";
 import { FindArticlesQuery } from "../gql/graphql";
 import { toast } from "react-toastify";
 import { AuthContext } from "../context/AuthContext";
 import { useSearch } from "../context/SearchContext";
+import {
+  showArticleCreatedToast,
+  showArticleDeletedToast,
+  showLoginRequiredToast,
+} from "../utils/customToasts";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -37,27 +42,6 @@ function PublicationPage() {
   }
 
   const { token, user } = authContext;
-
-  const isNotLogin = (action: "dislike" | "publish") => {
-    const messages = {
-      dislike: [
-        "Tu veux semer le chaos ? Connecte-toi d'abord, rebelle.",
-        "Pas de dislike sans identité... Connecte-toi et libère ta haine.",
-        "L'anarchie a ses règles : connecte-toi pour disliker.",
-        "Tu crois pouvoir disliker incognito ? Rejoins le désordre connecté.",
-      ],
-      publish: [
-        "Pas de publication sans identité... Connecte-toi et crée du chaos.",
-        "Les idées n'ont pas de visage sans connexion... Connecte-toi pour publier.",
-        "Pour faire entendre ta voix, tu dois être connecté.",
-        "Rejoins le mouvement, publie ton cri dans le néant après t'être connecté.",
-      ],
-    };
-
-    const randomMessage =
-      messages[action][Math.floor(Math.random() * messages[action].length)];
-    toast.warn(randomMessage);
-  };
 
   const navigate = useNavigate();
 
@@ -139,13 +123,8 @@ function PublicationPage() {
       });
 
       if (response.data?.createArticle?.success) {
-        toast.success(
-          "Un nouveau cri dans le néant. Ton article est en ligne.",
-          {
-            icon: <Megaphone size={24} color="#f0aaff" />,
-          }
-        );
-        console.log("Article created successfully!");
+        showArticleCreatedToast();
+        console.log("Article crée avec succès !");
 
         await refetchArticles();
         await refetechMostDislikedArticles();
@@ -197,10 +176,7 @@ function PublicationPage() {
       });
 
       if (response.data?.deleteArticle?.success) {
-        toast.success("Bam! Article vaporisé ! 💥", {
-          icon: <Bomb size={24} color="#f0aaff" />,
-          style: { background: "#2a0134", color: "#f0aaff" },
-        });
+        showArticleDeletedToast();
         if (sortOption === "popular") {
           await refetechMostDislikedArticles();
         } else {
@@ -228,7 +204,7 @@ function PublicationPage() {
   };
 
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
-    FIND_DISLIKES_BY_USER_ID,
+    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
     {
       variables: { userId: user?.id! },
       skip: !user?.id,
@@ -257,8 +233,10 @@ function PublicationPage() {
 
     // Vérifie les dislikes récupérés depuis la requête GraphQL
     if (dislikeUser?.getDislikesByUserId) {
-      dislikeUser.getDislikesByUserId.forEach(({ article }) => {
-        dislikesMap[article.id] = true;
+      dislikeUser.getDislikesByUserId.forEach((dislike) => {
+        if (dislike?.article) {
+          dislikesMap[dislike.article.id] = true;
+        }
       });
     }
 
@@ -277,11 +255,15 @@ function PublicationPage() {
     }
 
     if (!user) {
-      isNotLogin("dislike");
+      showLoginRequiredToast("dislike");
       return;
     }
 
     try {
+      setUserDislikes((prev) => ({
+        ...prev,
+        [articleId]: !prev[articleId], // Inverse le dislike localement
+      }));
       if (userDislikes[articleId]) {
         // Supprime le dislike
         await deleteDislike({ variables: { articleId, userId: user.id! } });

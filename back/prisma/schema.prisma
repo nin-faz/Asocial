@@ -28,9 +28,9 @@ model Dislike {
   id        String   @id @unique @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String
-  article   Article? @relation(fields: [articleId], references: [id])
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String?
-  comment   Comment? @relation(fields: [commentId], references: [id])
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   commentId String?
 }
 
@@ -54,4 +54,5 @@ model Comment {
   article  Article? @relation(fields: [articleId], references: [id])
   articleId String?
   dislikes    Dislike[]
+  createdAt DateTime @default(now())
 }

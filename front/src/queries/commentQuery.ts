@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client";
+import { graphql } from "../gql";
 
-export const GET_COMMENTS = gql`
+export const GET_COMMENTS = graphql(`
   query GetComments($articleId: ID!) {
     getComments(articleId: $articleId) {
       id
@@ -9,6 +9,13 @@ export const GET_COMMENTS = gql`
         username
         id
       }
+      createdAt
+      dislikes {
+        user {
+          id
+        }
+      }
+      TotalDislikes
     }
   }
-`;
+`);

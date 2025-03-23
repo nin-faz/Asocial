@@ -1,4 +1,3 @@
-import { gql } from "@apollo/client";
 import { graphql } from "../gql";
 
 export const FIND_ARTICLES = graphql(`
@@ -32,11 +31,19 @@ export const FIND_ARTICLE_BY_ID = graphql(`
       title
       content
       author {
-        username
         id
+        username
       }
       createdAt
       updatedAt
+      TotalDislikes
+      TotalComments
+      dislikes {
+        id
+        user {
+          id
+        }
+      }
     }
   }
 `);

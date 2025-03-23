@@ -47,7 +47,7 @@ export const resolvers: Resolvers = {
   },
   Dislike: {
     article: (parent, _, { dataSources: { db } }) => {
-      console.log("parent", parent);
+      console.log("parent article", parent);
       if (!parent.articleId) return null;
       return db.article.findUnique({
         where: { id: parent.articleId },
@@ -57,9 +57,13 @@ export const resolvers: Resolvers = {
       });
     },
     comment: (parent, _, { dataSources: { db } }) => {
+      console.log("parent comment", parent);
       if (!parent.commentId) return null;
       return db.comment.findUnique({
         where: { id: parent.commentId },
+        include: {
+          author: true,
+        },
       });
     },
   },

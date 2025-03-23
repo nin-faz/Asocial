@@ -10,7 +10,9 @@ export const findArticleById: NonNullable<
       },
       include: {
         author: true,
-        _count: { select: { dislikes: true } },
+        dislikes: true,
+        comments: true,
+        _count: { select: { dislikes: true, comments: true } },
       },
     });
 
@@ -21,6 +23,7 @@ export const findArticleById: NonNullable<
     return {
       ...article,
       TotalDislikes: article._count.dislikes,
+      TotalComments: article._count.comments,
     };
   } catch (error) {
     throw new Error(`Failed to fetch articles : ${error}`);

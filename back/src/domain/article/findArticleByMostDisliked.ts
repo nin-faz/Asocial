@@ -8,6 +8,7 @@ export const findArticleByMostDisliked: NonNullable<
       include: {
         author: true,
         dislikes: true,
+        comments: true,
         _count: { select: { dislikes: true, comments: true } },
       },
     });

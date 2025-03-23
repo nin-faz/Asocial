@@ -24,3 +24,21 @@ export const DELETE_ARTICLE_DISLIKE = graphql(`
     }
   }
 `);
+
+export const ADD_COMMENT_DISLIKE = graphql(`
+  mutation AddCommentDislike($commentId: ID!, $userId: ID!) {
+    addCommentDislike(commentId: $commentId, userId: $userId) {
+      id
+    }
+  }
+`);
+
+export const DELETE_COMMENT_DISLIKE = graphql(`
+  mutation DeleteCommentDislike($commentId: ID!, $userId: ID!) {
+    deleteCommentDislike(commentId: $commentId, userId: $userId) {
+      code
+      success
+      message
+    }
+  }
+`);

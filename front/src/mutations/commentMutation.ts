@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client";
+import { graphql } from "../gql";
 
-export const ADD_COMMENT = gql`
+export const ADD_COMMENT = graphql(`
   mutation AddComment($content: String!, $userId: ID!, $articleId: ID!) {
     addComment(content: $content, userId: $userId, articleId: $articleId) {
       id
@@ -11,9 +11,9 @@ export const ADD_COMMENT = gql`
       }
     }
   }
-`;
+`);
 
-export const DELETE_COMMENT = gql`
+export const DELETE_COMMENT = graphql(`
   mutation DeleteComment($commentId: ID!) {
     deleteComment(commentId: $commentId) {
       code
@@ -21,4 +21,4 @@ export const DELETE_COMMENT = gql`
       message
     }
   }
-`;
+`);

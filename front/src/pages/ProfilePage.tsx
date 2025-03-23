@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FIND_ARTICLES,
   GET_USER_BY_ID,
-  FIND_DISLIKES_BY_USER_ID,
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
 } from "../queries";
 import { Article } from "../gql/graphql";
 import { UserSummary } from "../gql/graphql";
@@ -59,7 +59,7 @@ const ProfilePage = () => {
 
   // const article = useQuery<{ findArticles: Article[] }>(FIND_ARTICLES);
   const articleLiked = useQuery<{ getDislikesByUserId: Dislike[] }>(
-    FIND_DISLIKES_BY_USER_ID,
+    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
     {
       variables: { userId: user?.id },
     }

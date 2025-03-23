@@ -38,6 +38,7 @@ export type Comment = {
   TotalDislikes?: Maybe<Scalars['Int']['output']>;
   author: User;
   content: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['String']['output']>;
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
 };
@@ -430,6 +431,7 @@ export type CommentResolvers<ContextType = Context, ParentType extends Resolvers
   TotalDislikes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

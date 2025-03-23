@@ -1,6 +1,11 @@
 import { CREATE_USER, SIGN_IN, UPDATE_USER } from "./userMutation";
 import { CREATE_ARTICLE, DELETE_ARTICLE } from "./articleMutation";
-import { ADD_ARTICLE_DISLIKE, DELETE_ARTICLE_DISLIKE } from "./dislikeMutation";
+import {
+  ADD_ARTICLE_DISLIKE,
+  DELETE_ARTICLE_DISLIKE,
+  ADD_COMMENT_DISLIKE,
+  DELETE_COMMENT_DISLIKE,
+} from "./dislikeMutation";
 import { ADD_COMMENT, DELETE_COMMENT } from "./commentMutation";
 
 export {
@@ -11,6 +16,8 @@ export {
   DELETE_ARTICLE_DISLIKE,
   CREATE_ARTICLE,
   DELETE_ARTICLE,
+  ADD_COMMENT_DISLIKE,
+  DELETE_COMMENT_DISLIKE,
   ADD_COMMENT,
   DELETE_COMMENT,
 };

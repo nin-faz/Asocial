@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { CREATE_USER, SIGN_IN } from "../mutations";
+import { showLoginToast, showWelcomeToast } from "../utils/customToasts";
 
 interface CreateUserResponse {
   createUser: {
@@ -62,19 +63,11 @@ function AuthPage() {
 
         if (signInResponse.data?.signIn?.success) {
           login(signInResponse.data.signIn.token);
-          toast.success(
-            "T’as fait le pire choix possible. Mais bon, bienvenue quand même.",
-            {
-              icon: <Skull size={24} color="#f0aaff" />,
-              style: { background: "#2a0134", color: "#f0aaff" },
-            }
-          );
+
+          showWelcomeToast();
+          console.log("inscription réussie, bienvenue dans le chaos !");
+
           navigate("/publications");
-        } else {
-          toast.success("Inscription réussie, tu y es presque ...", {
-            style: { background: "#2a0134", color: "#f0aaff" },
-          });
-          navigate("/auth");
         }
       } else {
         toast.error(
@@ -101,21 +94,10 @@ function AuthPage() {
 
       if (response.data?.signIn?.success) {
         login(response.data.signIn.token);
-        const darkMessages = [
-          "Revoilà l'anti-héros... enfin, juste un type paumé.",
-          "Bienvenue dans l'abîme. L'espoir n'a jamais eu sa place ici.",
-          "Encore toi ? On a toujours pas activé l’option éjection.",
-          "Tu t’accroches, hein ? C’est presque touchant.",
-          "Connexion réussie... mais à quoi bon ?",
-        ];
 
-        toast.success(
-          darkMessages[Math.floor(Math.random() * darkMessages.length)],
-          {
-            icon: <Flame size={24} color="#f0aaff" />,
-            style: { background: "#2a0134", color: "#f0aaff" },
-          }
-        );
+        showLoginToast();
+        console.log("connexion réussie, bienvenue dans le chaos !");
+
         navigate("/publications");
       } else {
         toast.error(response.data?.signIn?.message || "Échec de la connexion");

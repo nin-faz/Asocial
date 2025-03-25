@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { motion } from "framer-motion";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import {
   FIND_ARTICLE_BY_ID,
@@ -16,6 +16,7 @@ import {
   DELETE_COMMENT,
   ADD_COMMENT_DISLIKE,
   DELETE_COMMENT_DISLIKE,
+  UPDATE_ARTICLE,
 } from "../mutations";
 import {
   ThumbsDown,
@@ -33,10 +34,12 @@ import { AuthContext } from "../context/AuthContext";
 import { GetCommentsQuery } from "../gql/graphql";
 import {
   showArticleDeletedToast,
+  showArticleUpdatedToast,
   showCommentAddedToast,
   showCommentDeletedToast,
   showLoginRequiredToast,
 } from "../utils/customToasts";
+import Loader from "../components/Loader";
 
 const PublicationDetailsPage = () => {
   const authContext = useContext(AuthContext);
@@ -48,6 +51,15 @@ const PublicationDetailsPage = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const isEditMode = queryParams.get("edit") === "true";
+
+  useEffect(() => {
+    if (isEditMode) {
+      setIsEditing(true);
+    }
+  }, [isEditMode]);
 
   const { data: articleData, refetch: refetchArticleData } = useQuery(
     FIND_ARTICLE_BY_ID,
@@ -313,6 +325,54 @@ const PublicationDetailsPage = () => {
     }
   };
 
+  const [updateArticle] = useMutation(UPDATE_ARTICLE);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(article?.title || "");
+  const [editedContent, setEditedContent] = useState(article?.content || "");
+
+  useEffect(() => {
+    if (article) {
+      setEditedTitle(article.title || "");
+      setEditedContent(article.content || "");
+    }
+  }, [article]);
+
+  const handleUpdateArticle = async () => {
+    try {
+      const response = await updateArticle({
+        variables: {
+          id: article?.id!,
+          title: editedTitle, // Ajout du titre
+          content: editedContent,
+        },
+        context: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      });
+
+      if (response.data?.updateArticle?.success) {
+        console.log("Article mis à jour avec succès !");
+        setIsEditing(false);
+        showArticleUpdatedToast();
+        refetchArticleData();
+      } else {
+        console.error(
+          response?.data?.updateArticle?.message ||
+            "Échec de la mise à jour de l'article."
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) {
+        toast.error("Une erreur est survenue : " + err.message);
+      } else {
+        toast.error("Une erreur est survenue");
+      }
+    }
+  };
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       {/* Back Button */}
@@ -354,11 +414,8 @@ const PublicationDetailsPage = () => {
               </p>
             </div>
           </div>
-          {/* <button className="text-gray-500 hover:text-purple-400">
-            <MoreVertical className="h-5 w-5" />
-          </button> */}
 
-          {article?.author.id === user?.id && (
+          {article?.author.id === user?.id && !isEditing && (
             <div className="relative">
               <button
                 className="text-gray-500 hover:text-purple-400"
@@ -396,7 +453,7 @@ const PublicationDetailsPage = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Gérer la modification
+                      setIsEditing(true);
                       setShowMenu(null);
                     }}
                     className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
@@ -411,9 +468,57 @@ const PublicationDetailsPage = () => {
         </div>
 
         {/* Post Content */}
-        <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
-          {article?.content}
-        </p>
+        {isEditing ? (
+          <div className="flex flex-col space-y-4">
+            {/* Champ d'édition du titre */}
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+              placeholder="Titre de l'article"
+            />
+
+            {/* Champ d'édition du contenu */}
+            <textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+            />
+
+            <div className="flex justify-end space-x-4 pb-4">
+              <button
+                onClick={() => {
+                  if (article?.content === "") {
+                    setEditedContent("");
+                  }
+                  if (article?.title === "") {
+                    setEditedTitle("");
+                  }
+                  setIsEditing(false);
+                }}
+                className="text-red-500 hover:text-red-400"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleUpdateArticle}
+                className="text-purple-400 hover:text-purple-300"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-xl font-semibold text-purple-400 mb-2">
+              {article?.title}
+            </h2>
+            <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
+              {article?.content}
+            </p>
+          </>
+        )}
 
         {/* Post Image */}
         {/* {post.image && (
@@ -428,8 +533,8 @@ const PublicationDetailsPage = () => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className={`flex items-center space-x-2 ${
-                user && userArticleDislikes[article?.id]
+              className={`flex items-center space-x-2 hover:text-purple-400 ${
+                user && userArticleDislikes[article?.id!]
                   ? "text-purple-400"
                   : "text-gray-500"
               }`}
@@ -546,7 +651,7 @@ const PublicationDetailsPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex items-center space-x-2 ${
+                    className={`flex items-center space-x-2 hover:text-purple-400 ${
                       userCommentDislikes[comment?.id!]
                         ? "text-purple-400"
                         : "text-gray-500"

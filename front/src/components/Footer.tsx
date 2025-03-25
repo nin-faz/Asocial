@@ -1,6 +1,5 @@
-import React from "react";
 import { motion } from "framer-motion";
-import { Skull, Github, Twitter, Mail, ExternalLink } from "lucide-react";
+import { Github, Twitter, Mail, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -11,7 +10,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center mb-4">
-              <Skull className="h-8 w-8 text-purple-500" />
+              <img src="/logo.svg" alt="Logo" className="h-9 w-10" />
               <span className="ml-2 text-2xl font-bold text-purple-400">
                 Asocial
               </span>

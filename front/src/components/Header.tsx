@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Search,
   Skull,
@@ -17,7 +17,6 @@ import { useSearch } from "../context/SearchContext";
 
 const Header = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 

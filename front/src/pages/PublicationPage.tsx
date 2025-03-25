@@ -1,17 +1,14 @@
-import React, { use, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
-  Share2,
   Skull,
   MoreVertical,
-  Megaphone,
   SortDesc,
   Trash2,
   Edit2,
-  Bomb,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import {
@@ -57,8 +54,9 @@ function PublicationPage() {
   >;
 
   const [sortOption, setSortOption] = useState("recent");
-  const displayedArticles: ArticleType[] =
-    sortOption === "recent" ? articles : mostDisliked;
+  const displayedArticles: ArticleType[] = (
+    sortOption === "recent" ? articles : mostDisliked
+  ).filter((article): article is ArticleType => article !== null);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -105,7 +103,7 @@ function PublicationPage() {
 
   const handleCreateArticle = async () => {
     if (!user) {
-      isNotLogin("publish");
+      showLoginRequiredToast("publish");
       return;
     }
 
@@ -145,6 +143,10 @@ function PublicationPage() {
         toast.error("Une erreur est survenue");
       }
     }
+  };
+
+  const handleEditArticle = (articleId: string) => {
+    navigate(`/publications/${articleId}?edit=true`);
   };
 
   const [showMenu, setShowMenu] = useState<string | null>(null);
@@ -330,7 +332,14 @@ function PublicationPage() {
               <Skull className="h-6 w-6 text-purple-400" />
             </div>
           </div>
-          <div className="flex-grow">
+          <div className="flex flex-col space-y-4 w-full">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+              placeholder="Titre de l'article"
+            />
             <textarea
               placeholder="Partagez vos pensées les plus sombres..."
               className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
@@ -442,7 +451,7 @@ function PublicationPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Gérer la modification
+                                handleEditArticle(articleId);
                                 setShowMenu(null);
                               }}
                               className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
@@ -467,7 +476,7 @@ function PublicationPage() {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`flex items-center space-x-2 ${
+                      className={`flex items-center space-x-2 hover:text-purple-400 ${
                         user && userDislikes[articleId]
                           ? "text-purple-400"
                           : "text-gray-500"

@@ -15,6 +15,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
     "\n  mutation CreateArticle($title: String, $content: String!) {\n    createArticle(title: $title, content: $content) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n": typeof types.CreateArticleDocument,
+    "\n  mutation updateArticle($id: ID!, $title: String, $content: String!) {\n    updateArticle(id: $id, title: $title, content: $content) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.UpdateArticleDocument,
     "\n  mutation deleteArticle($id: ID!) {\n    deleteArticle(id: $id) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteArticleDocument,
     "\n  mutation AddComment($content: String!, $userId: ID!, $articleId: ID!) {\n    addComment(content: $content, userId: $userId, articleId: $articleId) {\n      id\n      content\n      author {\n        id\n        username\n      }\n    }\n  }\n": typeof types.AddCommentDocument,
     "\n  mutation DeleteComment($commentId: ID!) {\n    deleteComment(commentId: $commentId) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteCommentDocument,
@@ -36,6 +37,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  mutation CreateArticle($title: String, $content: String!) {\n    createArticle(title: $title, content: $content) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n": types.CreateArticleDocument,
+    "\n  mutation updateArticle($id: ID!, $title: String, $content: String!) {\n    updateArticle(id: $id, title: $title, content: $content) {\n      code\n      success\n      message\n    }\n  }\n": types.UpdateArticleDocument,
     "\n  mutation deleteArticle($id: ID!) {\n    deleteArticle(id: $id) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteArticleDocument,
     "\n  mutation AddComment($content: String!, $userId: ID!, $articleId: ID!) {\n    addComment(content: $content, userId: $userId, articleId: $articleId) {\n      id\n      content\n      author {\n        id\n        username\n      }\n    }\n  }\n": types.AddCommentDocument,
     "\n  mutation DeleteComment($commentId: ID!) {\n    deleteComment(commentId: $commentId) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteCommentDocument,
@@ -74,6 +76,10 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateArticle($title: String, $content: String!) {\n    createArticle(title: $title, content: $content) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateArticle($title: String, $content: String!) {\n    createArticle(title: $title, content: $content) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation updateArticle($id: ID!, $title: String, $content: String!) {\n    updateArticle(id: $id, title: $title, content: $content) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation updateArticle($id: ID!, $title: String, $content: String!) {\n    updateArticle(id: $id, title: $title, content: $content) {\n      code\n      success\n      message\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

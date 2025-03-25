@@ -7,7 +7,6 @@ import {
   Megaphone,
   Bomb,
 } from "lucide-react";
-import React from "react";
 
 const toastStyle = {
   background: "#2a0134",
@@ -76,7 +75,7 @@ export const showWelcomeToast = () => {
   );
 };
 
-// --- Article publié ---
+// Article
 export const showArticleCreatedToast = () => {
   toast.success("Un nouveau cri dans le néant. Ton article est en ligne.", {
     icon: <Megaphone size={24} color="#f0aaff" />,
@@ -84,7 +83,13 @@ export const showArticleCreatedToast = () => {
   });
 };
 
-// --- Article supprimé ---
+export const showArticleUpdatedToast = () => {
+  toast.success("Mise à jour appliquée. Retour au néant.", {
+    icon: <Megaphone size={24} color="#f0aaff" />,
+    style: toastStyle,
+  });
+};
+
 export const showArticleDeletedToast = () => {
   toast.success("Bam! Article vaporisé ! 💥", {
     icon: <Bomb size={24} color="#f0aaff" />,
@@ -92,7 +97,7 @@ export const showArticleDeletedToast = () => {
   });
 };
 
-// --- Commentaire ajouté ---
+// Comment
 export const showCommentAddedToast = () => {
   toast.success("Ton cri dans le vide a été publié.", {
     icon: <MessageCircle size={24} color="#f0aaff" />,
@@ -100,7 +105,6 @@ export const showCommentAddedToast = () => {
   });
 };
 
-// --- Commentaire supprimé ---
 export const showCommentDeletedToast = () => {
   toast.success(
     "Ton commentaire a été effacé... comme s'il n'avait jamais existé.",

@@ -10,20 +10,19 @@ import {
   Link as LinkIcon,
   Save,
   X,
+  Share2,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
-import { useMutation } from "@apollo/client";
-import { useQuery } from "@apollo/client";
-import { UPDATE_USER } from "../mutations/userMutation";
+import { useQuery, useMutation } from "@apollo/client";
+import { UPDATE_USER } from "../mutations";
 import { useNavigate } from "react-router-dom";
 import {
   FIND_ARTICLES,
   GET_USER_BY_ID,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+  FIND_ARTICLES_BY_USER,
 } from "../queries";
-import { Article } from "../gql/graphql";
-import { UserSummary } from "../gql/graphql";
-import { Dislike } from "../gql/graphql";
+import { Article, UserSummary, Dislike } from "../gql/graphql";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -34,38 +33,43 @@ const ProfilePage = () => {
   const [error, setError] = useState("");
   const [numberOfPosts, setNumberOfPosts] = useState(0);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [articleDisliked, setArticleDisliked] = useState<Article[] | null>([]);
+  const [allArticleDisliked, setAllArticleDisliked] = useState<
+    Article[] | null
+  >([]);
   const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
   const [activeTab, setActiveTab] = useState("publications"); // State for active tab
 
-  const token = auth?.token || "";
+  if (!auth) return null;
 
-  const storedUser = sessionStorage.getItem("user");
-  const userToken = storedUser ? JSON.parse(storedUser) : null;
+  const { token, user, logout } = auth;
 
   useEffect(() => {
-    if (!auth?.token || !userToken) {
+    if (!token || !user) {
       console.warn("Utilisateur déconnecté, redirection...");
       navigate("/");
     }
-  }, [auth?.token, userToken, navigate]);
+  }, [token, user, navigate]);
 
-  const userInfos = useQuery<{ findUserById: UserSummary }>(GET_USER_BY_ID, {
-    variables: userToken ? { id: userToken.id } : undefined,
-    skip: !userToken,
-  });
-
-  const user: UserSummary | undefined = userInfos.data?.findUserById;
-
-  // const article = useQuery<{ findArticles: Article[] }>(FIND_ARTICLES);
-  const articleLiked = useQuery<{ getDislikesByUserId: Dislike[] }>(
-    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+  const { data: userInfos, refetch: refetchUserInfos } = useQuery(
+    GET_USER_BY_ID,
     {
-      variables: { userId: user?.id },
+      variables: { id: user?.id },
+      skip: !user,
     }
   );
 
-  console.log("articleLiked : ", articleLiked.data?.getDislikesByUserId);
+  const userInfosData = userInfos?.findUserById;
+
+  // const article = useQuery<{ findArticles: Article[] }>(FIND_ARTICLES);
+  const { data: articleDisliked, refetch: refetchArticleDisliked } = useQuery(
+    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+    {
+      variables: { userId: user?.id! },
+    }
+  );
+
+  const articleDislikedData = articleDisliked?.getDislikesByUserId;
+  console.log("Article liké : ", articleDislikedData);
 
   // useEffect(() => {
   //   setNumberOfPosts(0);
@@ -80,15 +84,15 @@ const ProfilePage = () => {
   // }, [article.data, user]);
 
   useEffect(() => {
-    if (articleLiked.data && user) {
-      setNumberOfPostDisliked(articleLiked.data.getDislikesByUserId.length);
-      setArticleDisliked(
-        articleLiked.data.getDislikesByUserId
-          .map((dislike) => dislike.article)
+    if (articleDislikedData && user) {
+      setNumberOfPostDisliked(articleDislikedData.length);
+      setAllArticleDisliked(
+        articleDislikedData
+          .map((dislike) => dislike?.article)
           .filter((article): article is Article => article !== null)
       );
     }
-  }, [articleLiked.data, user]);
+  }, [articleDislikedData, user]);
 
   const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
 
@@ -100,7 +104,7 @@ const ProfilePage = () => {
   }, [user]);
 
   const handleLogout = () => {
-    auth?.logout();
+    logout();
     navigate("/");
   };
 
@@ -150,6 +154,16 @@ const ProfilePage = () => {
     followers: 20,
     following: 15,
   };
+
+  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
+    FIND_ARTICLES_BY_USER,
+    {
+      variables: { userId: user?.id! },
+      skip: !user,
+    }
+  );
+
+  const articleByUserData = articleByUser?.findArticlesByUser;
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
@@ -246,10 +260,12 @@ const ProfilePage = () => {
 
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
-                  <div className="flex items-center gap-2">
+                  <button className="flex items-center space-x-2 hover:text-purple-400">
                     <MessageSquare className="h-5 w-5" />
-                    <span>{numberOfPosts} publications</span>
-                  </div>
+                    <span>
+                      {articleByUser?.findArticlesByUser.length} publications
+                    </span>
+                  </button>
                   <div className="flex items-center gap-2">
                     <ThumbsDown className="h-5 w-5" />
                     <span>{numberOfPostDisliked} dislikes reçus</span>
@@ -351,6 +367,75 @@ const ProfilePage = () => {
 
       {/* Feed */}
       <div className="mt-8 space-y-6">
+        {activeTab === "publications" && (
+          <div className="space-y-6 mt-4">
+            {articleByUserData && articleByUserData.length > 0 ? (
+              articleByUserData.map((article) => (
+                // <motion.div
+                //   key={article.id}
+                //   initial={{ opacity: 0, y: 20 }}
+                //   animate={{ opacity: 1, y: 0 }}
+                //   transition={{ delay: 0.1, duration: 0.5 }}
+                //   whileHover={{
+                //     scale: 1.05,
+                //     boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+                //     transition: {
+                //       duration: 0.2,
+                //       ease: "easeOut",
+                //     },
+                //   }}
+                //   whileTap={{ scale: 0.98 }}
+                //   className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
+                // >
+                <div className="p-4 bg-gray-900 rounded-lg border border-purple-900">
+                  <p className="text-gray-500 text-sm">
+                    Publié le {""}
+                    {article.updatedAt
+                      ? new Date(parseInt(article.updatedAt, 10))
+                          .toLocaleString()
+                          .replace(" ", " à ")
+                      : new Date(parseInt(article.createdAt ?? "0", 10))
+                          .toLocaleString()
+                          .replace(" ", " à ")}
+                  </p>
+                  <div className="py-2">
+                    <h2 className="text-xl font-semibold text-purple-400 mb-2">
+                      {article.title}
+                    </h2>
+                    <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
+                      {article.content}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-gray-500 border-t border-gray-800 pt-4">
+                    <div className="flex items-center space-x-6 text-gray-500">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center space-x-2 hover:text-purple-400"
+                      >
+                        <ThumbsDown className="h-5 w-5" />
+                        <span>{article.TotalDislikes}</span>
+                      </motion.button>
+                      <button className="flex items-center gap-2 hover:text-purple-400">
+                        <MessageSquare className="h-5 w-5" />
+                        <span>{article.TotalComments}</span>
+                      </button>
+                    </div>
+
+                    <button className="flex items-center space-x-2 hover:text-purple-400">
+                      <Share2 className="h-5 w-5" />
+                      <span>Partager</span>
+                    </button>
+                  </div>
+                  {/* </motion.div> */}
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">Aucune publication trouvée.</p>
+            )}
+          </div>
+        )}
+
         {/* Example Post */}
         {activeTab === "dislikes" && articleDisliked
           ? articleDisliked.map((article) => (
@@ -395,7 +480,7 @@ const ProfilePage = () => {
               </motion.div>
             ))
           : null}
-        {activeTab === "publications" &&
+        {/* {activeTab === "publications" &&
           articles.map((article) => (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -436,7 +521,7 @@ const ProfilePage = () => {
                 </div>
               </div>
             </motion.div>
-          ))}
+          ))} */}
       </div>
     </main>
   );

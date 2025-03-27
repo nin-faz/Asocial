@@ -68,3 +68,27 @@ export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
     }
   }
 `);
+
+export const FIND_ARTICLES_BY_USER = graphql(`
+  query FindArticlesByUser($userId: ID!) {
+    findArticlesByUser(userId: $userId) {
+      id
+      title
+      content
+      author {
+        id
+        username
+      }
+      createdAt
+      updatedAt
+      TotalDislikes
+      TotalComments
+      dislikes {
+        id
+        user {
+          id
+        }
+      }
+    }
+  }
+`);

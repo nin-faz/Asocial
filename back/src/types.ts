@@ -26,7 +26,7 @@ export type Article = {
   author: User;
   comments?: Maybe<Array<Maybe<Comment>>>;
   content: Scalars['String']['output'];
-  createdAt?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['String']['output'];
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
   title?: Maybe<Scalars['String']['output']>;
@@ -195,6 +195,7 @@ export type Query = {
   findArticleById?: Maybe<Article>;
   findArticleByMostDisliked?: Maybe<Array<Maybe<Article>>>;
   findArticles?: Maybe<Array<Maybe<Article>>>;
+  findArticlesByUser: Array<Article>;
   findUserById?: Maybe<UserSummary>;
   getComments?: Maybe<Array<Maybe<Comment>>>;
   getDislikesByArticleId?: Maybe<Array<Maybe<Dislike>>>;
@@ -206,6 +207,11 @@ export type Query = {
 
 export type QueryFindArticleByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryFindArticlesByUserArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -419,7 +425,7 @@ export type ArticleResolvers<ContextType = Context, ParentType extends Resolvers
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   comments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -509,6 +515,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   findArticleById?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticleByIdArgs, 'id'>>;
   findArticleByMostDisliked?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
+  findArticlesByUser?: Resolver<Array<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticlesByUserArgs, 'userId'>>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
   getDislikesByArticleId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByArticleIdArgs, 'articleId'>>;

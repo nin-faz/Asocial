@@ -464,9 +464,9 @@ function PublicationPage() {
                       </div>
                     )}
                   </div>
-                  <h1 className="text-2xl font-semibold text-gray-100 mb-4">
+                  <h2 className="text-xl font-semibold text-purple-400 mb-2">
                     {title}
-                  </h1>
+                  </h2>
 
                   <p className="text-gray-300 mb-4 whitespace-pre-wrap">
                     {content}

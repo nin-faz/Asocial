@@ -5,12 +5,13 @@ export const typeDefs = gql`
     findUserById(id: ID!): UserSummary
     findArticles: [Article]
     findArticleById(id: ID!): Article
-    getComments(articleId: ID!): [Comment]
     findArticleByMostDisliked: [Article]
+    findArticlesByUser(userId: ID!): [Article!]!
     getUserbyToken(token: String!): UserToken
     getDislikesByArticleId(articleId: ID!): [Dislike]
     getDislikesByCommentId(commentId: ID!): [Dislike]
     getDislikesByUserId(userId: ID!): [Dislike]
+    getComments(articleId: ID!): [Comment]
   }
 
   type Mutation {
@@ -128,7 +129,7 @@ export const typeDefs = gql`
     TotalDislikes: Int
     comments: [Comment]
     TotalComments: Int
-    createdAt: String
+    createdAt: String!
     updatedAt: String
   }
 

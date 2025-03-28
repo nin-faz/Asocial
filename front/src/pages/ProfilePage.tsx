@@ -29,13 +29,19 @@ import {
 import { toast } from "react-toastify";
 import { showLoginRequiredToast } from "../utils/customToasts";
 import { Article, UserSummary, Dislike } from "../gql/graphql";
+import PublicationDetailsPage from "./PublicationDetailsPage";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
+
+  const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
+
   const [isEditing, setIsEditing] = useState(false);
+
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+
   const [error, setError] = useState("");
   const [numberOfPosts, setNumberOfPosts] = useState(0);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -230,11 +236,9 @@ const ProfilePage = () => {
 
   const articleByUserData = articleByUser?.findArticlesByUser;
 
-  console.log("actives", activeTab);
-
-  articleByUserData?.map((article) => {
-    console.log("ici", article.dislikes); // Vérifie si "dislikes" existe bien pour chaque article
-  });
+  const handlePostClick = (articleId: string) => {
+    setSelectedArticle(articleId);
+  };
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
@@ -418,23 +422,13 @@ const ProfilePage = () => {
           </button>
           <button
             className={`pb-4 ${
-              activeTab === "reponses"
+              activeTab === "statistiques"
                 ? "text-purple-400 border-b-2 border-purple-500"
                 : "text-gray-500 hover:text-gray-300"
             }`}
-            onClick={() => setActiveTab("reponses")}
+            onClick={() => setActiveTab("statistiques")}
           >
-            Réponses
-          </button>
-          <button
-            className={`pb-4 ${
-              activeTab === "medias"
-                ? "text-purple-400 border-b-2 border-purple-500"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-            onClick={() => setActiveTab("medias")}
-          >
-            Médias
+            Statistiques
           </button>
         </nav>
       </div>
@@ -445,23 +439,24 @@ const ProfilePage = () => {
           <div className="space-y-6 mt-4">
             {articleByUserData && articleByUserData.length > 0 ? (
               articleByUserData.map((article) => (
-                // <motion.div
-                //   key={article.id}
-                //   initial={{ opacity: 0, y: 20 }}
-                //   animate={{ opacity: 1, y: 0 }}
-                //   transition={{ delay: 0.1, duration: 0.5 }}
-                //   whileHover={{
-                //     scale: 1.05,
-                //     boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
-                //     transition: {
-                //       duration: 0.2,
-                //       ease: "easeOut",
-                //     },
-                //   }}
-                //   whileTap={{ scale: 0.98 }}
-                //   className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
-                // >
-                <div className="p-4 bg-gray-900 rounded-lg border border-purple-900">
+                <motion.div
+                  key={article.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                  whileHover={{
+                    scale: 1.05,
+                    boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+                    transition: {
+                      duration: 0.2,
+                      ease: "easeOut",
+                    },
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePostClick(article.id)}
+                  className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
+                >
+                  {/* <div className="p-4 bg-gray-900 rounded-lg border border-purple-900"> */}
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
                       <Skull className="h-6 w-6 text-purple-400" />
@@ -511,15 +506,40 @@ const ProfilePage = () => {
                       <span>Partager</span>
                     </button>
                   </div>
-                  {/* </motion.div> */}
-                </div>
+                  {/* </div> */}
+                </motion.div>
               ))
             ) : (
               <p className="text-gray-500">Aucune publication trouvée.</p>
             )}
           </div>
         )}
+        {selectedArticle && (
+          <div className="fixed inset-0 min-h-screen bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            {" "}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto relative"
+            >
+              <button
+                onClick={() => setSelectedArticle(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-purple-400 z-10"
+              >
+                <X className="h-6 w-6" />
+              </button>
 
+              <div className="p-6">
+                <PublicationDetailsPage
+                  articleId={selectedArticle}
+                  isModal={true}
+                  onClose={() => setSelectedArticle(null)}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
         {/* Onglet Dislikes */}
         {activeTab === "dislikes" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
@@ -577,6 +597,9 @@ const ProfilePage = () => {
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
+                          onClick={(e) =>
+                            handleArticleDislike(e, dislike?.article?.id!)
+                          }
                           className="flex items-end space-x-2 text-purple-400"
                         >
                           <ThumbsDown className="h-5 w-5" />
@@ -592,92 +615,94 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {/* Example Post */}
-        {/* {activeTab === "dislikes" && articleDisliked
-          ? articleDisliked.map((article) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-900 rounded-lg p-6 border border-purple-900"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center flex-shrink-0">
-                    <Skull className="h-6 w-6 text-purple-400" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-purple-400 font-semibold">
-                        {user?.username}
-                      </span>
-                      <span className="text-gray-500">
-                        ·{" "}
-                        {article.updatedAt
-                          ? new Date(
-                              parseInt(article.updatedAt ?? "0", 10)
-                            ).toLocaleString()
-                          : new Date(
-                              parseInt(article.createdAt ?? "0", 10)
-                            ).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-gray-300 mb-4">{article.content}</p>
-                    <div className="flex items-center gap-6 text-gray-500">
-                      <button className="flex items-center gap-2 hover:text-purple-400">
-                        <ThumbsDown className="h-5 w-5" />
-                        <span>1.3K</span>
-                      </button>
-                      <button className="flex items-center gap-2 hover:text-purple-400">
-                        <MessageSquare className="h-5 w-5" />
-                        <span>42</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          : null} */}
-        {/* {activeTab === "publications" &&
-          articles.map((article) => (
+        {activeTab === "statistiques" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-gray-900 rounded-lg p-6 border border-purple-900"
             >
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center flex-shrink-0">
-                  <Skull className="h-6 w-6 text-purple-400" />
+              <h3 className="text-purple-400 font-semibold mb-2">
+                Activité totale
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Publications</span>
+                  <span className="text-purple-400">
+                    {articleByUserData?.length || 0}
+                  </span>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-purple-400 font-semibold">
-                      {user?.username}
-                    </span>
-                    <span className="text-gray-500">
-                      ·{" "}
-                      {article.updatedAt
-                        ? new Date(
-                            parseInt(article.updatedAt ?? "0", 10)
-                          ).toLocaleString()
-                        : new Date(
-                            parseInt(article.createdAt ?? "0", 10)
-                          ).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-300 mb-4">{article.content}</p>
-                  <div className="flex items-center gap-6 text-gray-500">
-                    <button className="flex items-center gap-2 hover:text-purple-400">
-                      <ThumbsDown className="h-5 w-5" />
-                      <span>1.3K</span>
-                    </button>
-                    <button className="flex items-center gap-2 hover:text-purple-400">
-                      <MessageSquare className="h-5 w-5" />
-                      <span>42</span>
-                    </button>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Dislikes donnés</span>
+                  <span className="text-purple-400">
+                    {numberOfPostDisliked}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Dislikes reçus</span>
+                  <span className="text-purple-400">
+                    {userInfosData?.TotalDislikes || 0}
+                  </span>
                 </div>
               </div>
             </motion.div>
-          ))} */}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+            >
+              <h3 className="text-purple-400 font-semibold mb-2">Engagement</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Commentaires reçus</span>
+                  <span className="text-purple-400">
+                    {userInfosData?.TotalComments || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Taux d'engagement</span>
+                  <span className="text-purple-400">
+                    {(
+                      (userInfosData?.TotalDislikes || 0) /
+                      (articleByUserData?.length || 1)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+            >
+              <h3 className="text-purple-400 font-semibold mb-2">
+                Dernière activité
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Dernière publication</span>
+                  <span className="text-purple-400">
+                    {articleByUserData && articleByUserData.length > 0
+                      ? new Date(
+                          parseInt(articleByUserData[0].createdAt)
+                        ).toLocaleDateString()
+                      : "Aucune"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Membre depuis</span>
+                  <span className="text-purple-400">
+                    {new Date(
+                      userInfosData?.createdAt || Date.now()
+                    ).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </main>
   );

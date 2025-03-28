@@ -43,7 +43,17 @@ import {
 } from "../utils/customToasts";
 import Loader from "../components/Loader";
 
-const PublicationDetailsPage = () => {
+interface PublicationDetailsPageProps {
+  articleId?: string;
+  isModal?: boolean;
+  onClose?: () => void;
+}
+
+const PublicationDetailsPage = ({
+  articleId,
+  isModal,
+  onClose,
+}: PublicationDetailsPageProps) => {
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error("AuthContext is null");
@@ -52,6 +62,8 @@ const PublicationDetailsPage = () => {
   const { token, user } = authContext;
 
   const { id } = useParams();
+  const finalId = articleId || id;
+
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -66,7 +78,7 @@ const PublicationDetailsPage = () => {
   const { data: articleData, refetch: refetchArticleData } = useQuery(
     FIND_ARTICLE_BY_ID,
     {
-      variables: { id: id! },
+      variables: { id: finalId! },
     }
   );
 
@@ -240,7 +252,7 @@ const PublicationDetailsPage = () => {
   const { data: commentsData, refetch: refetchComments } = useQuery(
     GET_COMMENTS,
     {
-      variables: { articleId: id! },
+      variables: { articleId: finalId! },
     }
   );
 
@@ -258,7 +270,7 @@ const PublicationDetailsPage = () => {
         variables: {
           content: newComment,
           userId: user?.id!,
-          articleId: id!,
+          articleId: finalId!,
         },
       });
 
@@ -266,7 +278,7 @@ const PublicationDetailsPage = () => {
       console.log("Commentaire ajouté avec succès !");
 
       setNewComment("");
-      refetchComments();
+      await Promise.all([refetchComments(), refetchArticleData()]);
     } catch (err) {
       console.error("Erreur lors de l'ajout du commentaire :", err);
     }
@@ -378,15 +390,18 @@ const PublicationDetailsPage = () => {
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       {/* Back Button */}
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
-        onClick={() => navigate("/publications")}
-      >
-        <ArrowLeft className="h-5 w-5 mr-2" />
-        Retour aux publications
-      </motion.button>
+
+      {!isModal && (
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
+          onClick={() => navigate("/publications")}
+        >
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Retour aux publications
+        </motion.button>
+      )}
 
       {/* Post Card */}
       <motion.div

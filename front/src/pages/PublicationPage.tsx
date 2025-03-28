@@ -288,6 +288,13 @@ function PublicationPage() {
     }
   };
 
+  // const { userDislikes, handleDislike } = useDislike({
+  //   user,
+  //   items: displayedArticles,
+  //   refetchItems: refetchArticles,
+  //   type: "article",
+  // });
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">

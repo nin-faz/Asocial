@@ -1,28 +1,34 @@
-// pas utilisé peut être plus tard
-
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
-import { ADD_ARTICLE_DISLIKE, DELETE_ARTICLE_DISLIKE } from "../mutations";
+import {
+  ADD_ARTICLE_DISLIKE,
+  DELETE_ARTICLE_DISLIKE,
+  ADD_COMMENT_DISLIKE,
+  DELETE_COMMENT_DISLIKE,
+} from "../mutations";
 import {
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENT,
 } from "../queries";
+import { showLoginRequiredToast } from "../utils/customToasts";
 
 interface UseDislikeParams {
   user: { id: string; username: string } | null;
   items: { id: string; dislikes?: { user?: { id: string } }[] }[];
-  refetchItems?: () => void;
-  isNotLogin?: (action: "dislike" | "publish") => void;
+  refetchItems: () => Promise<any>;
+  type?: "article" | "comment";
 }
 
 export const useDislike = ({
   user,
   items,
   refetchItems,
-  isNotLogin,
+  type = "article",
 }: UseDislikeParams) => {
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
-    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+    type === "article"
+      ? FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE
+      : FIND_DISLIKES_BY_USER_ID_FOR_COMMENT,
     {
       variables: { userId: user?.id! },
       skip: !user?.id,
@@ -33,7 +39,6 @@ export const useDislike = ({
     {}
   );
 
-  // Met à jour userDislikes selon les items (articles ou commentaires) et les dislikes
   useEffect(() => {
     if (!user) {
       setUserDislikes({});
@@ -50,8 +55,12 @@ export const useDislike = ({
 
     if (dislikeUser?.getDislikesByUserId) {
       dislikeUser.getDislikesByUserId.forEach((dislike) => {
-        if (dislike?.item) {
-          dislikesMap[dislike.item.id] = true;
+        if (
+          (type === "article" && dislike?.article) ||
+          (type === "comment" && dislike?.comment)
+        ) {
+          const item = type === "article" ? dislike.article : dislike.comment;
+          if (item) dislikesMap[item.id] = true;
         }
       });
     }
@@ -64,8 +73,12 @@ export const useDislike = ({
     });
   }, [items, dislikeUser, user?.id]);
 
-  const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);
-  const [deleteDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+  const [addDislike] = useMutation(
+    type === "article" ? ADD_ARTICLE_DISLIKE : ADD_COMMENT_DISLIKE
+  );
+  const [deleteDislike] = useMutation(
+    type === "article" ? DELETE_ARTICLE_DISLIKE : DELETE_COMMENT_DISLIKE
+  );
 
   const handleDislike = async (e: React.MouseEvent, articleId: string) => {
     e.stopPropagation();
@@ -76,23 +89,42 @@ export const useDislike = ({
     }
 
     if (!user) {
-      isNotLogin?.("dislike");
+      showLoginRequiredToast("dislike");
       return;
     }
 
     try {
+      setUserDislikes((prev) => ({
+        ...prev,
+        [articleId]: !prev[articleId],
+      }));
+
       if (userDislikes[articleId]) {
-        await deleteDislike({ variables: { articleId, userId: user.id } });
+        await deleteDislike({
+          variables: {
+            [type === "article" ? "articleId" : "commentId"]: articleId,
+            userId: user.id,
+            articleId: "",
+          },
+        });
         setUserDislikes((prev) => ({ ...prev, [articleId]: false }));
+        console.log(user.username, "a retiré son dislike.");
       } else {
-        await addDislike({ variables: { articleId, userId: user.id } });
+        await addDislike({
+          variables: {
+            [type === "article" ? "articleId" : "commentId"]: articleId,
+            userId: user.id!,
+            articleId: "",
+          },
+        });
         setUserDislikes((prev) => ({ ...prev, [articleId]: true }));
+        console.log(user.username, "a disliké l'article.");
       }
 
       await refetchDislikeUser();
-      await refetchItems?.();
-    } catch (err) {
-      console.error("Erreur dislike :", err);
+      await refetchItems();
+    } catch (error) {
+      console.error("Erreur lors de l'ajout/suppression du dislike :", error);
     }
   };
 

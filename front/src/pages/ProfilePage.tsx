@@ -14,7 +14,11 @@ import {
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { useQuery, useMutation } from "@apollo/client";
-import { UPDATE_USER } from "../mutations";
+import {
+  UPDATE_USER,
+  ADD_ARTICLE_DISLIKE,
+  DELETE_ARTICLE_DISLIKE,
+} from "../mutations";
 import { useNavigate } from "react-router-dom";
 import {
   FIND_ARTICLES,
@@ -22,6 +26,8 @@ import {
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
   FIND_ARTICLES_BY_USER,
 } from "../queries";
+import { toast } from "react-toastify";
+import { showLoginRequiredToast } from "../utils/customToasts";
 import { Article, UserSummary, Dislike } from "../gql/graphql";
 
 const ProfilePage = () => {
@@ -38,6 +44,9 @@ const ProfilePage = () => {
   >([]);
   const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
   const [activeTab, setActiveTab] = useState("publications"); // State for active tab
+  const [userArticleDislikes, setUserArticleDislikes] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   if (!auth) return null;
 
@@ -84,6 +93,23 @@ const ProfilePage = () => {
   // }, [article.data, user]);
 
   useEffect(() => {
+    if (!user) {
+      setUserArticleDislikes({});
+      return;
+    }
+
+    const dislikesMap: { [key: string]: boolean } = {};
+
+    if (articleDisliked?.getDislikesByUserId) {
+      articleDisliked.getDislikesByUserId.forEach((dislike) => {
+        if (dislike?.article?.id) {
+          dislikesMap[dislike.article.id] = true;
+        }
+      });
+    }
+
+    setUserArticleDislikes(dislikesMap);
+
     if (dislikesByUser && user) {
       setNumberOfPostDisliked(dislikesByUser.length);
       setAllArticleDisliked(
@@ -92,7 +118,7 @@ const ProfilePage = () => {
           .filter((article): article is Article => article !== null)
       );
     }
-  }, [dislikesByUser, user]);
+  }, [dislikesByUser, user, articleDisliked]);
 
   const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
 
@@ -153,6 +179,45 @@ const ProfilePage = () => {
     dislikes: 5,
     followers: 20,
     following: 15,
+  };
+
+  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
+  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+
+  const handleArticleDislike = async (
+    e: React.MouseEvent,
+    articleId: string
+  ) => {
+    e.preventDefault();
+    if (!user) {
+      showLoginRequiredToast("dislike");
+      return;
+    }
+
+    try {
+      if (userArticleDislikes[articleId]) {
+        await deleteArticleDislike({
+          variables: { articleId, userId: user.id! },
+          context: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        setUserArticleDislikes((prev) => ({ ...prev, [articleId]: false }));
+      } else {
+        await addArticleDislike({
+          variables: { articleId, userId: user.id! },
+          context: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        setUserArticleDislikes((prev) => ({ ...prev, [articleId]: true }));
+      }
+      await refetchArticleDisliked();
+      await refetchArticleByUser();
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) {
+        toast.error("Une erreur est survenue : " + err.message);
+      } else {
+        toast.error("Une erreur est survenue");
+      }
+    }
   };
 
   const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
@@ -425,7 +490,12 @@ const ProfilePage = () => {
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
-                        className="flex items-center space-x-2 hover:text-purple-400"
+                        onClick={(e) => handleArticleDislike(e, article.id)}
+                        className={`flex items-center space-x-2 hover:text-purple-400 ${
+                          userArticleDislikes[article.id]
+                            ? "text-purple-400"
+                            : ""
+                        }`}
                       >
                         <ThumbsDown className="h-5 w-5" />
                         <span>{article.TotalDislikes}</span>

@@ -261,7 +261,7 @@ export type User = {
   articles?: Maybe<Array<Maybe<Article>>>;
   bio?: Maybe<Scalars['String']['output']>;
   comments?: Maybe<Array<Maybe<Comment>>>;
-  createdAt?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['String']['output'];
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];

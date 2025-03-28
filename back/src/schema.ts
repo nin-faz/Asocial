@@ -105,7 +105,7 @@ export const typeDefs = gql`
     comments: [Comment]
     dislikes: [Dislike]
     bio: String
-    createdAt: String
+    createdAt: String!
   }
 
   type UserToken {

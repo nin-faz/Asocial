@@ -2,24 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
-import { FIND_DISLIKES_BY_USER_ID } from "../queries";
 import { ADD_ARTICLE_DISLIKE, DELETE_ARTICLE_DISLIKE } from "../mutations";
+import {
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+  FIND_DISLIKES_BY_USER_ID_FOR_COMMENT,
+} from "../queries";
 
 interface UseDislikeParams {
   user: { id: string; username: string } | null;
-  articles: { id: string; dislikes?: { user?: { id: string } }[] }[];
-  refetchArticles?: () => void;
+  items: { id: string; dislikes?: { user?: { id: string } }[] }[];
+  refetchItems?: () => void;
   isNotLogin?: (action: "dislike" | "publish") => void;
 }
 
 export const useDislike = ({
   user,
-  articles,
-  refetchArticles,
+  items,
+  refetchItems,
   isNotLogin,
 }: UseDislikeParams) => {
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
-    FIND_DISLIKES_BY_USER_ID,
+    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
     {
       variables: { userId: user?.id! },
       skip: !user?.id,
@@ -30,9 +33,7 @@ export const useDislike = ({
     {}
   );
 
-  const [sortOption, setSortOption] = useState("recent");
-
-  // Met à jour userDislikes selon les articles et les dislikes
+  // Met à jour userDislikes selon les items (articles ou commentaires) et les dislikes
   useEffect(() => {
     if (!user) {
       setUserDislikes({});
@@ -41,7 +42,7 @@ export const useDislike = ({
 
     const dislikesMap: { [key: string]: boolean } = {};
 
-    articles.forEach(({ id, dislikes = [] }) => {
+    items.forEach(({ id, dislikes = [] }) => {
       if (dislikes.some((d) => d?.user?.id === user.id)) {
         dislikesMap[id] = true;
       }
@@ -49,8 +50,8 @@ export const useDislike = ({
 
     if (dislikeUser?.getDislikesByUserId) {
       dislikeUser.getDislikesByUserId.forEach((dislike) => {
-        if (dislike?.article) {
-          dislikesMap[dislike.article.id] = true;
+        if (dislike?.item) {
+          dislikesMap[dislike.item.id] = true;
         }
       });
     }
@@ -61,7 +62,7 @@ export const useDislike = ({
       }
       return prev;
     });
-  }, [articles, dislikeUser, user?.id, sortOption]);
+  }, [items, dislikeUser, user?.id]);
 
   const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   const [deleteDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
@@ -89,7 +90,7 @@ export const useDislike = ({
       }
 
       await refetchDislikeUser();
-      await refetchArticles?.();
+      await refetchItems?.();
     } catch (err) {
       console.error("Erreur dislike :", err);
     }

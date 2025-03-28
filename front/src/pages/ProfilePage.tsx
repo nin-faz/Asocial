@@ -68,8 +68,8 @@ const ProfilePage = () => {
     }
   );
 
-  const articleDislikedData = articleDisliked?.getDislikesByUserId;
-  console.log("Article liké : ", articleDislikedData);
+  const dislikesByUser = articleDisliked?.getDislikesByUserId;
+  console.log("Article liké : ", dislikesByUser);
 
   // useEffect(() => {
   //   setNumberOfPosts(0);
@@ -84,22 +84,22 @@ const ProfilePage = () => {
   // }, [article.data, user]);
 
   useEffect(() => {
-    if (articleDislikedData && user) {
-      setNumberOfPostDisliked(articleDislikedData.length);
+    if (dislikesByUser && user) {
+      setNumberOfPostDisliked(dislikesByUser.length);
       setAllArticleDisliked(
-        articleDislikedData
+        dislikesByUser
           .map((dislike) => dislike?.article)
           .filter((article): article is Article => article !== null)
       );
     }
-  }, [articleDislikedData, user]);
+  }, [dislikesByUser, user]);
 
   const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
 
   useEffect(() => {
-    if (user) {
-      setUsername(user.username);
-      setBio(user.bio || "");
+    if (userInfosData) {
+      setUsername(userInfosData.username);
+      setBio(userInfosData.bio);
     }
   }, [user]);
 
@@ -140,8 +140,8 @@ const ProfilePage = () => {
   const cancelEditing = () => {
     // Reset form to original values
     if (user) {
-      setUsername(user.username);
-      setBio(user.bio || "");
+      setUsername(userInfosData.username);
+      setBio(userInfosData.bio);
     }
     setIsEditing(false);
     setError("");
@@ -164,6 +164,12 @@ const ProfilePage = () => {
   );
 
   const articleByUserData = articleByUser?.findArticlesByUser;
+
+  console.log("actives", activeTab);
+
+  articleByUserData?.map((article) => {
+    console.log("ici", article.dislikes); // Vérifie si "dislikes" existe bien pour chaque article
+  });
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
@@ -223,11 +229,12 @@ const ProfilePage = () => {
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={cancelEditing}
-                    className="flex items-center px-3 py-1 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700"
+                    className="flex items-center px-3 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
                   >
                     <X className="h-4 w-4 mr-1" />
                     Annuler
                   </button>
+
                   <button
                     onClick={handleSaveProfile}
                     disabled={updating}
@@ -249,13 +256,15 @@ const ProfilePage = () => {
                 </h1>
                 <p className="text-gray-500 mb-4">
                   Membre depuis{" "}
-                  {new Date(user?.createdAt || Date.now()).toLocaleDateString(
-                    "fr-FR",
-                    { month: "short", year: "numeric" }
-                  )}
+                  {new Date(
+                    userInfosData?.createdAt || Date.now()
+                  ).toLocaleDateString("fr-FR", {
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </p>
                 <p className="text-gray-300 mb-6 max-w-2xl">
-                  {user?.bio || "Bienvenue sur mon profil !"}
+                  {userInfosData?.bio || "Bienvenue sur mon profil !"}
                 </p>
 
                 {/* Stats */}
@@ -388,16 +397,21 @@ const ProfilePage = () => {
                 //   className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
                 // >
                 <div className="p-4 bg-gray-900 rounded-lg border border-purple-900">
-                  <p className="text-gray-500 text-sm">
-                    Publié le {""}
-                    {article.updatedAt
-                      ? new Date(parseInt(article.updatedAt, 10))
-                          .toLocaleString()
-                          .replace(" ", " à ")
-                      : new Date(parseInt(article.createdAt ?? "0", 10))
-                          .toLocaleString()
-                          .replace(" ", " à ")}
-                  </p>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                      <Skull className="h-6 w-6 text-purple-400" />
+                    </div>
+                    <p className="text-gray-500 text-sm">
+                      Publié le {""}
+                      {article.updatedAt
+                        ? new Date(parseInt(article.updatedAt, 10))
+                            .toLocaleString()
+                            .replace(" ", " à ")
+                        : new Date(parseInt(article.createdAt ?? "0", 10))
+                            .toLocaleString()
+                            .replace(" ", " à ")}
+                    </p>
+                  </div>
                   <div className="py-2">
                     <h2 className="text-xl font-semibold text-purple-400 mb-2">
                       {article.title}
@@ -436,8 +450,80 @@ const ProfilePage = () => {
           </div>
         )}
 
+        {/* Onglet Dislikes */}
+        {activeTab === "dislikes" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+            {dislikesByUser && dislikesByUser.length > 0 ? (
+              dislikesByUser
+                .filter((dislike) => dislike?.article)
+                .map((dislike) => (
+                  <motion.div
+                    key={dislike?.article?.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+                      transition: {
+                        duration: 0.2,
+                        ease: "easeOut",
+                      },
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-colors flex flex-col"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                          <Skull className="h-6 w-6 text-purple-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-purple-400 font-semibold">
+                            {dislike?.article?.author.username}
+                          </h3>
+                          <p className="text-gray-500 text-sm">
+                            Le{" "}
+                            {new Date(
+                              parseInt(dislike?.article?.createdAt!, 10)
+                            )
+                              .toLocaleString()
+                              .replace(" ", " à ")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col flex-grow justify-between">
+                      <h1 className="text-2xl font-semibold text-gray-100 h-8 mb-4">
+                        {dislike?.article?.title}
+                      </h1>
+
+                      <p className="text-gray-300 mb-4 whitespace-pre-wrap flex-grow">
+                        {dislike?.article?.content}
+                      </p>
+
+                      <div className="flex flex-col justify-center items-end text-gray-500">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex items-end space-x-2 text-purple-400"
+                        >
+                          <ThumbsDown className="h-5 w-5" />
+                          <span>Disliké</span>
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+            ) : (
+              <p className="text-gray-500">Aucun article disliké.</p>
+            )}
+          </div>
+        )}
+
         {/* Example Post */}
-        {activeTab === "dislikes" && articleDisliked
+        {/* {activeTab === "dislikes" && articleDisliked
           ? articleDisliked.map((article) => (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -479,7 +565,7 @@ const ProfilePage = () => {
                 </div>
               </motion.div>
             ))
-          : null}
+          : null} */}
         {/* {activeTab === "publications" &&
           articles.map((article) => (
             <motion.div

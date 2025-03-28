@@ -28,6 +28,8 @@ import {
   MoreVertical,
   Trash2,
   Edit2,
+  Save,
+  X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { AuthContext } from "../context/AuthContext";
@@ -325,7 +327,7 @@ const PublicationDetailsPage = () => {
     }
   };
 
-  const [updateArticle] = useMutation(UPDATE_ARTICLE);
+  const [updateArticle, { loading: updating }] = useMutation(UPDATE_ARTICLE);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(article?.title || "");
   const [editedContent, setEditedContent] = useState(article?.content || "");
@@ -497,15 +499,22 @@ const PublicationDetailsPage = () => {
                   }
                   setIsEditing(false);
                 }}
-                className="text-red-500 hover:text-red-400"
+                className="flex items-center px-3 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
               >
+                <X className="h-4 w-4 mr-1" />
                 Annuler
               </button>
               <button
                 onClick={handleUpdateArticle}
-                className="text-purple-400 hover:text-purple-300"
+                disabled={updating}
+                className={`flex items-center px-3 py-1 ${
+                  updating
+                    ? "bg-purple-800"
+                    : "bg-purple-600 hover:bg-purple-700 text-purple-400 hover:text-purple-300"
+                } text-white rounded-lg`}
               >
-                Enregistrer
+                <Save className="h-4 w-4 mr-1" />
+                {updating ? "Sauvegarde..." : "Sauvegarder"}
               </button>
             </div>
           </div>

@@ -264,7 +264,7 @@ export type User = {
   articles?: Maybe<Array<Maybe<Article>>>;
   bio?: Maybe<Scalars['String']['output']>;
   comments?: Maybe<Array<Maybe<Comment>>>;
-  createdAt?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['String']['output'];
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
@@ -543,7 +543,7 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   articles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   comments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

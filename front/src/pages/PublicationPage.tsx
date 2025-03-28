@@ -71,10 +71,13 @@ function PublicationPage() {
         const titleMatch = article?.title
           ? article.title.toLowerCase().includes(searchTerm.toLowerCase())
           : false;
+        const contentMatch = article.content
+          ? article.content.toLowerCase().includes(searchTerm.toLowerCase())
+          : false;
         const authorMatch = article.author.username
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
-        return titleMatch || authorMatch;
+        return titleMatch || contentMatch || authorMatch;
       })
     : displayedArticles;
 

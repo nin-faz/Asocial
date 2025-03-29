@@ -457,6 +457,35 @@ const PublicationDetailsPage = ({
     }
   };
 
+  // Fonction pour partager un article
+  const handleShareArticle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const shareUrl = `${window.location.origin}/publications/${finalId}`;
+    const shareTitle = article?.title
+      ? `${article.title} - Asocial`
+      : "Découvrez cet article sur Asocial";
+    const shareText = "Rejoignez la discussion sur cet article intéressant!";
+
+    try {
+      // Vérifier si l'API Web Share est disponible
+      if (navigator.share) {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+      } else {
+        // Fallback: copier le lien dans le presse-papier
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Lien copié dans le presse-papier!");
+      }
+    } catch (error) {
+      console.error("Erreur lors du partage:", error);
+      toast.error("Impossible de partager cet article");
+    }
+  };
+
   const { data: userData } = useQuery(GET_USER_BY_ID, {
     variables: { id: user?.id! },
     skip: !user?.id,
@@ -660,7 +689,6 @@ const PublicationDetailsPage = ({
               className="flex items-center space-x-2 hover:text-purple-400"
               onClick={(e) => {
                 e.stopPropagation();
-                // handlePostClick(articleId);
               }}
             >
               <MessageSquare className="h-5 w-5" />
@@ -668,7 +696,10 @@ const PublicationDetailsPage = ({
             </button>
           </div>
 
-          <button className="flex items-center space-x-2 hover:text-purple-400">
+          <button
+            className="flex items-center space-x-2 hover:text-purple-400"
+            onClick={handleShareArticle}
+          >
             <Share2 className="h-5 w-5" />
             <span>Partager</span>
           </button>

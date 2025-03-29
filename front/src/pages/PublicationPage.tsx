@@ -553,31 +553,33 @@ function PublicationPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center space-x-6 text-gray-500">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`flex items-center space-x-2 hover:text-purple-400 ${
-                        user && userDislikes[articleId]
-                          ? "text-purple-400"
-                          : "text-gray-500"
-                      }`}
-                      onClick={(e) => handleDislike(e, articleId)}
-                    >
-                      <ThumbsDown className="h-5 w-5" />
-                      <span>{TotalDislikes}</span>
-                    </motion.button>
+                  <div className="flex items-center justify-between text-gray-500">
+                    <div className="flex items-center space-x-6">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`flex items-center space-x-2 hover:text-purple-400 ${
+                          user && userDislikes[articleId]
+                            ? "text-purple-400"
+                            : "text-gray-500"
+                        }`}
+                        onClick={(e) => handleDislike(e, articleId)}
+                      >
+                        <ThumbsDown className="h-5 w-5" />
+                        <span>{TotalDislikes}</span>
+                      </motion.button>
 
-                    <button
-                      className="flex items-center space-x-2 hover:text-purple-400"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePostClick(articleId);
-                      }}
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                      <span>{TotalComments}</span>
-                    </button>
+                      <button
+                        className="flex items-center space-x-2 hover:text-purple-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePostClick(articleId);
+                        }}
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        <span>{TotalComments}</span>
+                      </button>
+                    </div>
 
                     <button
                       className="flex items-center space-x-2 hover:text-purple-400"

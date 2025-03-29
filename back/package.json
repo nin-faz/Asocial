@@ -5,7 +5,7 @@
   "scripts": {
     "compile": "tsc",
     "start": "npm run compile && node ./dist/index.js",
-    "dev": "node --import ./scripts/register.js --watch src/index.ts",
+    "dev": "cross-env NODE_OPTIONS=--loader=ts-node/esm node --watch src/index.ts",
     "codegen": "graphql-codegen",
     "prisma": "prisma"
   },
@@ -31,7 +31,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.5",
-    "prisma": "^6.4.1",
+    "prisma": "^6.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }

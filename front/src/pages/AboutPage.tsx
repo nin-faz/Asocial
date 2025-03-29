@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Skull,
   ThumbsDown,
   MessageSquare,
   Users,
@@ -62,14 +61,17 @@ const AboutPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-20"
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto w-24 h-24 bg-purple-900 rounded-full flex items-center justify-center mb-8"
-        >
-          <Skull className="w-14 h-14 text-purple-400" />
-        </motion.div>
+        {/* <motion.div
+         className="mx-auto w-24 h-24 bg-purple-900 rounded-full flex items-center justify-center mb-8"> */}
+        <div className="flex justify-center mb-8">
+          <motion.img
+            whileHover={{ scale: 1.05 }}
+            src="/logo.svg"
+            alt="Logo Asocial"
+            className="flex items-center cursor-pointer w-16 h-16"
+          />
+          {/* </motion.div> */}
+        </div>
         <h1 className="text-4xl md:text-5xl font-bold text-purple-400 mb-6">
           Bienvenue dans l'Anti-Social
         </h1>

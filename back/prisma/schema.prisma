@@ -21,16 +21,17 @@ model User {
   comments Comment[]
   dislikes    Dislike[]
   bio       String?
+  iconName   String? @default("Skull")
   createdAt DateTime @default(now())
 }
 
 model Dislike {
   id        String   @id @unique @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  article   Article? @relation(fields: [articleId], references: [id])
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String?
-  comment   Comment? @relation(fields: [commentId], references: [id])
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   commentId String?
 }
 
@@ -38,20 +39,22 @@ model Article {
   id       String @id @unique @default(uuid())
   title    String
   content  String
-  author   User   @relation(fields: [authorId], references: [id])
+  imageUrl String?
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId String
   dislikes    Dislike[]
   createdAt DateTime @default(now())
   updatedAt DateTime?
-  comment Comment[]
+  comments Comment[]
 }
 
 model Comment {
   id       String @id @unique @default(uuid())
   content  String
-  author   User   @relation(fields: [authorId], references: [id])
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId String
   article  Article? @relation(fields: [articleId], references: [id])
   articleId String?
   dislikes    Dislike[]
+  createdAt DateTime @default(now())
 }

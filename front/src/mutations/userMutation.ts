@@ -1,6 +1,6 @@
-import { gql } from "graphql-tag";
+import { graphql } from "../gql";
 
-export const CREATE_USER = gql`
+export const CREATE_USER = graphql(`
   mutation CreateUser($username: String!, $password: String!) {
     createUser(username: $username, password: $password) {
       success
@@ -10,9 +10,9 @@ export const CREATE_USER = gql`
       }
     }
   }
-`;
+`);
 
-export const SIGN_IN = gql`
+export const SIGN_IN = graphql(`
   mutation SignIn($username: String!, $password: String!) {
     signIn(username: $username, password: $password) {
       success
@@ -20,9 +20,9 @@ export const SIGN_IN = gql`
       token
     }
   }
-`;
+`);
 
-export const UPDATE_USER = gql`
+export const UPDATE_USER = graphql(`
   mutation UpdateUser($id: ID!, $body: userUpdateBody!) {
     updateUser(id: $id, body: $body) {
       success
@@ -31,8 +31,9 @@ export const UPDATE_USER = gql`
         id
         username
         bio
+        iconName
         createdAt
       }
     }
   }
-`;
+`);

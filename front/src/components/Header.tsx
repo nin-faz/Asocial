@@ -1,23 +1,22 @@
-import React, { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Search,
   Skull,
-  MessageSquare,
   Menu,
-  ThumbsDown,
   Home,
   Bomb,
   LogOut,
   User,
-  PenSquare,
+  PlusCircle,
+  BarChart2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useSearch } from "../context/SearchContext";
 
 const Header = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -33,6 +32,19 @@ const Header = () => {
     setShowUserMenu(false);
   };
 
+  const { pathname } = useLocation();
+  const { searchTerm, setSearchTerm } = useSearch();
+
+  const isPublicationsActive =
+    pathname === "/publications" || pathname.startsWith("/publications/");
+
+  // Vide le champ quand on quitte /publications
+  useEffect(() => {
+    if (!pathname.startsWith("/publications") && searchTerm !== "") {
+      setSearchTerm("");
+    }
+  }, [pathname]);
+
   return (
     <motion.header
       initial={{ y: -100 }}
@@ -40,83 +52,99 @@ const Header = () => {
       className="sticky top-0 z-50 bg-black border-b border-purple-900"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 relative">
           {/* Logo and Brand */}
           <motion.div
-            className="flex items-center cursor-pointer"
+            className="flex items-center cursor-pointer z-10"
             whileHover={{ scale: 1.05 }}
             onClick={() => navigate("/")}
           >
-            <Skull className="h-8 w-8 text-purple-500" />
+            <img src="/logo.svg" alt="Logo" className="h-9 w-10" />
+
             <span className="ml-2 text-2xl font-bold text-purple-400">
               Asocial
             </span>
           </motion.div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <motion.div
-              className={`flex items-center transition-colors cursor-pointer ${
-                location.pathname === "/publications"
-                  ? "text-purple-400"
-                  : "text-gray-400 hover:text-purple-400"
-              }`}
-              whileHover={{ scale: 1.1 }}
-              onClick={() => navigate("/publications")}
-            >
-              <Home className="h-5 w-5" />
-              <span className="ml-1">Publications</span>
-            </motion.div>
-            {!user ? (
-              <motion.div
-                className={`flex items-center transition-colors cursor-pointer ${
-                  location.pathname === "/auth"
-                    ? "text-purple-400"
-                    : "text-gray-400 hover:text-purple-400"
-                }`}
-                whileHover={{ scale: 1.1 }}
-                onClick={() => navigate("/auth")}
-              >
-                <Bomb className="h-5 w-5" />
-                <span className="ml-1">Chaos</span>
-              </motion.div>
-            ) : null}
-          </nav>
+          {/* Desktop Navigation and Search */}
+          <div className="hidden md:flex md:flex-1 md:justify-center">
+            <div className="flex items-center justify-between w-full max-w-4xl px-4">
+              {/* Left Navigation */}
+              <nav className="flex items-center space-x-8">
+                <motion.div
+                  className={`flex items-center transition-colors cursor-pointer ${
+                    isPublicationsActive
+                      ? "text-purple-400"
+                      : "text-gray-400 hover:text-purple-400"
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => navigate("/publications")}
+                >
+                  <Home className="h-7 w-7" />
+                  <span className="ml-1">Publications</span>
+                </motion.div>
+                {!user ? (
+                  <motion.div
+                    className={`flex items-center transition-colors cursor-pointer ${
+                      pathname === "/auth"
+                        ? "text-purple-400"
+                        : "text-gray-400 hover:text-purple-400"
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => navigate("/auth")}
+                  >
+                    <Bomb className="h-7 w-7" />
+                    <span className="ml-1">Chaos</span>
+                  </motion.div>
+                ) : null}
+              </nav>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search for chaos..."
-                className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
-              />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+              {/* Centered Search Bar */}
+              {pathname.startsWith("/publications") && (
+                <div className="w-full max-w-md mx-auto px-4">
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      placeholder="Search for chaos..."
+                      className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center space-x-4">
-            <motion.button
-              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
-              whileHover={{ scale: 1.1 }}
-            >
-              <MessageSquare className="h-6 w-6" />
-            </motion.button>
-            <motion.button
-              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
-              whileHover={{ scale: 1.1 }}
-            >
-              <ThumbsDown className="h-6 w-6" />
-            </motion.button>
+          <div className="flex items-center space-x-4 z-10">
+            {user && (
+              <>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => navigate("/publications")}
+                  title="Créer une publication"
+                >
+                  <PlusCircle className="h-6 w-6" />
+                </motion.button>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => navigate("/profile?tab=statistiques")}
+                  title="Voir mes statistiques"
+                >
+                  <BarChart2 className="h-6 w-6" />
+                </motion.button>
+              </>
+            )}
 
             {user ? (
               <div className="relative">
                 <motion.button
                   className={`flex items-center justify-center h-8 w-8 rounded-full bg-gray-800 hover:bg-purple-900 ${
-                    location.pathname === "/profile"
-                      ? "ring-2 ring-purple-500"
-                      : ""
+                    pathname === "/profile" ? "ring-2 ring-purple-500" : ""
                   }`}
                   whileHover={{ scale: 1.1 }}
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -137,9 +165,6 @@ const Header = () => {
                       <div className="p-3 border-b border-gray-800">
                         <p className="text-purple-400 font-medium">
                           {user?.username}
-                        </p>
-                        <p className="text-gray-500 text-sm truncate">
-                          {user?.bio}
                         </p>
                       </div>
                       <div className="py-1">
@@ -196,18 +221,24 @@ const Header = () => {
             className="md:hidden bg-gray-900 border-t border-gray-800"
           >
             <div className="px-4 py-3">
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  placeholder="Search for chaos..."
-                  className="w-full bg-gray-800 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-              </div>
+              {pathname.startsWith("/publications") && (
+                <div className="relative mb-3">
+                  <input
+                    type="text"
+                    placeholder="Search for chaos..."
+                    className="w-full bg-gray-800 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                </div>
+              )}
 
               <nav className="space-y-1">
                 <button
-                  className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800"
+                  className={`flex items-center w-full p-3 rounded-lg hover:bg-gray-800 ${
+                    isPublicationsActive ? "text-purple-400" : "text-gray-300"
+                  }`}
                   onClick={() => {
                     navigate("/publications");
                     setShowMobileMenu(false);

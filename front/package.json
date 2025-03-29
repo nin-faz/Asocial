@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.1",
-    "@graphql-codegen/cli": "^5.0.5",
-    "@parcel/watcher": "^2.5.1",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.4.7",
     "front": "file:",
@@ -26,7 +25,13 @@
     "react-toastify": "^11.0.5"
   },
   "devDependencies": {
+    "@0no-co/graphqlsp": "^1.12.16",
     "@eslint/js": "^9.21.0",
+    "@graphql-codegen/cli": "^5.0.5",
+    "@graphql-codegen/client-preset": "^4.6.4",
+    "@graphql-codegen/introspection": "4.0.3",
+    "@graphql-codegen/schema-ast": "^4.1.0",
+    "@parcel/watcher": "^2.5.1",
     "@types/prop-types": "^15.7.14",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

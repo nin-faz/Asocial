@@ -1,30 +1,12 @@
 import { useContext, useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Lock, User, Eye, EyeOff, Skull, Flame } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
-import { CREATE_USER, SIGN_IN } from "../gql/mutations";
-
-interface CreateUserResponse {
-  createUser: {
-    success: boolean;
-    message: string;
-    user: {
-      id: string;
-      username: string;
-    };
-  };
-}
-
-interface SignInResponse {
-  signIn: {
-    success: boolean;
-    token: string;
-    message: string;
-  };
-}
+import { CREATE_USER, SIGN_IN } from "../mutations";
+import { AuthContext } from "../context/AuthContext";
+import { showLoginToast, showWelcomeToast } from "../utils/customToasts";
+import { Lock, User, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,8 +21,8 @@ function AuthPage() {
     document.title = isLogin ? "Connexion" : "Inscription";
   }, [isLogin]);
 
-  const [createUser] = useMutation<CreateUserResponse>(CREATE_USER);
-  const [signIn] = useMutation<SignInResponse>(SIGN_IN);
+  const [createUser] = useMutation(CREATE_USER);
+  const [signIn] = useMutation(SIGN_IN);
 
   const authContext = useContext(AuthContext);
   if (!authContext) {
@@ -61,20 +43,12 @@ function AuthPage() {
         });
 
         if (signInResponse.data?.signIn?.success) {
-          login(signInResponse.data.signIn.token);
-          toast.success(
-            "T’as fait le pire choix possible. Mais bon, bienvenue quand même.",
-            {
-              icon: <Skull size={24} color="#f0aaff" />,
-              style: { background: "#2a0134", color: "#f0aaff" },
-            }
-          );
+          login(signInResponse.data.signIn.token ?? "");
+
+          showWelcomeToast();
+          console.log("inscription réussie, bienvenue dans le chaos !");
+
           navigate("/publications");
-        } else {
-          toast.success("Inscription réussie, tu y es presque ...", {
-            style: { background: "#2a0134", color: "#f0aaff" },
-          });
-          navigate("/auth");
         }
       } else {
         toast.error(
@@ -100,22 +74,11 @@ function AuthPage() {
       });
 
       if (response.data?.signIn?.success) {
-        login(response.data.signIn.token);
-        const darkMessages = [
-          "Revoilà l'anti-héros... enfin, juste un type paumé.",
-          "Bienvenue dans l'abîme. L'espoir n'a jamais eu sa place ici.",
-          "Encore toi ? On a toujours pas activé l’option éjection.",
-          "Tu t’accroches, hein ? C’est presque touchant.",
-          "Connexion réussie... mais à quoi bon ?",
-        ];
+        login(response.data.signIn.token ?? "");
 
-        toast.success(
-          darkMessages[Math.floor(Math.random() * darkMessages.length)],
-          {
-            icon: <Flame size={24} color="#f0aaff" />,
-            style: { background: "#2a0134", color: "#f0aaff" },
-          }
-        );
+        showLoginToast();
+        console.log("connexion réussie, bienvenue dans le chaos !");
+
         navigate("/publications");
       } else {
         toast.error(response.data?.signIn?.message || "Échec de la connexion");
@@ -128,7 +91,7 @@ function AuthPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-      <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
+      <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1,9 +1,24 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Skull, Github, Twitter, Mail, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ExternalLink,
+  MessageSquareOff,
+  UserX,
+  AlertTriangle,
+  X,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
+  const [activeToast, setActiveToast] = useState<string | null>(null);
+
+  const handleIconClick = (id: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveToast(id);
+    // Auto dismiss after 3 seconds
+    setTimeout(() => setActiveToast(null), 3000);
+  };
+
   return (
     <footer className="bg-gray-950 border-t border-purple-900 sm:flex sm:justify-between sm:items-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -11,7 +26,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center mb-4">
-              <Skull className="h-8 w-8 text-purple-500" />
+              <img src="/logo.svg" alt="Logo" className="h-9 w-10" />
               <span className="ml-2 text-2xl font-bold text-purple-400">
                 Asocial
               </span>
@@ -21,27 +36,42 @@ const Footer = () => {
               meurent.
             </p>
             <div className="flex space-x-4">
-              <motion.a
-                href="#"
+              <motion.button
+                onClick={handleIconClick("network")}
                 whileHover={{ scale: 1.1 }}
-                className="text-gray-400 hover:text-purple-400"
+                whileTap={{ scale: 0.95 }}
+                className="text-gray-400 hover:text-purple-400 relative group"
+                title="Anti-réseautage"
               >
-                <Github className="h-5 w-5" />
-              </motion.a>
-              <motion.a
-                href="#"
+                <UserX className="h-5 w-5" />
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                  Anti-réseautage
+                </span>
+              </motion.button>
+              <motion.button
+                onClick={handleIconClick("comments")}
                 whileHover={{ scale: 1.1 }}
-                className="text-gray-400 hover:text-purple-400"
+                whileTap={{ scale: 0.95 }}
+                className="text-gray-400 hover:text-purple-400 relative group"
+                title="Silence imposé"
               >
-                <Twitter className="h-5 w-5" />
-              </motion.a>
-              <motion.a
-                href="mailto:chaos@asocial.com"
+                <MessageSquareOff className="h-5 w-5" />
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                  Silence imposé
+                </span>
+              </motion.button>
+              <motion.button
+                onClick={handleIconClick("chaos")}
                 whileHover={{ scale: 1.1 }}
-                className="text-gray-400 hover:text-purple-400"
+                whileTap={{ scale: 0.95 }}
+                className="text-gray-400 hover:text-purple-400 relative group"
+                title="Manifeste du chaos"
               >
-                <Mail className="h-5 w-5" />
-              </motion.a>
+                <AlertTriangle className="h-5 w-5" />
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                  Manifeste du chaos
+                </span>
+              </motion.button>
             </div>
           </div>
 
@@ -183,6 +213,53 @@ const Footer = () => {
           </p>
         </div>
       </div>
+
+      {/* Toast Messages */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-3 rounded-md shadow-lg border border-purple-500 flex items-center z-50"
+          >
+            <div className="mr-3">
+              {activeToast === "network" && (
+                <>
+                  <UserX className="h-5 w-5 text-purple-400 inline-block mr-2" />
+                  <span>
+                    Réseautage rejeté. Nous valorisons l'authenticité, pas les
+                    connexions forcées.
+                  </span>
+                </>
+              )}
+              {activeToast === "comments" && (
+                <>
+                  <MessageSquareOff className="h-5 w-5 text-purple-400 inline-block mr-2" />
+                  <span>
+                    Zone de silence. Pas de commentaires, pas d'avis non
+                    sollicités.
+                  </span>
+                </>
+              )}
+              {activeToast === "chaos" && (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-purple-400 inline-block mr-2" />
+                  <span>
+                    Le chaos est notre philosophie. L'ordre est une illusion.
+                  </span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setActiveToast(null)}
+              className="text-gray-300 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </footer>
   );
 };

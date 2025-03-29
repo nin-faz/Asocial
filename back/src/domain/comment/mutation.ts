@@ -70,7 +70,6 @@ export const deleteComment: NonNullable<
   }
 };
 
-// Modifier un commentaire
 export const updateComment: NonNullable<
   MutationResolvers["updateComment"]
 > = async (_, { commentId, content }, { dataSources: { db }, user }) => {

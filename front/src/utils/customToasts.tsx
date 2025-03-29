@@ -6,6 +6,7 @@ import {
   Trash2,
   Megaphone,
   Bomb,
+  Save,
 } from "lucide-react";
 
 const toastStyle = {
@@ -105,6 +106,22 @@ export const showCommentAddedToast = () => {
   });
 };
 
+export const showCommentUpdatedToast = () => {
+  const messages = [
+    "Ta correction de pensée a été enregistrée dans le néant.",
+    "Commentaire modifié. Comme si quelqu'un allait remarquer la différence.",
+    "Mise à jour appliquée. Ton opinion améliorée reste toujours aussi inutile.",
+    "Modification sauvegardée. Tu n'échapperas pas au vide pour autant.",
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  toast.success(randomMessage, {
+    icon: <MessageCircle size={24} color="#f0aaff" />,
+    style: toastStyle,
+  });
+};
+
 export const showCommentDeletedToast = () => {
   toast.success(
     "Ton commentaire a été effacé... comme s'il n'avait jamais existé.",
@@ -113,4 +130,21 @@ export const showCommentDeletedToast = () => {
       style: toastStyle,
     }
   );
+};
+
+// Profile
+export const showProfileUpdatedToast = () => {
+  const messages = [
+    "Identité modifiée. Mais tu restes toujours aussi insignifiant.",
+    "Changement enregistré. C'est presque comme si ça importait.",
+    "Nouveau masque, même néant. Profil mis à jour.",
+    "Profil rafraîchi. Le vide te va bien mieux maintenant.",
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  toast.success(randomMessage, {
+    icon: <Save size={24} color="#f0aaff" />,
+    style: toastStyle,
+  });
 };

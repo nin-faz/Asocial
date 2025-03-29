@@ -18,6 +18,7 @@ import {
   ADD_COMMENT_DISLIKE,
   DELETE_COMMENT_DISLIKE,
   UPDATE_ARTICLE,
+  UPDATE_COMMENT,
 } from "../mutations";
 import {
   ThumbsDown,
@@ -39,6 +40,7 @@ import {
   showArticleUpdatedToast,
   showCommentAddedToast,
   showCommentDeletedToast,
+  showCommentUpdatedToast,
   showLoginRequiredToast,
 } from "../utils/customToasts";
 import Loader from "../components/Loader";
@@ -286,6 +288,9 @@ const PublicationDetailsPage = ({
   };
 
   const [deleteComment] = useMutation(DELETE_COMMENT);
+  const [updateComment] = useMutation(UPDATE_COMMENT);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editedCommentContent, setEditedCommentContent] = useState("");
 
   const handleDeleteComment = async (commentId: string) => {
     try {
@@ -305,6 +310,52 @@ const PublicationDetailsPage = ({
       await refetchArticleData();
     } catch (err) {
       console.error("Erreur lors de la suppression du commentaire :", err);
+    }
+  };
+
+  const handleEditComment = (comment: CommentType) => {
+    setEditingCommentId(comment?.id ?? null);
+    setEditedCommentContent(comment?.content ?? "");
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditedCommentContent("");
+  };
+
+  const handleUpdateComment = async (commentId: string) => {
+    if (editedCommentContent.trim() === "") return;
+
+    try {
+      const response = await updateComment({
+        variables: {
+          commentId,
+          content: editedCommentContent,
+        },
+        context: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      });
+
+      if (response.data?.updateComment?.success) {
+        showCommentUpdatedToast();
+        console.log("Commentaire mis à jour avec succès !");
+        setEditingCommentId(null);
+        await refetchComments();
+      } else {
+        console.error(
+          response?.data?.updateComment?.message ||
+            "Échec de la mise à jour du commentaire."
+        );
+        toast.error("Échec de la mise à jour du commentaire.");
+      }
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour du commentaire :", err);
+      toast.error(
+        "Une erreur est survenue lors de la mise à jour du commentaire."
+      );
     }
   };
 
@@ -650,7 +701,7 @@ const PublicationDetailsPage = ({
               },
             }}
             whileTap={{ scale: 0.98 }}
-            className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
+            className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors w-full"
           >
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
@@ -672,16 +723,87 @@ const PublicationDetailsPage = ({
                     </p>
                   </div>
                   {comment?.author.id === user?.id && (
-                    <button
-                      onClick={() => handleDeleteComment(comment?.id!)}
-                      className="text-red-500 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="relative ml-4">
+                      <button
+                        className="text-gray-500 hover:text-purple-400 p-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(
+                            comment?.id === showMenu
+                              ? null
+                              : comment?.id ?? null
+                          );
+                        }}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+
+                      {showMenu === comment?.id && (
+                        <motion.div
+                          ref={menuRef}
+                          initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, x: 20 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="absolute top-0 right-0 w-36 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-2 z-10"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteComment(comment?.id!);
+                              setShowMenu(null);
+                            }}
+                            className="flex items-center space-x-2 text-red-500 hover:text-red-400 w-full"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                            <span>Supprimer</span>
+                          </button>
+                          <hr className="border-gray-700" />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditComment(comment);
+                              setShowMenu(null);
+                            }}
+                            className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
+                          >
+                            <Edit2 className="h-5 w-5" />
+                            <span>Modifier</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
                   )}
                 </div>
-                <p className="text-gray-300 mb-2">{comment?.content}</p>
-                <div className="flex justify-end mt-2 text-gray-500">
+                {editingCommentId === comment?.id ? (
+                  <div className="mt-2 mb-4">
+                    <textarea
+                      value={editedCommentContent}
+                      onChange={(e) => setEditedCommentContent(e.target.value)}
+                      className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                    />
+                    <div className="flex justify-end space-x-2 mt-2">
+                      <button
+                        onClick={handleCancelEditComment}
+                        className="flex items-center px-3 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Annuler
+                      </button>
+                      <button
+                        onClick={() => handleUpdateComment(comment?.id!)}
+                        className="flex items-center px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                      >
+                        <Save className="h-4 w-4 mr-1" />
+                        Sauvegarder
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-300 mb-2">{comment?.content}</p>
+                )}
+                <div className="flex justify-between items-center mt-8 text-gray-500 border-t border-gray-800 pt-3">
+                  <div></div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
@@ -690,7 +812,10 @@ const PublicationDetailsPage = ({
                         ? "text-purple-400"
                         : "text-gray-500"
                     }`}
-                    onClick={() => handleCommentDislike(comment)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCommentDislike(comment);
+                    }}
                   >
                     <ThumbsDown className="h-5 w-5" />
                     <span>{comment?.TotalDislikes}</span>

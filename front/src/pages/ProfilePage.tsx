@@ -24,7 +24,6 @@ import {
   DELETE_ARTICLE,
 } from "../mutations";
 import {
-  FIND_ARTICLES,
   GET_USER_BY_ID,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLES_BY_USER,
@@ -33,8 +32,9 @@ import { toast } from "react-toastify";
 import {
   showLoginRequiredToast,
   showArticleDeletedToast,
+  showProfileUpdatedToast,
 } from "../utils/customToasts";
-import { Article, UserSummary, Dislike } from "../gql/graphql";
+import { Article } from "../gql/graphql";
 import PublicationDetailsPage from "./PublicationDetailsPage";
 import IconSelector from "../components/IconSelector";
 import { renderUserIcon } from "../utils/iconUtil";
@@ -151,7 +151,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (userInfosData) {
       setUsername(userInfosData.username);
-      setBio(userInfosData.bio);
+      setBio(userInfosData?.bio! || "");
       setIconName(userInfosData.iconName || "Skull");
     }
   }, [userInfosData]);
@@ -163,15 +163,13 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      console.log("Saving profile with iconName:", iconName); // Ajoutez cette ligne pour débogage
-
       const { data } = await updateUserMutation({
         variables: {
-          id: user?.id,
+          id: user?.id!,
           body: {
             username,
             bio,
-            iconName, // Assurez-vous que cette valeur est présente
+            iconName,
           },
         },
         context: {
@@ -181,26 +179,25 @@ const ProfilePage = () => {
         },
       });
 
-      console.log("Update response:", data); // Ajoutez cette ligne pour débogage
-
-      if (data.updateUser.success) {
+      if (data?.updateUser.success) {
         setIsEditing(false);
         setError("");
         await refetchUserInfos();
+        showProfileUpdatedToast();
       } else {
-        setError(data.updateUser.message);
+        setError(data?.updateUser.message!);
       }
     } catch (err) {
-      console.error("Error updating profile:", err); // Améliorez l'affichage de l'erreur
+      console.error("Error updating profile:", err);
       setError("Une erreur est survenue lors de la mise à jour du profil.");
     }
   };
 
   const cancelEditing = () => {
     if (user) {
-      setUsername(userInfosData.username);
-      setBio(userInfosData.bio);
-      setIconName(userInfosData.iconName || "Skull");
+      setUsername(userInfosData?.username! ?? "");
+      setBio(userInfosData?.bio! ?? "");
+      setIconName(userInfosData?.iconName || "Skull");
     }
     setIsEditing(false);
     setError("");
@@ -332,11 +329,10 @@ const ProfilePage = () => {
         ? dislikesByUser
             .filter((dislike) => dislike?.article)
             .map((dislike) => ({
-              id: dislike?.id,
               articleId: dislike?.article?.id,
               articleTitle: dislike?.article?.title,
               articleAuthor: dislike?.article?.author.username,
-              createdAt: dislike?.createdAt,
+              createdAt: dislike?.article?.createdAt,
             }))
         : [],
     };

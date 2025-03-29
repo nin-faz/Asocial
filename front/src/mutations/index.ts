@@ -10,7 +10,7 @@ import {
   ADD_COMMENT_DISLIKE,
   DELETE_COMMENT_DISLIKE,
 } from "./dislikeMutation";
-import { ADD_COMMENT, DELETE_COMMENT } from "./commentMutation";
+import { ADD_COMMENT, DELETE_COMMENT, UPDATE_COMMENT } from "./commentMutation";
 
 export {
   CREATE_USER,
@@ -25,4 +25,5 @@ export {
   DELETE_COMMENT_DISLIKE,
   ADD_COMMENT,
   DELETE_COMMENT,
+  UPDATE_COMMENT,
 };

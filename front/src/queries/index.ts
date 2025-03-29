@@ -1,4 +1,4 @@
-import { GET_USER_BY_ID, GET_USER_BY_TOKEN } from "./userQueries";
+import { GET_USER_BY_ID, GET_USER_BY_TOKEN } from "./userQuery";
 import {
   FIND_ARTICLES,
   FIND_ARTICLE_BY_ID,

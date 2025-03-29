@@ -22,3 +22,13 @@ export const DELETE_COMMENT = graphql(`
     }
   }
 `);
+
+export const UPDATE_COMMENT = graphql(`
+  mutation UpdateComment($commentId: ID!, $content: String!) {
+    updateComment(commentId: $commentId, content: $content) {
+      code
+      success
+      message
+    }
+  }
+`);

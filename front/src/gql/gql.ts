@@ -19,6 +19,7 @@ type Documents = {
     "\n  mutation deleteArticle($id: ID!) {\n    deleteArticle(id: $id) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteArticleDocument,
     "\n  mutation AddComment($content: String!, $userId: ID!, $articleId: ID!) {\n    addComment(content: $content, userId: $userId, articleId: $articleId) {\n      id\n      content\n      author {\n        id\n        username\n      }\n    }\n  }\n": typeof types.AddCommentDocument,
     "\n  mutation DeleteComment($commentId: ID!) {\n    deleteComment(commentId: $commentId) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteCommentDocument,
+    "\n  mutation UpdateComment($commentId: ID!, $content: String!) {\n    updateComment(commentId: $commentId, content: $content) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.UpdateCommentDocument,
     "\n  mutation AddArticleDislike($articleId: ID!, $userId: ID!) {\n    addArticleDislike(articleId: $articleId, userId: $userId) {\n      id\n      article {\n        id\n      }\n      user {\n        id\n        username\n      }\n    }\n  }\n": typeof types.AddArticleDislikeDocument,
     "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteArticleDislikeDocument,
     "\n  mutation AddCommentDislike($commentId: ID!, $userId: ID!) {\n    addCommentDislike(commentId: $commentId, userId: $userId) {\n      id\n    }\n  }\n": typeof types.AddCommentDislikeDocument,
@@ -42,6 +43,7 @@ const documents: Documents = {
     "\n  mutation deleteArticle($id: ID!) {\n    deleteArticle(id: $id) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteArticleDocument,
     "\n  mutation AddComment($content: String!, $userId: ID!, $articleId: ID!) {\n    addComment(content: $content, userId: $userId, articleId: $articleId) {\n      id\n      content\n      author {\n        id\n        username\n      }\n    }\n  }\n": types.AddCommentDocument,
     "\n  mutation DeleteComment($commentId: ID!) {\n    deleteComment(commentId: $commentId) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteCommentDocument,
+    "\n  mutation UpdateComment($commentId: ID!, $content: String!) {\n    updateComment(commentId: $commentId, content: $content) {\n      code\n      success\n      message\n    }\n  }\n": types.UpdateCommentDocument,
     "\n  mutation AddArticleDislike($articleId: ID!, $userId: ID!) {\n    addArticleDislike(articleId: $articleId, userId: $userId) {\n      id\n      article {\n        id\n      }\n      user {\n        id\n        username\n      }\n    }\n  }\n": types.AddArticleDislikeDocument,
     "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteArticleDislikeDocument,
     "\n  mutation AddCommentDislike($commentId: ID!, $userId: ID!) {\n    addCommentDislike(commentId: $commentId, userId: $userId) {\n      id\n    }\n  }\n": types.AddCommentDislikeDocument,
@@ -94,6 +96,10 @@ export function graphql(source: "\n  mutation AddComment($content: String!, $use
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteComment($commentId: ID!) {\n    deleteComment(commentId: $commentId) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteComment($commentId: ID!) {\n    deleteComment(commentId: $commentId) {\n      code\n      success\n      message\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateComment($commentId: ID!, $content: String!) {\n    updateComment(commentId: $commentId, content: $content) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateComment($commentId: ID!, $content: String!) {\n    updateComment(commentId: $commentId, content: $content) {\n      code\n      success\n      message\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

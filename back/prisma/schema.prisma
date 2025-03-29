@@ -21,12 +21,13 @@ model User {
   comments Comment[]
   dislikes    Dislike[]
   bio       String?
+  iconName   String? @default("Skull")
   createdAt DateTime @default(now())
 }
 
 model Dislike {
   id        String   @id @unique @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String?

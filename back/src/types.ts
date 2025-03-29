@@ -200,7 +200,8 @@ export type Query = {
   getComments?: Maybe<Array<Maybe<Comment>>>;
   getDislikesByArticleId?: Maybe<Array<Maybe<Dislike>>>;
   getDislikesByCommentId?: Maybe<Array<Maybe<Dislike>>>;
-  getDislikesByUserId?: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByUserIdForArticles?: Maybe<Array<Maybe<Dislike>>>;
+  getDislikesByUserIdForComments?: Maybe<Array<Maybe<Dislike>>>;
   getUserbyToken?: Maybe<UserToken>;
 };
 
@@ -235,7 +236,12 @@ export type QueryGetDislikesByCommentIdArgs = {
 };
 
 
-export type QueryGetDislikesByUserIdArgs = {
+export type QueryGetDislikesByUserIdForArticlesArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetDislikesByUserIdForCommentsArgs = {
   userId: Scalars['ID']['input'];
 };
 
@@ -266,14 +272,18 @@ export type User = {
   comments?: Maybe<Array<Maybe<Comment>>>;
   createdAt: Scalars['String']['output'];
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
+  iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
 };
 
 export type UserSummary = {
   __typename?: 'UserSummary';
+  TotalComments?: Maybe<Scalars['Int']['output']>;
+  TotalDislikes?: Maybe<Scalars['Int']['output']>;
   bio?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   username: Scalars['String']['output'];
 };
@@ -294,6 +304,7 @@ export type UpdateUserResponse = {
 
 export type UserUpdateBody = {
   bio?: InputMaybe<Scalars['String']['input']>;
+  iconName?: InputMaybe<Scalars['String']['input']>;
   password?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
 };
@@ -520,7 +531,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
   getDislikesByArticleId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByArticleIdArgs, 'articleId'>>;
   getDislikesByCommentId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByCommentIdArgs, 'commentId'>>;
-  getDislikesByUserId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdArgs, 'userId'>>;
+  getDislikesByUserIdForArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdForArticlesArgs, 'userId'>>;
+  getDislikesByUserIdForComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdForCommentsArgs, 'userId'>>;
   getUserbyToken?: Resolver<Maybe<ResolversTypes['UserToken']>, ParentType, ContextType, RequireFields<QueryGetUserbyTokenArgs, 'token'>>;
 };
 
@@ -545,14 +557,18 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   comments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
+  iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type UserSummaryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserSummary'] = ResolversParentTypes['UserSummary']> = {
+  TotalComments?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  TotalDislikes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

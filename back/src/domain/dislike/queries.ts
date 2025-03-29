@@ -37,15 +37,37 @@ export const getDislikesByCommentId: NonNullable<
   }
 };
 
-export const getDislikesByUserId: NonNullable<
-  QueryResolvers["getDislikesByUserId"]
+export const getDislikesByUserIdForArticles: NonNullable<
+  QueryResolvers["getDislikesByUserIdForArticles"]
 > = async (_, { userId }, { dataSources: { db } }) => {
   try {
     const dislikes = await db.dislike.findMany({
       where: {
         userId,
+        articleId: { not: null },
       },
       include: {
+        article: true,
+        user: true,
+      },
+    });
+    return dislikes;
+  } catch {
+    return null;
+  }
+};
+
+export const getDislikesByUserIdForComments: NonNullable<
+  QueryResolvers["getDislikesByUserIdForComments"]
+> = async (_, { userId }, { dataSources: { db } }) => {
+  try {
+    const dislikes = await db.dislike.findMany({
+      where: {
+        userId,
+        commentId: { not: null },
+      },
+      include: {
+        comment: true,
         user: true,
       },
     });
@@ -57,10 +79,14 @@ export const getDislikesByUserId: NonNullable<
 
 type DislikeQueries = WithRequired<
   QueryResolvers,
-  "getDislikesByArticleId" | "getDislikesByUserId" | "getDislikesByCommentId"
+  | "getDislikesByArticleId"
+  | "getDislikesByCommentId"
+  | "getDislikesByUserIdForArticles"
+  | "getDislikesByUserIdForComments"
 >;
 export const dislikeQueries: DislikeQueries = {
   getDislikesByArticleId,
   getDislikesByCommentId,
-  getDislikesByUserId,
+  getDislikesByUserIdForArticles,
+  getDislikesByUserIdForComments,
 };

@@ -31,6 +31,7 @@ export const UPDATE_USER = gql`
         id
         username
         bio
+        iconName
         createdAt
       }
     }

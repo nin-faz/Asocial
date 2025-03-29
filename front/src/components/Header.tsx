@@ -2,13 +2,14 @@ import { useContext, useEffect, useState } from "react";
 import {
   Search,
   Skull,
-  MessageSquare,
   Menu,
-  ThumbsDown,
   Home,
   Bomb,
   LogOut,
   User,
+  PlusCircle,
+  BarChart2,
+  Settings,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -35,9 +36,13 @@ const Header = () => {
   const { pathname } = useLocation();
   const { searchTerm, setSearchTerm } = useSearch();
 
+  // Check if current path is publications or a publication details page
+  const isPublicationsActive =
+    pathname === "/publications" || pathname.startsWith("/publications/");
+
   // Vide le champ quand on quitte /publications
   useEffect(() => {
-    if (pathname !== "/publications" && searchTerm !== "") {
+    if (!pathname.startsWith("/publications") && searchTerm !== "") {
       setSearchTerm("");
     }
   }, [pathname]);
@@ -68,7 +73,7 @@ const Header = () => {
             <nav className="flex items-center space-x-8">
               <motion.div
                 className={`flex items-center transition-colors cursor-pointer ${
-                  pathname === "/publications"
+                  isPublicationsActive
                     ? "text-purple-400"
                     : "text-gray-400 hover:text-purple-400"
                 }`}
@@ -95,7 +100,7 @@ const Header = () => {
             </nav>
 
             {/* Search Bar */}
-            {pathname === "/publications" && (
+            {pathname.startsWith("/publications") && (
               <div className="flex-auto max-w-lg mr-24">
                 <div className="relative w-full">
                   <input
@@ -113,18 +118,26 @@ const Header = () => {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
-            <motion.button
-              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
-              whileHover={{ scale: 1.1 }}
-            >
-              <MessageSquare className="h-6 w-6" />
-            </motion.button>
-            <motion.button
-              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
-              whileHover={{ scale: 1.1 }}
-            >
-              <ThumbsDown className="h-6 w-6" />
-            </motion.button>
+            {user && (
+              <>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => navigate("/publications")}
+                  title="Créer une publication"
+                >
+                  <PlusCircle className="h-6 w-6" />
+                </motion.button>
+                <motion.button
+                  className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => navigate("/profile?tab=statistiques")}
+                  title="Voir mes statistiques"
+                >
+                  <BarChart2 className="h-6 w-6" />
+                </motion.button>
+              </>
+            )}
 
             {user ? (
               <div className="relative">
@@ -218,7 +231,9 @@ const Header = () => {
 
               <nav className="space-y-1">
                 <button
-                  className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800"
+                  className={`flex items-center w-full p-3 rounded-lg hover:bg-gray-800 ${
+                    isPublicationsActive ? "text-purple-400" : "text-gray-300"
+                  }`}
                   onClick={() => {
                     navigate("/publications");
                     setShowMobileMenu(false);

@@ -19,8 +19,9 @@ import {
 } from "../mutations";
 import {
   FIND_ARTICLES,
-  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLE_BY_MOST_DISLIKED,
+  GET_USER_BY_ID,
 } from "../queries";
 import { FindArticlesQuery } from "../gql/graphql";
 import { toast } from "react-toastify";
@@ -31,6 +32,7 @@ import {
   showArticleDeletedToast,
   showLoginRequiredToast,
 } from "../utils/customToasts";
+import UserIcon from "../components/UserIcon"; // Ajoutez cette ligne
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -42,8 +44,29 @@ function PublicationPage() {
 
   const navigate = useNavigate();
 
-  const { data, refetch: refetchArticles } = useQuery(FIND_ARTICLES);
+  // Obtenir les informations utilisateur, y compris l'icône
+  const { data: userData, refetch: refetchUserData } = useQuery(
+    GET_USER_BY_ID,
+    {
+      variables: { id: user?.id },
+      skip: !user?.id,
+    }
+  );
+
+  const userIconName = userData?.findUserById?.iconName || "Skull";
+
+  const { data, refetch: refetchArticles } = useQuery(FIND_ARTICLES, {
+    fetchPolicy: "network-only", // Force le rafraîchissement depuis le serveur
+  });
   const articles = data?.findArticles || [];
+
+  // Effet au chargement pour rafraîchir les données
+  useEffect(() => {
+    refetchArticles();
+    if (user?.id) {
+      refetchUserData();
+    }
+  }, [refetchArticles, refetchUserData, user?.id]);
 
   const { data: mostDislikedArticles, refetch: refetechMostDislikedArticles } =
     useQuery(FIND_ARTICLE_BY_MOST_DISLIKED);
@@ -209,7 +232,7 @@ function PublicationPage() {
   };
 
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
-    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
     {
       variables: { userId: user?.id! },
       skip: !user?.id,
@@ -229,7 +252,7 @@ function PublicationPage() {
 
     const dislikesMap: { [key: string]: boolean } = {};
 
-    // Vérifie les articles dislikés dans sortedArticles
+    // Vérifie les articles dislikés dans displayedArticles
     displayedArticles.forEach(({ id, dislikes = [] }) => {
       if (dislikes?.some((dislike) => dislike?.user?.id === user?.id)) {
         dislikesMap[id] = true;
@@ -237,8 +260,8 @@ function PublicationPage() {
     });
 
     // Vérifie les dislikes récupérés depuis la requête GraphQL
-    if (dislikeUser?.getDislikesByUserId) {
-      dislikeUser.getDislikesByUserId.forEach((dislike) => {
+    if (dislikeUser?.getDislikesByUserIdForArticles) {
+      dislikeUser.getDislikesByUserIdForArticles.forEach((dislike) => {
         if (dislike?.article) {
           dislikesMap[dislike.article.id] = true;
         }
@@ -339,7 +362,11 @@ function PublicationPage() {
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-              <Skull className="h-6 w-6 text-purple-400" />
+              {user ? (
+                <UserIcon iconName={userIconName} size="small" />
+              ) : (
+                <Skull className="h-6 w-6 text-purple-400" />
+              )}
             </div>
           </div>
           <div className="flex flex-col space-y-4 w-full">
@@ -404,7 +431,7 @@ function PublicationPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-                        <Skull className="h-6 w-6 text-purple-400" />
+                        <UserIcon iconName={author.iconName} size="small" />
                       </div>
                       <div>
                         <h3 className="text-purple-400 font-semibold">

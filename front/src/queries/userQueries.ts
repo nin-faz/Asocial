@@ -10,12 +10,15 @@ export const GET_USER_BY_TOKEN = gql`
 `;
 
 export const GET_USER_BY_ID = gql`
-  query FindUserById($id: ID!) {
+  query GetUserById($id: ID!) {
     findUserById(id: $id) {
       id
       username
       bio
+      iconName
       createdAt
+      TotalDislikes
+      TotalComments
     }
   }
 `;

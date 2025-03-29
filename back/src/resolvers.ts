@@ -67,4 +67,49 @@ export const resolvers: Resolvers = {
       });
     },
   },
+  UserSummary: {
+    TotalDislikes: async (parent, _, { dataSources: { db } }) => {
+      // Trouver tous les articles de l'utilisateur
+      const userArticles = await db.article.findMany({
+        where: { authorId: parent.id },
+        select: { id: true },
+      });
+
+      // Obtenir les IDs des articles
+      const articleIds = userArticles.map((article) => article.id);
+
+      // Compter les dislikes sur ces articles
+      const dislikeCount = await db.dislike.count({
+        where: {
+          articleId: {
+            in: articleIds,
+          },
+        },
+      });
+
+      return dislikeCount;
+    },
+
+    TotalComments: async (parent, _, { dataSources: { db } }) => {
+      // Trouver tous les articles de l'utilisateur
+      const userArticles = await db.article.findMany({
+        where: { authorId: parent.id },
+        select: { id: true },
+      });
+
+      // Obtenir les IDs des articles
+      const articleIds = userArticles.map((article) => article.id);
+
+      // Compter les commentaires sur ces articles
+      const commentCount = await db.comment.count({
+        where: {
+          articleId: {
+            in: articleIds,
+          },
+        },
+      });
+
+      return commentCount;
+    },
+  },
 };

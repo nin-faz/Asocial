@@ -1,16 +1,19 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
   Settings,
   LogOut,
   Users,
-  Skull,
-  Link as LinkIcon,
   Save,
   X,
   Share2,
+  Download,
+  MoreVertical,
+  Trash2,
+  Edit2,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { useQuery, useMutation } from "@apollo/client";
@@ -18,22 +21,33 @@ import {
   UPDATE_USER,
   ADD_ARTICLE_DISLIKE,
   DELETE_ARTICLE_DISLIKE,
+  DELETE_ARTICLE,
 } from "../mutations";
-import { useNavigate } from "react-router-dom";
 import {
   FIND_ARTICLES,
   GET_USER_BY_ID,
-  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLES_BY_USER,
 } from "../queries";
 import { toast } from "react-toastify";
-import { showLoginRequiredToast } from "../utils/customToasts";
+import {
+  showLoginRequiredToast,
+  showArticleDeletedToast,
+} from "../utils/customToasts";
 import { Article, UserSummary, Dislike } from "../gql/graphql";
 import PublicationDetailsPage from "./PublicationDetailsPage";
+import IconSelector from "../components/IconSelector";
+import { renderUserIcon } from "../utils/iconUtil";
+import UserIcon from "../components/UserIcon";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const auth = useContext(AuthContext);
+
+  // Get tab from URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const tabParam = queryParams.get("tab");
 
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
 
@@ -41,18 +55,38 @@ const ProfilePage = () => {
 
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+  const [iconName, setIconName] = useState("Skull");
 
   const [error, setError] = useState("");
-  const [numberOfPosts, setNumberOfPosts] = useState(0);
-  const [articles, setArticles] = useState<Article[]>([]);
+
   const [allArticleDisliked, setAllArticleDisliked] = useState<
     Article[] | null
   >([]);
   const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
-  const [activeTab, setActiveTab] = useState("publications"); // State for active tab
+  const [activeTab, setActiveTab] = useState(
+    tabParam === "statistiques" || tabParam === "dislikes"
+      ? tabParam
+      : "publications"
+  );
   const [userArticleDislikes, setUserArticleDislikes] = useState<{
     [key: string]: boolean;
   }>({});
+
+  // State for dropdown menu
+  const [showMenu, setShowMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!auth) return null;
 
@@ -75,28 +109,14 @@ const ProfilePage = () => {
 
   const userInfosData = userInfos?.findUserById;
 
-  // const article = useQuery<{ findArticles: Article[] }>(FIND_ARTICLES);
   const { data: articleDisliked, refetch: refetchArticleDisliked } = useQuery(
-    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+    FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
     {
       variables: { userId: user?.id! },
     }
   );
 
-  const dislikesByUser = articleDisliked?.getDislikesByUserId;
-  console.log("Article liké : ", dislikesByUser);
-
-  // useEffect(() => {
-  //   setNumberOfPosts(0);
-  //   if (article.data && user) {
-  //     const userArticles = article.data.findArticles.filter(
-  //       (article) => article.author.id === user.id
-  //     );
-  //     console.log("userArticles : ", userArticles);
-  //     setArticles(userArticles);
-  //     setNumberOfPosts(userArticles.length);
-  //   }
-  // }, [article.data, user]);
+  const dislikesByUser = articleDisliked?.getDislikesByUserIdForArticles;
 
   useEffect(() => {
     if (!user) {
@@ -106,8 +126,8 @@ const ProfilePage = () => {
 
     const dislikesMap: { [key: string]: boolean } = {};
 
-    if (articleDisliked?.getDislikesByUserId) {
-      articleDisliked.getDislikesByUserId.forEach((dislike) => {
+    if (articleDisliked?.getDislikesByUserIdForArticles) {
+      articleDisliked.getDislikesByUserIdForArticles.forEach((dislike) => {
         if (dislike?.article?.id) {
           dislikesMap[dislike.article.id] = true;
         }
@@ -132,8 +152,9 @@ const ProfilePage = () => {
     if (userInfosData) {
       setUsername(userInfosData.username);
       setBio(userInfosData.bio);
+      setIconName(userInfosData.iconName || "Skull");
     }
-  }, [user]);
+  }, [userInfosData]);
 
   const handleLogout = () => {
     logout();
@@ -142,12 +163,15 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
+      console.log("Saving profile with iconName:", iconName); // Ajoutez cette ligne pour débogage
+
       const { data } = await updateUserMutation({
         variables: {
           id: user?.id,
           body: {
             username,
             bio,
+            iconName, // Assurez-vous que cette valeur est présente
           },
         },
         context: {
@@ -157,44 +181,42 @@ const ProfilePage = () => {
         },
       });
 
+      console.log("Update response:", data); // Ajoutez cette ligne pour débogage
+
       if (data.updateUser.success) {
         setIsEditing(false);
         setError("");
+        await refetchUserInfos();
       } else {
         setError(data.updateUser.message);
       }
     } catch (err) {
+      console.error("Error updating profile:", err); // Améliorez l'affichage de l'erreur
       setError("Une erreur est survenue lors de la mise à jour du profil.");
-      console.error(error, err);
     }
   };
 
   const cancelEditing = () => {
-    // Reset form to original values
     if (user) {
       setUsername(userInfosData.username);
       setBio(userInfosData.bio);
+      setIconName(userInfosData.iconName || "Skull");
     }
     setIsEditing(false);
     setError("");
   };
 
-  // Mock stats for UI
-  const mockUserStats = {
-    publications: 10,
-    dislikes: 5,
-    followers: 20,
-    following: 15,
-  };
-
   const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+  const [deleteArticle] = useMutation(DELETE_ARTICLE);
 
   const handleArticleDislike = async (
     e: React.MouseEvent,
     articleId: string
   ) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (!user) {
       showLoginRequiredToast("dislike");
       return;
@@ -226,6 +248,41 @@ const ProfilePage = () => {
     }
   };
 
+  const handleDeleteArticle = async (articleId: string) => {
+    try {
+      const response = await deleteArticle({
+        variables: { id: articleId },
+        context: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      });
+
+      if (response.data?.deleteArticle?.success) {
+        showArticleDeletedToast();
+        await refetchArticleByUser();
+        console.log("Article supprimé avec succès !");
+      } else {
+        console.error(
+          response?.data?.deleteArticle?.message ||
+            "Echec de la suppression de l'article."
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) {
+        toast.error("Une erreur est survenue : " + err.message);
+      } else {
+        toast.error("Une erreur est survenue");
+      }
+    }
+  };
+
+  const handleEditArticle = (articleId: string) => {
+    navigate(`/publications/${articleId}?edit=true`);
+  };
+
   const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
     FIND_ARTICLES_BY_USER,
     {
@@ -240,6 +297,63 @@ const ProfilePage = () => {
     setSelectedArticle(articleId);
   };
 
+  const handleExportUserData = () => {
+    if (!user || !userInfosData || !articleByUserData) {
+      toast.error("Impossible d'exporter les données");
+      return;
+    }
+
+    // Données d'objet avec toutes les infos du user
+    const userData = {
+      profile: {
+        id: user.id,
+        username: userInfosData.username,
+        bio: userInfosData.bio,
+        createdAt: userInfosData.createdAt,
+        totalDislikes: userInfosData.TotalDislikes || 0,
+        totalComments: userInfosData.TotalComments || 0,
+      },
+      publications: articleByUserData.map((article) => ({
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        createdAt: article.createdAt,
+        totalDislikes: article.TotalDislikes,
+        totalComments: article.TotalComments,
+      })),
+      dislikes: dislikesByUser
+        ? dislikesByUser
+            .filter((dislike) => dislike?.article)
+            .map((dislike) => ({
+              id: dislike?.id,
+              articleId: dislike?.article?.id,
+              articleTitle: dislike?.article?.title,
+              articleAuthor: dislike?.article?.author.username,
+              createdAt: dislike?.createdAt,
+            }))
+        : [],
+    };
+
+    const jsonData = JSON.stringify(userData, null, 2);
+    const blob = new Blob([jsonData], { type: "application/json" });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `asocial-data-${user.username}-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+    toast.success("Données exportées avec succès !");
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    navigate(`/profile?tab=${tab}`, { replace: true });
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       {/* Profile Header */}
@@ -250,12 +364,16 @@ const ProfilePage = () => {
       >
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Avatar */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="w-32 h-32 rounded-full bg-purple-900 flex items-center justify-center"
-          >
-            <Skull className="h-16 w-16 text-purple-400" />
-          </motion.div>
+          {isEditing ? (
+            <IconSelector currentIcon={iconName} onSelectIcon={setIconName} />
+          ) : (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="w-32 h-32 rounded-full bg-purple-900 flex items-center justify-center"
+            >
+              {renderUserIcon(userInfosData?.iconName, "large")}
+            </motion.div>
+          )}
 
           {/* Profile Info */}
           <div className="flex-1 text-center md:text-left">
@@ -345,15 +463,18 @@ const ProfilePage = () => {
                     </span>
                   </button>
                   <div className="flex items-center gap-2">
-                    <ThumbsDown className="h-5 w-5" />
-                    <span>{numberOfPostDisliked} dislikes reçus</span>
+                    <button className="flex items-center space-x-2 hover:text-purple-400">
+                      <ThumbsDown className="h-5 w-5" />
+                      <span>
+                        {userInfosData?.TotalDislikes || 0} dislikes reçus
+                      </span>
+                    </button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    <span>
-                      {mockUserStats.followers} détracteurs ·{" "}
-                      {mockUserStats.following} cibles
-                    </span>
+                    <button className="flex items-center space-x-2 hover:text-purple-400">
+                      <Users className="h-5 w-5" />
+                      <span>{numberOfPostDisliked} dislikes donnés</span>
+                    </button>
                   </div>
                 </div>
 
@@ -383,8 +504,10 @@ const ProfilePage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-lg"
+              onClick={handleExportUserData}
+              title="Exporter mes données"
             >
-              <LinkIcon className="h-6 w-6" />
+              <Download className="h-6 w-6" />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -399,36 +522,45 @@ const ProfilePage = () => {
 
       {/* Tabs */}
       <div className="mt-8 border-b border-purple-900">
-        <nav className="flex gap-8">
+        <nav className="flex justify-center md:justify-between w-full mx-auto">
           <button
-            className={`pb-4 ${
+            className={`px-6 py-3 text-center flex-1 transition-all duration-200 ${
               activeTab === "publications"
-                ? "text-purple-400 border-b-2 border-purple-500"
-                : "text-gray-500 hover:text-gray-300"
+                ? "text-purple-400 border-b-2 border-purple-500 font-medium"
+                : "text-gray-500 hover:text-gray-300 "
             }`}
-            onClick={() => setActiveTab("publications")}
+            onClick={() => handleTabChange("publications")}
           >
-            Publications
+            <span className="flex items-center justify-center">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Publications
+            </span>
           </button>
           <button
-            className={`pb-4 ${
+            className={`px-6 py-3 text-center flex-1 transition-all duration-200 ${
               activeTab === "dislikes"
-                ? "text-purple-400 border-b-2 border-purple-500"
-                : "text-gray-500 hover:text-gray-300"
+                ? "text-purple-400 border-b-2 border-purple-500 font-medium"
+                : "text-gray-500 hover:text-gray-300 "
             }`}
-            onClick={() => setActiveTab("dislikes")}
+            onClick={() => handleTabChange("dislikes")}
           >
-            Dislikes
+            <span className="flex items-center justify-center">
+              <ThumbsDown className="h-4 w-4 mr-2" />
+              Dislikes
+            </span>
           </button>
           <button
-            className={`pb-4 ${
+            className={`px-6 py-3 text-center flex-1 transition-all duration-200 ${
               activeTab === "statistiques"
-                ? "text-purple-400 border-b-2 border-purple-500"
-                : "text-gray-500 hover:text-gray-300"
+                ? "text-purple-400 border-b-2 border-purple-500 font-medium"
+                : "text-gray-500 hover:text-gray-300 "
             }`}
-            onClick={() => setActiveTab("statistiques")}
+            onClick={() => handleTabChange("statistiques")}
           >
-            Statistiques
+            <span className="flex items-center justify-center">
+              <Share2 className="h-4 w-4 mr-2" />
+              Statistiques
+            </span>
           </button>
         </nav>
       </div>
@@ -456,21 +588,72 @@ const ProfilePage = () => {
                   onClick={() => handlePostClick(article.id)}
                   className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
                 >
-                  {/* <div className="p-4 bg-gray-900 rounded-lg border border-purple-900"> */}
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-                      <Skull className="h-6 w-6 text-purple-400" />
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                        {renderUserIcon(userInfosData?.iconName, "small")}
+                      </div>
+                      <p className="text-gray-500 text-sm">
+                        Publié le {""}
+                        {article.updatedAt
+                          ? new Date(parseInt(article.updatedAt, 10))
+                              .toLocaleString()
+                              .replace(" ", " à ")
+                          : new Date(parseInt(article.createdAt ?? "0", 10))
+                              .toLocaleString()
+                              .replace(" ", " à ")}
+                      </p>
                     </div>
-                    <p className="text-gray-500 text-sm">
-                      Publié le {""}
-                      {article.updatedAt
-                        ? new Date(parseInt(article.updatedAt, 10))
-                            .toLocaleString()
-                            .replace(" ", " à ")
-                        : new Date(parseInt(article.createdAt ?? "0", 10))
-                            .toLocaleString()
-                            .replace(" ", " à ")}
-                    </p>
+
+                    {/* Menu button with dropdown */}
+                    <div className="relative">
+                      <button
+                        className="text-gray-500 hover:text-purple-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(
+                            article.id === showMenu ? null : article.id
+                          );
+                        }}
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+
+                      {showMenu === article.id && (
+                        <motion.div
+                          ref={menuRef}
+                          initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, x: 20 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="absolute top-0 right-5 w-36 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-2 z-10"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteArticle(article.id);
+                              setShowMenu(null);
+                            }}
+                            className="flex items-center space-x-2 text-red-500 hover:text-red-400 w-full"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                            <span>Supprimer</span>
+                          </button>
+                          <hr className="border-gray-700" />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditArticle(article.id);
+                              setShowMenu(null);
+                            }}
+                            className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
+                          >
+                            <Edit2 className="h-5 w-5" />
+                            <span>Modifier</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                   <div className="py-2">
                     <h2 className="text-xl font-semibold text-purple-400 mb-2">
@@ -495,18 +678,23 @@ const ProfilePage = () => {
                         <ThumbsDown className="h-5 w-5" />
                         <span>{article.TotalDislikes}</span>
                       </motion.button>
-                      <button className="flex items-center gap-2 hover:text-purple-400">
+                      <button
+                        className="flex items-center gap-2 hover:text-purple-400"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MessageSquare className="h-5 w-5" />
                         <span>{article.TotalComments}</span>
                       </button>
                     </div>
 
-                    <button className="flex items-center space-x-2 hover:text-purple-400">
+                    <button
+                      className="flex items-center space-x-2 hover:text-purple-400"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Share2 className="h-5 w-5" />
                       <span>Partager</span>
                     </button>
                   </div>
-                  {/* </div> */}
                 </motion.div>
               ))
             ) : (
@@ -515,13 +703,13 @@ const ProfilePage = () => {
           </div>
         )}
         {selectedArticle && (
-          <div className="fixed inset-0 min-h-screen bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset- min-h-screen bg-black bg-opacity-50 z-50 flex items-center justify-center p-">
             {" "}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto relative"
+              className="bg-gray-900 rounded-lg w-full max-w-3xl h-[95vh] overflow-y-auto relative"
             >
               <button
                 onClick={() => setSelectedArticle(null)}
@@ -530,7 +718,7 @@ const ProfilePage = () => {
                 <X className="h-6 w-6" />
               </button>
 
-              <div className="p-6">
+              <div className="p-6 h-full">
                 <PublicationDetailsPage
                   articleId={selectedArticle}
                   isModal={true}
@@ -540,6 +728,7 @@ const ProfilePage = () => {
             </motion.div>
           </div>
         )}
+
         {/* Onglet Dislikes */}
         {activeTab === "dislikes" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
@@ -566,7 +755,10 @@ const ProfilePage = () => {
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-                          <Skull className="h-6 w-6 text-purple-400" />
+                          <UserIcon
+                            iconName={dislike?.article?.author.iconName}
+                            size="small"
+                          />
                         </div>
                         <div>
                           <h3 className="text-purple-400 font-semibold">
@@ -616,74 +808,99 @@ const ProfilePage = () => {
         )}
 
         {activeTab === "statistiques" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+            {/* Première carte: Activité totale */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+              whileHover={{
+                scale: 1.03,
+                boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+              }}
+              className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-all h-full"
             >
-              <h3 className="text-purple-400 font-semibold mb-2">
+              <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
                 Activité totale
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Publications</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {articleByUserData?.length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Dislikes donnés</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {numberOfPostDisliked}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Dislikes reçus</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {userInfosData?.TotalDislikes || 0}
                   </span>
                 </div>
               </div>
             </motion.div>
 
+            {/* Deuxième carte: Engagement */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+              whileHover={{
+                scale: 1.03,
+                boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+              }}
+              className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-all h-full"
             >
-              <h3 className="text-purple-400 font-semibold mb-2">Engagement</h3>
+              <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
+                Engagement
+              </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Commentaires reçus</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {userInfosData?.TotalComments || 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Taux d'engagement</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {(
                       (userInfosData?.TotalDislikes || 0) /
                       (articleByUserData?.length || 1)
                     ).toFixed(2)}
                   </span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Quotient de haine</span>
+                  <span className="text-purple-400 font-semibold">
+                    {(
+                      numberOfPostDisliked / (articleByUserData?.length || 1)
+                    ).toFixed(2)}
+                  </span>
+                </div>
               </div>
             </motion.div>
 
+            {/* Troisième carte: Dernière activité */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+              whileHover={{
+                scale: 1.03,
+                boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
+              }}
+              className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-all h-full md:col-span-2 lg:col-span-1"
             >
-              <h3 className="text-purple-400 font-semibold mb-2">
+              <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
                 Dernière activité
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Dernière publication</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {articleByUserData && articleByUserData.length > 0
                       ? new Date(
                           parseInt(articleByUserData[0].createdAt)
@@ -693,10 +910,22 @@ const ProfilePage = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Membre depuis</span>
-                  <span className="text-purple-400">
+                  <span className="text-purple-400 font-semibold">
                     {new Date(
                       userInfosData?.createdAt || Date.now()
                     ).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Jours de présence</span>
+                  <span className="text-purple-400 font-semibold">
+                    {Math.floor(
+                      (Date.now() -
+                        new Date(
+                          userInfosData?.createdAt || Date.now()
+                        ).getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    )}
                   </span>
                 </div>
               </div>

@@ -7,7 +7,7 @@ import {
   DELETE_COMMENT_DISLIKE,
 } from "../mutations";
 import {
-  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENT,
 } from "../queries";
 import { showLoginRequiredToast } from "../utils/customToasts";
@@ -27,7 +27,7 @@ export const useDislike = ({
 }: UseDislikeParams) => {
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
     type === "article"
-      ? FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE
+      ? FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES
       : FIND_DISLIKES_BY_USER_ID_FOR_COMMENT,
     {
       variables: { userId: user?.id! },

@@ -10,7 +10,8 @@ export const typeDefs = gql`
     getUserbyToken(token: String!): UserToken
     getDislikesByArticleId(articleId: ID!): [Dislike]
     getDislikesByCommentId(commentId: ID!): [Dislike]
-    getDislikesByUserId(userId: ID!): [Dislike]
+    getDislikesByUserIdForArticles(userId: ID!): [Dislike]
+    getDislikesByUserIdForComments(userId: ID!): [Dislike]
     getComments(articleId: ID!): [Comment]
   }
 
@@ -53,7 +54,10 @@ export const typeDefs = gql`
     id: ID!
     username: String!
     bio: String
+    iconName: String
     createdAt: String!
+    TotalDislikes: Int
+    TotalComments: Int
   }
 
   type CreateUserResponse {
@@ -80,6 +84,7 @@ export const typeDefs = gql`
     bio: String
     username: String
     password: String
+    iconName: String
   }
 
   type CreateArticleResponse {
@@ -105,6 +110,7 @@ export const typeDefs = gql`
     comments: [Comment]
     dislikes: [Dislike]
     bio: String
+    iconName: String
     createdAt: String!
   }
 

@@ -6,8 +6,9 @@ export const GET_COMMENTS = graphql(`
       id
       content
       author {
-        username
         id
+        username
+        iconName
       }
       createdAt
       dislikes {

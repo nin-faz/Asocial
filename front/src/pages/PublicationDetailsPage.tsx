@@ -4,9 +4,10 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import {
   FIND_ARTICLE_BY_ID,
-  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE,
-  FIND_DISLIKES_BY_USER_ID_FOR_COMMENT,
+  FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
+  FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS,
   GET_COMMENTS,
+  GET_USER_BY_ID,
 } from "../queries";
 import {
   ADD_ARTICLE_DISLIKE,
@@ -22,7 +23,6 @@ import {
   ThumbsDown,
   MessageSquare,
   Share2,
-  Skull,
   ArrowLeft,
   Send,
   MoreVertical,
@@ -42,6 +42,7 @@ import {
   showLoginRequiredToast,
 } from "../utils/customToasts";
 import Loader from "../components/Loader";
+import UserIcon from "../components/UserIcon"; // Import the UserIcon component
 
 interface PublicationDetailsPageProps {
   articleId?: string;
@@ -133,13 +134,13 @@ const PublicationDetailsPage = ({
   }, []);
 
   const { data: articleDislikeUser, refetch: refetchArticleDislikeUser } =
-    useQuery(FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE, {
+    useQuery(FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES, {
       variables: { userId: user?.id! },
       skip: !user?.id,
     });
 
   const { data: commentDislikeUser, refetch: refetchCommentDislikeUser } =
-    useQuery(FIND_DISLIKES_BY_USER_ID_FOR_COMMENT, {
+    useQuery(FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS, {
       variables: { userId: user?.id! },
       skip: !user?.id,
     });
@@ -174,8 +175,8 @@ const PublicationDetailsPage = ({
     }
 
     // Vérification des dislikes pour l'article depuis la requête GraphQL
-    if (articleDislikeUser?.getDislikesByUserId) {
-      articleDislikeUser.getDislikesByUserId.forEach((dislike) => {
+    if (articleDislikeUser?.getDislikesByUserIdForArticles) {
+      articleDislikeUser.getDislikesByUserIdForArticles.forEach((dislike) => {
         if (
           articleData?.findArticleById &&
           dislike?.article?.id === articleData.findArticleById.id
@@ -186,8 +187,8 @@ const PublicationDetailsPage = ({
     }
 
     // Vérification des dislikes pour les commentaires
-    if (commentDislikeUser?.getDislikesByUserId) {
-      commentDislikeUser.getDislikesByUserId.forEach((dislike) => {
+    if (commentDislikeUser?.getDislikesByUserIdForComments) {
+      commentDislikeUser.getDislikesByUserIdForComments.forEach((dislike) => {
         if (dislike?.comment?.id) {
           commentDislikesMap[dislike.comment.id] = true;
         }
@@ -300,7 +301,8 @@ const PublicationDetailsPage = ({
       showCommentDeletedToast();
       console.log("suppression du commentaire", commentId);
 
-      refetchComments();
+      await refetchComments();
+      await refetchArticleData();
     } catch (err) {
       console.error("Erreur lors de la suppression du commentaire :", err);
     }
@@ -387,6 +389,11 @@ const PublicationDetailsPage = ({
     }
   };
 
+  const { data: userData } = useQuery(GET_USER_BY_ID, {
+    variables: { id: user?.id },
+    skip: !user?.id,
+  });
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       {/* Back Button */}
@@ -412,8 +419,8 @@ const PublicationDetailsPage = ({
         {/* Post Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-purple-900 flex items-center justify-center">
-              <Skull className="h-7 w-7 text-purple-400" />
+            <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+              <UserIcon iconName={article?.author.iconName} size="small" />
             </div>
             <div>
               <h3 className="text-purple-400 font-semibold text-lg">
@@ -599,7 +606,10 @@ const PublicationDetailsPage = ({
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-              <Skull className="h-6 w-6 text-purple-400" />
+              <UserIcon
+                iconName={userData?.findUserById?.iconName}
+                size="small"
+              />
             </div>
           </div>
           <div className="flex-grow relative">
@@ -645,7 +655,7 @@ const PublicationDetailsPage = ({
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center">
-                  <Skull className="h-4 w-4 text-purple-400" />
+                  <UserIcon iconName={comment?.author?.iconName} size="small" />
                 </div>
               </div>
               <div className="flex-grow">

@@ -9,6 +9,7 @@ export const FIND_ARTICLES = graphql(`
       author {
         id
         username
+        iconName
       }
       createdAt
       updatedAt
@@ -33,6 +34,7 @@ export const FIND_ARTICLE_BY_ID = graphql(`
       author {
         id
         username
+        iconName
       }
       createdAt
       updatedAt
@@ -57,6 +59,7 @@ export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
       author {
         id
         username
+        iconName
       }
       createdAt
       updatedAt
@@ -78,6 +81,7 @@ export const FIND_ARTICLES_BY_USER = graphql(`
       author {
         id
         username
+        iconName
       }
       createdAt
       updatedAt

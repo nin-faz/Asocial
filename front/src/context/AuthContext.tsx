@@ -36,7 +36,6 @@ const decodeToken = (token: string): User | null => {
   }
 };
 
-
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const storedToken = sessionStorage.getItem("token");
   const storedUser = sessionStorage.getItem("user");
@@ -68,7 +67,10 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     sessionStorage.removeItem("token");
   };
 
-  const value = React.useMemo(() => ({ user, token, login, logout }), [user, token]);
+  const value = React.useMemo(
+    () => ({ user, token, login, logout }),
+    [user, token]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

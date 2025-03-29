@@ -1,8 +1,8 @@
 import { graphql } from "../gql";
 
-export const FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE = graphql(`
-  query FindDislikesByUserIdForArticle($userId: ID!) {
-    getDislikesByUserId(userId: $userId) {
+export const FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES = graphql(`
+  query FindDislikesByUserIdForArticles($userId: ID!) {
+    getDislikesByUserIdForArticles(userId: $userId) {
       user {
         id
         username
@@ -16,15 +16,16 @@ export const FIND_DISLIKES_BY_USER_ID_FOR_ARTICLE = graphql(`
         author {
           username
           id
+          iconName
         }
       }
     }
   }
 `);
 
-export const FIND_DISLIKES_BY_USER_ID_FOR_COMMENT = graphql(`
-  query FindDislikesByUserIdForComment($userId: ID!) {
-    getDislikesByUserId(userId: $userId) {
+export const FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS = graphql(`
+  query FindDislikesByUserIdForComments($userId: ID!) {
+    getDislikesByUserIdForComments(userId: $userId) {
       user {
         id
         username

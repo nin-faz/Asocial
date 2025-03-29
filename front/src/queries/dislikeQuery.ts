@@ -11,6 +11,7 @@ export const FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES = graphql(`
         id
         title
         content
+        imageUrl
         createdAt
         updatedAt
         author {

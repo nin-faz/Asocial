@@ -20,11 +20,16 @@ export const typeDefs = gql`
     signIn(username: String!, password: String!): SignInResponse!
     updateUser(id: ID!, body: userUpdateBody!): updateUserResponse!
 
-    createArticle(title: String, content: String!): CreateArticleResponse!
+    createArticle(
+      title: String
+      content: String!
+      imageUrl: String
+    ): CreateArticleResponse!
     updateArticle(
       id: ID!
       title: String
       content: String
+      imageUrl: String
     ): UpdateArticleResponse!
     deleteArticle(id: ID!): DeleteArticleResponse!
 
@@ -130,6 +135,7 @@ export const typeDefs = gql`
     id: ID!
     title: String
     content: String!
+    imageUrl: String
     author: User!
     dislikes: [Dislike]
     TotalDislikes: Int

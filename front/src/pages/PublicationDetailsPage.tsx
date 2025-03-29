@@ -45,6 +45,7 @@ import {
 } from "../utils/customToasts";
 import Loader from "../components/Loader";
 import UserIcon from "../components/UserIcon"; // Import the UserIcon component
+import ImageUploader from "../components/ImageUploader"; // Importez le composant ImageUploader
 
 interface PublicationDetailsPageProps {
   articleId?: string;
@@ -396,22 +397,38 @@ const PublicationDetailsPage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(article?.title || "");
   const [editedContent, setEditedContent] = useState(article?.content || "");
+  const [editedImageUrl, setEditedImageUrl] = useState<string | null>(
+    article?.imageUrl || null
+  );
 
   useEffect(() => {
     if (article) {
       setEditedTitle(article.title || "");
       setEditedContent(article.content || "");
+      setEditedImageUrl(article.imageUrl || null);
     }
   }, [article]);
 
   const handleUpdateArticle = async () => {
+    // Ajoutons des logs pour voir ce qui est envoyé
+    console.log("État de l'image avant envoi:", {
+      editedImageUrl,
+      type: typeof editedImageUrl,
+      isNull: editedImageUrl === null,
+    });
+
     try {
+      const variables = {
+        id: article?.id!,
+        title: editedTitle,
+        content: editedContent,
+        imageUrl: editedImageUrl,
+      };
+
+      console.log("Variables envoyées à la mutation:", variables);
+
       const response = await updateArticle({
-        variables: {
-          id: article?.id!,
-          title: editedTitle, // Ajout du titre
-          content: editedContent,
-        },
+        variables,
         context: {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -431,7 +448,7 @@ const PublicationDetailsPage = ({
         );
       }
     } catch (err) {
-      console.error(err);
+      console.error("Erreur lors de la mise à jour de l'article:", err);
       if (err instanceof Error) {
         toast.error("Une erreur est survenue : " + err.message);
       } else {
@@ -441,7 +458,7 @@ const PublicationDetailsPage = ({
   };
 
   const { data: userData } = useQuery(GET_USER_BY_ID, {
-    variables: { id: user?.id },
+    variables: { id: user?.id! },
     skip: !user?.id,
   });
 
@@ -561,6 +578,12 @@ const PublicationDetailsPage = ({
               className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
             />
 
+            {/* Ajout du téléchargeur d'image */}
+            <ImageUploader
+              imageUrl={editedImageUrl}
+              onImageChange={setEditedImageUrl}
+            />
+
             <div className="flex justify-end space-x-4 pb-4">
               <button
                 onClick={() => {
@@ -570,6 +593,7 @@ const PublicationDetailsPage = ({
                   if (article?.title === "") {
                     setEditedTitle("");
                   }
+                  setEditedImageUrl(article?.imageUrl || null);
                   setIsEditing(false);
                 }}
                 className="flex items-center px-3 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
@@ -603,11 +627,15 @@ const PublicationDetailsPage = ({
         )}
 
         {/* Post Image */}
-        {/* {post.image && (
+        {!isEditing && article?.imageUrl && (
           <div className="mb-6 rounded-lg overflow-hidden">
-            <img src={post.image} alt="Post" className="w-full h-auto" />
+            <img
+              src={article.imageUrl}
+              alt="Article"
+              className="w-full h-auto rounded-lg"
+            />
           </div>
-        )} */}
+        )}
 
         {/* Post Stats */}
         <div className="flex items-center justify-between text-gray-500 border-t border-gray-800 pt-4">

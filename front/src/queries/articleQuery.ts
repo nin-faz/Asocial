@@ -6,6 +6,7 @@ export const FIND_ARTICLES = graphql(`
       id
       title
       content
+      imageUrl
       author {
         id
         username
@@ -31,6 +32,7 @@ export const FIND_ARTICLE_BY_ID = graphql(`
       id
       title
       content
+      imageUrl
       author {
         id
         username
@@ -78,6 +80,7 @@ export const FIND_ARTICLES_BY_USER = graphql(`
       id
       title
       content
+      imageUrl
       author {
         id
         username

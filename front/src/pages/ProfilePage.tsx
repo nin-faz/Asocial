@@ -102,7 +102,7 @@ const ProfilePage = () => {
   const { data: userInfos, refetch: refetchUserInfos } = useQuery(
     GET_USER_BY_ID,
     {
-      variables: { id: user?.id },
+      variables: { id: user?.id! },
       skip: !user,
     }
   );
@@ -321,6 +321,7 @@ const ProfilePage = () => {
         id: article.id,
         title: article.title,
         content: article.content,
+        imageUrl: article.imageUrl,
         createdAt: article.createdAt,
         totalDislikes: article.TotalDislikes,
         totalComments: article.TotalComments,
@@ -665,6 +666,18 @@ const ProfilePage = () => {
                     <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
                       {article.content}
                     </p>
+
+                    {/* Ajout de l'affichage de l'image si elle existe */}
+                    {article.imageUrl && (
+                      <div className="mb-6 rounded-lg overflow-hidden">
+                        <img
+                          src={article.imageUrl}
+                          alt="Article"
+                          className="w-full h-auto rounded-lg max-h-80 object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center justify-between text-gray-500 border-t border-gray-800 pt-4">
                     <div className="flex items-center space-x-6 text-gray-500">
@@ -689,7 +702,6 @@ const ProfilePage = () => {
                         <span>{article.TotalComments}</span>
                       </button>
                     </div>
-
                     <button
                       className="flex items-center space-x-2 hover:text-purple-400"
                       onClick={(e) => e.stopPropagation()}
@@ -723,7 +735,6 @@ const ProfilePage = () => {
               >
                 <X className="h-6 w-6" />
               </button>
-
               <div className="p-6">
                 <PublicationDetailsPage
                   articleId={selectedArticle}
@@ -781,16 +792,24 @@ const ProfilePage = () => {
                         </div>
                       </div>
                     </div>
-
                     <div className="flex flex-col flex-grow justify-between">
                       <h1 className="text-2xl font-semibold text-gray-100 h-8 mb-4">
                         {dislike?.article?.title}
                       </h1>
-
                       <p className="text-gray-300 mb-4 whitespace-pre-wrap flex-grow">
                         {dislike?.article?.content}
                       </p>
-
+                      {/* Ajout de l'affichage de l'image si elle existe */}
+                      {dislike?.article?.imageUrl && (
+                        <div className="mb-4 rounded-lg overflow-hidden">
+                          <img
+                            src={dislike?.article?.imageUrl}
+                            alt="Article"
+                            className="w-full h-auto rounded-lg max-h-60 object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
                       <div className="flex flex-col justify-center items-end text-gray-500">
                         <motion.button
                           whileHover={{ scale: 1.1 }}

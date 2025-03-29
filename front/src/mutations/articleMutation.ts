@@ -1,8 +1,9 @@
 import { graphql } from "../gql";
+import { gql } from "@apollo/client";
 
 export const CREATE_ARTICLE = graphql(`
-  mutation CreateArticle($title: String, $content: String!) {
-    createArticle(title: $title, content: $content) {
+  mutation CreateArticle($title: String, $content: String!, $imageUrl: String) {
+    createArticle(title: $title, content: $content, imageUrl: $imageUrl) {
       code
       success
       message
@@ -21,15 +22,25 @@ export const CREATE_ARTICLE = graphql(`
   }
 `);
 
-export const UPDATE_ARTICLE = graphql(`
-  mutation updateArticle($id: ID!, $title: String, $content: String!) {
-    updateArticle(id: $id, title: $title, content: $content) {
+export const UPDATE_ARTICLE = gql`
+  mutation UpdateArticle(
+    $id: ID!
+    $title: String
+    $content: String
+    $imageUrl: String
+  ) {
+    updateArticle(
+      id: $id
+      title: $title
+      content: $content
+      imageUrl: $imageUrl
+    ) {
       code
       success
       message
     }
   }
-`);
+`;
 
 export const DELETE_ARTICLE = graphql(`
   mutation deleteArticle($id: ID!) {

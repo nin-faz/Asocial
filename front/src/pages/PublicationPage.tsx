@@ -9,6 +9,7 @@ import {
   SortDesc,
   Trash2,
   Edit2,
+  Share2,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import {
@@ -32,7 +33,8 @@ import {
   showArticleDeletedToast,
   showLoginRequiredToast,
 } from "../utils/customToasts";
-import UserIcon from "../components/UserIcon"; // Ajoutez cette ligne
+import UserIcon from "../components/UserIcon";
+import ImageUploader from "../components/ImageUploader";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -41,7 +43,6 @@ function PublicationPage() {
   }
 
   const { token, user } = authContext;
-
   const navigate = useNavigate();
 
   // Obtenir les informations utilisateur, y compris l'icône
@@ -83,6 +84,7 @@ function PublicationPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [articlesPerPage] = useState(5);
@@ -123,9 +125,7 @@ function PublicationPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  const [createArticle] = useMutation(CREATE_ARTICLE, {
-    variables: { title, content },
-  });
+  const [createArticle] = useMutation(CREATE_ARTICLE);
 
   const handleCreateArticle = async () => {
     if (!user) {
@@ -133,11 +133,17 @@ function PublicationPage() {
       return;
     }
 
+    if (content.trim() === "") {
+      toast.error("Le contenu de l'article ne peut pas être vide");
+      return;
+    }
+
     try {
       const response = await createArticle({
         variables: {
-          title,
+          title: title.trim() || null,
           content,
+          imageUrl,
         },
         context: {
           headers: {
@@ -148,13 +154,14 @@ function PublicationPage() {
 
       if (response.data?.createArticle?.success) {
         showArticleCreatedToast();
-        console.log("Article crée avec succès !");
+        console.log("Article créé avec succès !");
 
         await refetchArticles();
         await refetechMostDislikedArticles();
 
         setTitle("");
         setContent("");
+        setImageUrl(null);
       } else {
         console.error(
           response?.data?.createArticle?.message ||
@@ -311,13 +318,6 @@ function PublicationPage() {
     }
   };
 
-  // const { userDislikes, handleDislike } = useDislike({
-  //   user,
-  //   items: displayedArticles,
-  //   refetchItems: refetchArticles,
-  //   type: "article",
-  // });
-
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -383,6 +383,10 @@ function PublicationPage() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
+
+            {/* Ajout du téléchargeur d'image */}
+            <ImageUploader imageUrl={imageUrl} onImageChange={setImageUrl} />
+
             <div className="flex justify-end mt-3">
               <button
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
@@ -405,6 +409,7 @@ function PublicationPage() {
                 id: articleId,
                 title,
                 content,
+                imageUrl, // Ajout de imageUrl
                 author,
                 createdAt,
                 updatedAt,
@@ -509,6 +514,18 @@ function PublicationPage() {
                     {content}
                   </p>
 
+                  {/* Affichage de l'image si elle existe */}
+                  {imageUrl && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <img
+                        src={imageUrl}
+                        alt="Article"
+                        className="w-full h-auto rounded-lg max-h-80 object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex items-center space-x-6 text-gray-500">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -541,7 +558,8 @@ function PublicationPage() {
                         e.stopPropagation();
                       }}
                     >
-                      {/* <Share2 className="h-5 w-5" /> */}
+                      <Share2 className="h-5 w-5" />
+                      <span>Partager</span>
                     </button>
                   </div>
                 </motion.div>

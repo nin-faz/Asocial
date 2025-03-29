@@ -43,9 +43,8 @@ import {
   showCommentUpdatedToast,
   showLoginRequiredToast,
 } from "../utils/customToasts";
-import Loader from "../components/Loader";
-import UserIcon from "../components/UserIcon"; // Import the UserIcon component
-import ImageUploader from "../components/ImageUploader"; // Importez le composant ImageUploader
+import UserIcon from "../components/UserIcon";
+import ImageUploader from "../components/ImageUploader";
 
 interface PublicationDetailsPageProps {
   articleId?: string;
@@ -56,7 +55,6 @@ interface PublicationDetailsPageProps {
 const PublicationDetailsPage = ({
   articleId,
   isModal,
-  onClose,
 }: PublicationDetailsPageProps) => {
   const authContext = useContext(AuthContext);
   if (!authContext) {

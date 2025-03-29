@@ -59,9 +59,6 @@ const ProfilePage = () => {
 
   const [error, setError] = useState("");
 
-  const [allArticleDisliked, setAllArticleDisliked] = useState<
-    Article[] | null
-  >([]);
   const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
   const [activeTab, setActiveTab] = useState(
     tabParam === "statistiques" || tabParam === "dislikes"
@@ -138,11 +135,9 @@ const ProfilePage = () => {
 
     if (dislikesByUser && user) {
       setNumberOfPostDisliked(dislikesByUser.length);
-      setAllArticleDisliked(
-        dislikesByUser
-          .map((dislike) => dislike?.article)
-          .filter((article): article is Article => article !== null)
-      );
+      dislikesByUser
+        .map((dislike) => dislike?.article)
+        .filter((article): article is Article => article !== null);
     }
   }, [dislikesByUser, user, articleDisliked]);
 

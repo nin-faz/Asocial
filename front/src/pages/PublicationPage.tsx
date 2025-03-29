@@ -49,7 +49,7 @@ function PublicationPage() {
   const { data: userData, refetch: refetchUserData } = useQuery(
     GET_USER_BY_ID,
     {
-      variables: { id: user?.id },
+      variables: { id: user?.id! },
       skip: !user?.id,
     }
   );

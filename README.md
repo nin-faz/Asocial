@@ -1,8 +1,12 @@
 # Asocial
 
-## Asocial
+## FAZER Nino
 
-## FAZER Nino - PEREIRA-ELENGA MAKOUALA Jordy - TRAN Huu-Nghia - MONMARCHE Romain
+## PEREIRA-ELENGA MAKOUALA Jordy
+
+## TRAN Huu-Nghia
+
+## MONMARCHE Romain
 
 ## Description du Projet
 
@@ -87,32 +91,32 @@ cd Asocial
 
 ### Backend
 
-```sh
+````sh
 # Asocial
 
 ## Commandes à lancer dans le back :
 
 ```sh
 # Installer les dépendances :
-npm i 
+npm i
 
-# Récupérer la dernière structure de la BD 
+# Récupérer la dernière structure de la BD
 npm run prisma migrate dev --name init
 
 # Générer les types
 npm run codegen
 
-# Lancer le back 
+# Lancer le back
 npm run dev
 
 # Lancer Prisma Studio
 npm run prisma studio
 
-```
+````
 
 ### .env
-![alt env](image.png)
 
+![alt env](image.png)
 
 ### Frontend
 

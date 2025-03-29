@@ -9,7 +9,6 @@ import {
   User,
   PlusCircle,
   BarChart2,
-  Settings,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -36,7 +35,6 @@ const Header = () => {
   const { pathname } = useLocation();
   const { searchTerm, setSearchTerm } = useSearch();
 
-  // Check if current path is publications or a publication details page
   const isPublicationsActive =
     pathname === "/publications" || pathname.startsWith("/publications/");
 

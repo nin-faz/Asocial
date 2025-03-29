@@ -1,23 +1,18 @@
 # Asocial
 
-## FAZER Nino
-
-## PEREIRA-ELENGA MAKOUALA Jordy
-
-## TRAN Huu-Nghia
-
-## MONMARCHE Romain
+## FAZER Nino - PEREIRA-ELENGA MAKOUALA Jordy - TRAN Huu-Nghia - MONMARCHE Romain
 
 ## Description du Projet
 
-Asocial est un réseau social permettant aux utilisateurs de :
+Asocial est un réseau social moderne développé comme projet éducatif qui démontre l'implémentation d'une stack GraphQL complète. L'application permet aux utilisateurs de :
 
-- S'inscrire et se connecter.
-- Publier des articles.
-- Commenter les publications d'autres utilisateurs.
-- "Liker" des articles.
+- S'inscrire et se connecter avec un système d'authentification sécurisé
+- Publier, modifier et supprimer des articles
+- Commenter les publications d'autres utilisateurs
+- "Disliker" des articles et des commentaires
+- Accéder à un profil utilisateur personnalisé avec bio et icône
 
-Ce projet met en pratique l'utilisation de **GraphQL, Prisma, et Apollo Client**, ainsi que l'intégration de ces technologies dans une application frontend moderne.
+Ce projet illustre l'architecture d'une application full-stack utilisant **GraphQL, Prisma, Apollo Server et Apollo Client**, en mettant en œuvre les meilleures pratiques de développement moderne.
 
 ---
 
@@ -25,48 +20,87 @@ Ce projet met en pratique l'utilisation de **GraphQL, Prisma, et Apollo Client**
 
 ### 1. Authentification des Utilisateurs :closed_lock_with_key:
 
-- Inscription et connexion avec validation.
-- Gestion des sessions utilisateur avec JWT.
+- Système complet d'inscription et connexion avec validation
+- Gestion des sessions utilisateur avec JWT
+- Profil utilisateur personnalisable (bio, nom d'utilisateur, icône)
 
 ### 2. Gestion des Articles :pencil:
 
-- **CRUD complet** : création, lecture, mise à jour et suppression d'articles.
-- Affichage des articles avec **auteur, contenu, commentaires et likes**.
+- **CRUD complet** : création, lecture, mise à jour et suppression d'articles
+- Support pour les images via URL
+- Affichage des articles avec auteur, contenu, commentaires et dislikes
+- Horodatage des articles (création et mise à jour)
 
-### 3. Interaction avec les Articles :star:
+### 3. Interaction Sociale :star:
 
-- Ajout et suppression de **commentaires**.
-- Système de **like** pour les articles.
+- Système de commentaires sur les articles
+- Mécanisme de dislikes pour les articles et commentaires
+- Compteurs de dislikes et commentaires en temps réel
 
-### 4. Navigation et Filtrage :mag:
+### 4. Interface Utilisateur et Navigation :mag:
 
-- Page principale affichant les **derniers articles**.
-- Filtrage des articles par **auteur** ou **popularité (nombre de likes)**.
+- Page principale affichant les articles récents
+- Page de détail pour chaque publication
+- Page de profil utilisateur
+- Filtrage des articles par popularité (nombre de dislikes)
 
-### 5. Gestion des Erreurs :construction:
+### 5. Performance et Sécurité :shield:
 
-- Redirection automatique en cas d'**accès non autorisé**.
-- Gestion des erreurs serveur et client.
+- Validation des entrées côté client et serveur
+- Protection des routes avec authentification
+- Gestion élégante des erreurs avec feedback utilisateur
 
 ---
 
 ## Technologies Utilisées :computer:
 
-### Backend (GraphQL + Prisma + Apollo Server)
+### Backend
 
-- **TypeScript** pour le développement backend.
-- **Apollo Server** pour GraphQL.
-- **Prisma** pour la gestion de la base de données.
-- **GraphQL Codegen** pour générer automatiquement les types et les hooks.
-- **SQLite** comme base de données, gérée via SQLiteStudio.
+- **TypeScript** - Typage statique pour une meilleure maintenabilité
+- **Apollo Server** - Serveur GraphQL
+- **Prisma ORM** - Modélisation de données typée et migrations
+- **GraphQL Codegen** - Génération automatique des types et resolvers
+- **JWT** - Gestion sécurisée de l'authentification
+- **SQLite** - Base de données relationnelle légère
+- **bcrypt** - Hachage sécurisé des mots de passe
 
-### Frontend (React + Apollo Client)
+### Frontend
 
-- **React** pour l'interface utilisateur.
-- **Apollo Client** pour la gestion des requêtes GraphQL.
-- **React Router** pour la navigation.
-- **React Toastify** pour les notifications.
-- **TailwindCSS** pour le design.
+- **React 19** - Bibliothèque UI avec Hooks et architecture moderne
+- **Apollo Client** - Gestion d'état et cache pour GraphQL
+- **TailwindCSS** - Styling utilitaire et responsive
+- **React Router v7** - Navigation et routes protégées
+- **React Toastify** - Système de notifications élégant
+- **Framer Motion** - Animations fluides
+- **Lucide React** - Icônes modernes
+- **date-fns** - Formatage des dates
+
+---
+
+## Structure du Projet
+
+```
+Asocial/
+├── back/                 # Backend GraphQL avec Apollo Server
+│   ├── prisma/           # Schéma et migrations Prisma
+│   ├── src/
+│   │   ├── resolvers.ts  # Resolvers GraphQL
+│   │   ├── schema.ts     # Définition du schéma GraphQL
+│   │   └── index.ts      # Point d'entrée du serveur
+│   └── package.json
+│
+├── front/                # Frontend React avec Apollo Client
+│   ├── public/           # Assets statiques
+│   ├── src/
+│   │   ├── components/   # Composants React réutilisables
+│   │   ├── pages/        # Pages principales de l'application
+│   │   ├── mutations/    # Mutations GraphQL
+│   │   ├── queries/      # Requêtes GraphQL
+│   │   └── App.tsx       # Composant racine
+│   └── package.json
+│
+└── README.md             # Documentation principale
+```
 
 ---
 
@@ -74,9 +108,8 @@ Ce projet met en pratique l'utilisation de **GraphQL, Prisma, et Apollo Client**
 
 Avant d'installer et d'exécuter le projet, assurez-vous d'avoir :
 
-- **Node.js** installé (v16 ou supérieur).
-- **PostgreSQL** installé et configuré.
-- **Un gestionnaire de paquets** comme npm ou yarn.
+- **Node.js** installé (v18 ou supérieur)
+- **Un gestionnaire de paquets** comme npm ou yarn
 
 ---
 
@@ -91,14 +124,11 @@ cd Asocial
 
 ### Backend
 
-````sh
-# Asocial
-
-## Commandes à lancer dans le back :
-
 ```sh
-# Installer les dépendances :
-npm i
+cd back
+
+# Installer les dépendances
+npm install
 
 # Récupérer la dernière structure de la BD
 npm run prisma migrate dev --name init
@@ -109,12 +139,11 @@ npm run codegen
 # Lancer le back
 npm run dev
 
-# Lancer Prisma Studio
+# Lancer Prisma Studio pour visualiser/éditer la BD
 npm run prisma studio
+```
 
-````
-
-### .env
+### Configuration du .env
 
 ![alt env](image.png)
 
@@ -122,11 +151,15 @@ npm run prisma studio
 
 ```sh
 cd front
+
+# Installer les dépendances
 npm install
+
+# Lancer le serveur de développement
 npm run dev
 ```
 
-Ouvrez l'URL suivante dans votre navigateur :
+Ouvrez l'application dans votre navigateur à l'adresse :
 
 ```
 http://localhost:5173
@@ -134,14 +167,42 @@ http://localhost:5173
 
 ---
 
-## Livrables :package:
+## API GraphQL
 
-- **Un monorepo GitHub** avec :
-  - Un dossier `back/` contenant le backend.
-  - Un dossier `front/` contenant le frontend.
-  - Un `README.md` détaillé pour chaque partie.
-- Une **présentation finale** du projet.
+Le backend expose un endpoint GraphQL avec les opérations suivantes :
+
+### Requêtes principales :
+
+- `findUserById` : Informations sur un utilisateur spécifique
+- `findArticles` : Liste des articles
+- `findArticleById` : Détails d'un article spécifique
+- `findArticleByMostDisliked` : Articles les plus dislikés
+- `getComments` : Commentaires d'un article
+
+### Mutations principales :
+
+- `createUser` : Création d'un compte utilisateur
+- `signIn` : Authentification et génération de token
+- `updateUser` : Modification du profil utilisateur
+- `createArticle` : Publication d'un nouvel article
+- `updateArticle` : Modification d'un article existant
+- `deleteArticle` : Suppression d'un article
+- `addComment` : Ajout d'un commentaire
+- `updateComment` : Modification d'un commentaire
+- `deleteComment` : Suppression d'un commentaire
+- `addArticleDislike` : Dislike d'un article
+- `addCommentDislike` : Dislike d'un commentaire
 
 ---
 
-bonne exploration ! :rocket:
+## Livrables :package:
+
+- **Un monorepo GitHub** avec :
+  - Un dossier `back/` contenant le backend
+  - Un dossier `front/` contenant le frontend
+  - Un `README.md` détaillé pour chaque partie
+- Une **présentation finale** du projet
+
+---
+
+Bonne exploration ! :rocket:

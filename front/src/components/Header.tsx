@@ -54,10 +54,10 @@ const Header = () => {
       className="sticky top-0 z-50 bg-black border-b border-purple-900"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 relative">
           {/* Logo and Brand */}
           <motion.div
-            className="flex items-center cursor-pointer"
+            className="flex items-center cursor-pointer z-10"
             whileHover={{ scale: 1.05 }}
             onClick={() => navigate("/")}
           >
@@ -68,56 +68,59 @@ const Header = () => {
             </span>
           </motion.div>
 
-          <div className="hidden md:flex items-center justify-between w-full px-14">
-            {/* Navigation */}
-            <nav className="flex items-center space-x-8">
-              <motion.div
-                className={`flex items-center transition-colors cursor-pointer ${
-                  isPublicationsActive
-                    ? "text-purple-400"
-                    : "text-gray-400 hover:text-purple-400"
-                }`}
-                whileHover={{ scale: 1.1 }}
-                onClick={() => navigate("/publications")}
-              >
-                <Home className="h-7 w-7" />
-                <span className="ml-1">Publications</span>
-              </motion.div>
-              {!user ? (
+          {/* Desktop Navigation and Search */}
+          <div className="hidden md:flex md:flex-1 md:justify-center">
+            <div className="flex items-center justify-between w-full max-w-4xl px-4">
+              {/* Left Navigation */}
+              <nav className="flex items-center space-x-8">
                 <motion.div
                   className={`flex items-center transition-colors cursor-pointer ${
-                    pathname === "/auth"
+                    isPublicationsActive
                       ? "text-purple-400"
                       : "text-gray-400 hover:text-purple-400"
                   }`}
                   whileHover={{ scale: 1.1 }}
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/publications")}
                 >
-                  <Bomb className="h-7 w-7" />
-                  <span className="ml-1">Chaos</span>
+                  <Home className="h-7 w-7" />
+                  <span className="ml-1">Publications</span>
                 </motion.div>
-              ) : null}
-            </nav>
+                {!user ? (
+                  <motion.div
+                    className={`flex items-center transition-colors cursor-pointer ${
+                      pathname === "/auth"
+                        ? "text-purple-400"
+                        : "text-gray-400 hover:text-purple-400"
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => navigate("/auth")}
+                  >
+                    <Bomb className="h-7 w-7" />
+                    <span className="ml-1">Chaos</span>
+                  </motion.div>
+                ) : null}
+              </nav>
 
-            {/* Search Bar */}
-            {pathname.startsWith("/publications") && (
-              <div className="flex-auto max-w-lg mr-24">
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    placeholder="Search for chaos..."
-                    className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+              {/* Centered Search Bar */}
+              {pathname.startsWith("/publications") && (
+                <div className="w-full max-w-md mx-auto px-4">
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      placeholder="Search for chaos..."
+                      className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 z-10">
             {user && (
               <>
                 <motion.button
@@ -220,14 +223,18 @@ const Header = () => {
             className="md:hidden bg-gray-900 border-t border-gray-800"
           >
             <div className="px-4 py-3">
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  placeholder="Search for chaos..."
-                  className="w-full bg-gray-800 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
-              </div>
+              {pathname.startsWith("/publications") && (
+                <div className="relative mb-3">
+                  <input
+                    type="text"
+                    placeholder="Search for chaos..."
+                    className="w-full bg-gray-800 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                </div>
+              )}
 
               <nav className="space-y-1">
                 <button

@@ -14,6 +14,7 @@ import {
   Award,
   Cloud,
 } from "lucide-react";
+import { CheetahIcon } from "../components/icons/CheetahIcon";
 
 export const renderUserIcon = (
   iconName: string | null | undefined,
@@ -52,6 +53,8 @@ export const renderUserIcon = (
       return <Award className={`${sizeClassName} text-purple-400`} />;
     case "Cloud":
       return <Cloud className={`${sizeClassName} text-purple-400`} />;
+    case "Cheetah":
+      return <CheetahIcon className={`${sizeClassName} text-purple-400`} />;
     default:
       return <Skull className={`${sizeClassName} text-purple-400`} />;
   }

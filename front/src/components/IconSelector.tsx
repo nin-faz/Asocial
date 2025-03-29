@@ -16,6 +16,7 @@ import {
   Award,
   Cloud,
 } from "lucide-react";
+import { CheetahIcon } from "./icons/CheetahIcon";
 
 type IconOption = {
   name: string;
@@ -50,6 +51,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({
     { name: "Smile", component: <Smile className="h-full w-full" /> },
     { name: "Award", component: <Award className="h-full w-full" /> },
     { name: "Cloud", component: <Cloud className="h-full w-full" /> },
+    { name: "Cheetah", component: <CheetahIcon className="h-full w-full" /> },
   ];
 
   const getCurrentIcon = () => {

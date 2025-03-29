@@ -703,13 +703,16 @@ const ProfilePage = () => {
           </div>
         )}
         {selectedArticle && (
-          <div className="fixed inset- min-h-screen bg-black bg-opacity-50 z-50 flex items-center justify-center p-">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            style={{ margin: 0 }}
+          >
             {" "}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-900 rounded-lg w-full max-w-3xl h-[95vh] overflow-y-auto relative"
+              className="bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto relative"
             >
               <button
                 onClick={() => setSelectedArticle(null)}
@@ -718,7 +721,7 @@ const ProfilePage = () => {
                 <X className="h-6 w-6" />
               </button>
 
-              <div className="p-6 h-full">
+              <div className="p-6">
                 <PublicationDetailsPage
                   articleId={selectedArticle}
                   isModal={true}

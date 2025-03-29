@@ -1,5 +1,6 @@
 import { MutationResolvers } from "../../types";
 import { hashPassword } from "../../module/auth.js";
+import { formatUsername } from "../../module/usernameFormatter.js";
 
 export const updateUser: NonNullable<MutationResolvers["updateUser"]> = async (
   _,
@@ -35,9 +36,14 @@ export const updateUser: NonNullable<MutationResolvers["updateUser"]> = async (
       };
     }
 
+    // Format username if provided
+    const formattedUsername = body.username?.trim()
+      ? formatUsername(body.username)
+      : existUser.username;
+
     const updatedData = {
       bio: body.bio?.trim() ? body.bio : existUser.bio,
-      username: body.username?.trim() ? body.username : existUser.username,
+      username: formattedUsername,
       password: body.password?.trim()
         ? await hashPassword(body.password)
         : existUser.password,

@@ -1,31 +1,12 @@
 import { useContext, useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Lock, User, Eye, EyeOff, Skull, Flame } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { CREATE_USER, SIGN_IN } from "../mutations";
+import { AuthContext } from "../context/AuthContext";
 import { showLoginToast, showWelcomeToast } from "../utils/customToasts";
-
-interface CreateUserResponse {
-  createUser: {
-    success: boolean;
-    message: string;
-    user: {
-      id: string;
-      username: string;
-    };
-  };
-}
-
-interface SignInResponse {
-  signIn: {
-    success: boolean;
-    token: string;
-    message: string;
-  };
-}
+import { Lock, User, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -40,8 +21,8 @@ function AuthPage() {
     document.title = isLogin ? "Connexion" : "Inscription";
   }, [isLogin]);
 
-  const [createUser] = useMutation<CreateUserResponse>(CREATE_USER);
-  const [signIn] = useMutation<SignInResponse>(SIGN_IN);
+  const [createUser] = useMutation(CREATE_USER);
+  const [signIn] = useMutation(SIGN_IN);
 
   const authContext = useContext(AuthContext);
   if (!authContext) {
@@ -62,7 +43,7 @@ function AuthPage() {
         });
 
         if (signInResponse.data?.signIn?.success) {
-          login(signInResponse.data.signIn.token);
+          login(signInResponse.data.signIn.token ?? "");
 
           showWelcomeToast();
           console.log("inscription réussie, bienvenue dans le chaos !");
@@ -93,7 +74,7 @@ function AuthPage() {
       });
 
       if (response.data?.signIn?.success) {
-        login(response.data.signIn.token);
+        login(response.data.signIn.token ?? "");
 
         showLoginToast();
         console.log("connexion réussie, bienvenue dans le chaos !");

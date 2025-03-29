@@ -293,6 +293,13 @@ const ProfilePage = () => {
 
   const articleByUserData = articleByUser?.findArticlesByUser;
 
+  // Effet pour rafraîchir les données quand on revient sur la page
+  useEffect(() => {
+    // Rafraîchir les articles de l'utilisateur quand la page est affichée
+    refetchArticleByUser();
+    refetchArticleDisliked();
+  }, [location.pathname]);
+
   const handlePostClick = (articleId: string) => {
     setSelectedArticle(articleId);
   };

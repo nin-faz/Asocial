@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "compile": "tsc",
-    "start": "npm run compile && node ./dist/index.js",
+    "compile": "build",
+    "start": "npm run build && node ./dist/index.js",
     "dev": "cross-env NODE_OPTIONS=--loader=ts-node/esm node --watch src/index.ts",
     "codegen": "graphql-codegen",
     "prisma": "prisma"

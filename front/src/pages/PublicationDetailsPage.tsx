@@ -774,9 +774,17 @@ const PublicationDetailsPage = ({
                     </span>
                     <p className="text-gray-500 text-sm">
                       Le {""}
-                      {new Date(parseInt(comment?.createdAt ?? "0", 10))
-                        .toLocaleString()
-                        .replace(" ", " à ")}
+                      {comment?.updatedAt
+                        ? `${new Date(parseInt(comment?.createdAt ?? "0", 10))
+                            .toLocaleString()
+                            .replace(" ", " à ")} (modifié le ${new Date(
+                            parseInt(comment?.updatedAt, 10)
+                          )
+                            .toLocaleString()
+                            .replace(" ", " à ")})`
+                        : new Date(parseInt(comment?.createdAt ?? "0", 10))
+                            .toLocaleString()
+                            .replace(" ", " à ")}
                     </p>
                   </div>
                   {comment?.author.id === user?.id && (

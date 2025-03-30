@@ -152,6 +152,7 @@ export const typeDefs = gql`
     dislikes: [Dislike]
     TotalDislikes: Int
     createdAt: String
+    updatedAt: String
   }
 
   type CommentUpdateResponse {

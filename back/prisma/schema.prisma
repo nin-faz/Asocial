@@ -57,4 +57,5 @@ model Comment {
   articleId String?
   dislikes    Dislike[]
   createdAt DateTime @default(now())
+  updatedAt DateTime?
 }

@@ -11,6 +11,7 @@ export const GET_COMMENTS = graphql(`
         iconName
       }
       createdAt
+      updatedAt
       dislikes {
         user {
           id

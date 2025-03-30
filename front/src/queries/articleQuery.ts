@@ -58,6 +58,7 @@ export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
       id
       title
       content
+      imageUrl
       author {
         id
         username

@@ -107,6 +107,7 @@ export const updateComment: NonNullable<
       },
       data: {
         content,
+        updatedAt: new Date(),
       },
     });
 

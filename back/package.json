@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "compile": "build",
+    "build": "tsc",
     "start": "npm run build && node ./dist/index.js",
     "dev": "cross-env NODE_OPTIONS=--loader=ts-node/esm node --watch src/index.ts",
     "codegen": "graphql-codegen",

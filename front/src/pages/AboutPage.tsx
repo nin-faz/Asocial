@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
@@ -7,7 +8,9 @@ import {
   Shield,
   Bomb,
   Zap,
+  Hammer,
 } from "lucide-react";
+import { AuthContext } from "../context/AuthContext";
 
 const features = [
   {
@@ -49,6 +52,13 @@ const features = [
 ];
 
 const AboutPage = () => {
+  const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
+  if (!authContext) {
+    throw new Error("AuthContext is null");
+  }
+  const { user } = authContext;
+
   useEffect(() => {
     document.title = "À propos";
   }, []);
@@ -148,7 +158,7 @@ const AboutPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="text-center mt-20"
+        className="flex flex-col items-center justify-center text-center mt-20"
       >
         <h2 className="text-3xl font-bold text-purple-400 mb-6">
           Prêt à Embrasser le Chaos ?
@@ -160,10 +170,16 @@ const AboutPage = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          onClick={() => (window.location.href = "/auth")}
+          className="flex items-center justify-center gap-2 px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          onClick={() => {
+            if (user) {
+              navigate("/publications");
+            } else {
+              navigate("/auth");
+            }
+          }}
         >
-          Commencer la Destruction
+          Commencer la Destruction <Hammer className="w-5 h-5" />
         </motion.button>
       </motion.div>
     </main>

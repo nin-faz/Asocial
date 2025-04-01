@@ -7,9 +7,11 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
+
   const [activeToast, setActiveToast] = useState<string | null>(null);
 
   const handleIconClick = (id: string) => (e: React.MouseEvent) => {
@@ -25,7 +27,10 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center mb-4">
+            <div
+              className="flex items-center cursor-pointer z-10 mb-4"
+              onClick={() => navigate("/")}
+            >
               <img src="/logo.svg" alt="Logo" className="h-9 w-10" />
               <span className="ml-2 text-2xl font-bold text-purple-400">
                 Asocial

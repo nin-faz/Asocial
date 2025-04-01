@@ -8,6 +8,7 @@ import App from "./App.tsx";
 
 const client = new ApolloClient({
   uri: "https://asocial-production.up.railway.app/",
+  // uri: "http://localhost:4000",
   cache: new InMemoryCache(),
 });
 

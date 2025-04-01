@@ -37,13 +37,17 @@ export const updateUser: NonNullable<MutationResolvers["updateUser"]> = async (
     }
 
     // Format username if provided
-    const formattedUsername = body.username?.trim()
-      ? formatUsername(body.username)
-      : existUser.username;
+    // Ensure we always use the new username when it's provided, even if it's the same as before
+    // const formattedUsername =
+    //   body.username !== undefined && body.username?.trim() !== ""
+    //     ? formatUsername(body?.username!)
+    //     : existUser.username;
 
     const updatedData = {
       bio: body.bio?.trim() ? body.bio : existUser.bio,
-      username: formattedUsername,
+      username: body.username?.trim()
+        ? formatUsername(body?.username)
+        : existUser.username,
       password: body.password?.trim()
         ? await hashPassword(body.password)
         : existUser.password,

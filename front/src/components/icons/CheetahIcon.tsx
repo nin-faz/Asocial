@@ -13,7 +13,7 @@ export const CheetahIcon: React.FC<CheetahIconProps> = ({ className = "" }) => {
 
   // Si c'est utilisé dans iconUtil (après sauvegarde), on utilise 75% de largeur
   // Sinon (dans le sélecteur d'icônes), on utilise 100%
-  const svgWidth = hasIconUtilSize ? "75%" : "100%";
+  const svgWidth = hasIconUtilSize ? "50%" : "100%";
 
   return (
     <svg

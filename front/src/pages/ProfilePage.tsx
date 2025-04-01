@@ -396,9 +396,15 @@ const ProfilePage = () => {
           ) : (
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="w-32 h-32 rounded-full bg-purple-900 flex items-center justify-center"
+              className="w-32 h-32 rounded-full bg-purple-900 flex items-center justify-center relative cursor-pointer group"
+              onClick={() => setIsEditing(true)}
             >
               {renderUserIcon(userInfosData?.iconName, "large")}
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <p className="text-white text-sm text-center font-medium">
+                  Cliquez pour modifier
+                </p>
+              </div>
             </motion.div>
           )}
 
@@ -466,7 +472,7 @@ const ProfilePage = () => {
             ) : (
               <>
                 <h1 className="text-3xl font-bold text-purple-400 mb-2">
-                  {user?.username}
+                  {userInfosData?.username}
                 </h1>
                 <p className="text-gray-500 mb-4">
                   Membre depuis{" "}
@@ -525,6 +531,7 @@ const ProfilePage = () => {
               whileHover={{ scale: 1.05 }}
               className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-lg"
               onClick={() => setIsEditing(!isEditing)}
+              title="Modifier son profil"
             >
               <Settings className="h-6 w-6" />
             </motion.button>
@@ -540,6 +547,7 @@ const ProfilePage = () => {
               whileHover={{ scale: 1.05 }}
               className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg"
               onClick={handleLogout}
+              title="Déconnexion"
             >
               <LogOut className="h-6 w-6" />
             </motion.button>

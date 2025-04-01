@@ -7,13 +7,15 @@ import {
   Bomb,
   LogOut,
   User,
-  PlusCircle,
   BarChart2,
+  ThumbsDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useSearch } from "../context/SearchContext";
+import { GET_USER_BY_ID } from "../queries";
+import { useQuery } from "@apollo/client";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -44,6 +46,13 @@ const Header = () => {
       setSearchTerm("");
     }
   }, [pathname]);
+
+  const { data: userInfos } = useQuery(GET_USER_BY_ID, {
+    variables: { id: user?.id! },
+    skip: !user,
+  });
+
+  const userInfosData = userInfos?.findUserById;
 
   return (
     <motion.header
@@ -124,10 +133,10 @@ const Header = () => {
                 <motion.button
                   className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                   whileHover={{ scale: 1.1 }}
-                  onClick={() => navigate("/publications")}
-                  title="Créer une publication"
+                  onClick={() => navigate("/profile?tab=dislikes")}
+                  title="Voir mes dislikes"
                 >
-                  <PlusCircle className="h-6 w-6" />
+                  <ThumbsDown className="h-6 w-6" />
                 </motion.button>
                 <motion.button
                   className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
@@ -150,7 +159,7 @@ const Header = () => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <span className="text-sm font-medium text-purple-400">
-                    {user?.username?.charAt(0).toUpperCase() || "X"}
+                    {userInfosData?.username?.charAt(0).toUpperCase() || "X"}
                   </span>
                 </motion.button>
 
@@ -164,7 +173,9 @@ const Header = () => {
                     >
                       <div className="p-3 border-b border-gray-800">
                         <p className="text-purple-400 font-medium">
-                          {user?.username}
+                          {userInfosData?.username
+                            ? userInfosData.username.charAt(0).toUpperCase()
+                            : userInfosData?.username?.slice(1)}
                         </p>
                       </div>
                       <div className="py-1">
@@ -259,6 +270,16 @@ const Header = () => {
                     >
                       <User className="h-5 w-5 text-gray-400 mr-3" />
                       <span className="text-gray-300">Profil</span>
+                    </button>
+                    <button
+                      className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800"
+                      onClick={() => {
+                        navigate("/profile?tab=dislikes");
+                        setShowMobileMenu(false);
+                      }}
+                    >
+                      <ThumbsDown className="h-5 w-5 text-gray-400 mr-3" />
+                      <span className="text-gray-300">Mes dislikes</span>
                     </button>
                     <button
                       className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800"

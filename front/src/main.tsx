@@ -7,7 +7,7 @@ import "./index.css";
 import App from "./App.tsx";
 
 const client = new ApolloClient({
-  uri: "https://back-asocial.onrender.com/",
+  uri: "https://asocial-production.up.railway.app/",
   cache: new InMemoryCache(),
 });
 

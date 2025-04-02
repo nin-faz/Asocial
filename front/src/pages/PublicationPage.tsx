@@ -12,6 +12,7 @@ import {
   Share2,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
+import Loader from "../components/Loader";
 import {
   CREATE_ARTICLE,
   ADD_ARTICLE_DISLIKE,
@@ -56,7 +57,11 @@ function PublicationPage() {
 
   const userIconName = userData?.findUserById?.iconName || "Skull";
 
-  const { data, refetch: refetchArticles } = useQuery(FIND_ARTICLES, {
+  const {
+    data,
+    loading: articlesLoading,
+    refetch: refetchArticles,
+  } = useQuery(FIND_ARTICLES, {
     fetchPolicy: "network-only", // Force le rafraîchissement depuis le serveur
   });
   const articles = data?.findArticles || [];
@@ -69,8 +74,11 @@ function PublicationPage() {
     }
   }, [refetchArticles, refetchUserData, user?.id]);
 
-  const { data: mostDislikedArticles, refetch: refetechMostDislikedArticles } =
-    useQuery(FIND_ARTICLE_BY_MOST_DISLIKED);
+  const {
+    data: mostDislikedArticles,
+    loading: mostDislikedLoading,
+    refetch: refetechMostDislikedArticles,
+  } = useQuery(FIND_ARTICLE_BY_MOST_DISLIKED);
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
   type ArticleType = NonNullable<
@@ -344,6 +352,14 @@ function PublicationPage() {
       toast.error("Impossible de partager cet article");
     }
   };
+
+  // Vérifier si les données sont en cours de chargement
+  const isLoading = articlesLoading || mostDislikedLoading;
+
+  // Afficher le loader pendant le chargement des données
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">

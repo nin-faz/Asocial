@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import HomePage from "./pages/HomePage";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import PublicationDetailsPage from "./pages/PublicationDetailsPage";
 import PublicationPage from "./pages/PublicationPage";
 import Footer from "./components/Footer";
 import ProfilePage from "./pages/ProfilePage";
+import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,16 +31,23 @@ function App() {
         <Header />
         <div className="min-h-screen bg-black">
           <Routes>
+            {/* Routes publiques */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/about" element={<AboutPage />} />
             <Route path="/publications/*" element={<PublicationPage />} />
             <Route
               path="/publications/:id"
               element={<PublicationDetailsPage />}
             />
+            <Route path="/about" element={<AboutPage />} />
 
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route element={<RedirectIfAuthenticated />}>
+              <Route path="/auth" element={<AuthPage />} />
+            </Route>
+
+            {/* Routes protégées */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
 
             <Route
               path="*"

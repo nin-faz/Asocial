@@ -27,7 +27,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
-            <div
+            <motion.div
+              whileHover={{ scale: 1.01 }}
               className="flex items-center cursor-pointer z-10 mb-4"
               onClick={() => navigate("/")}
             >
@@ -35,7 +36,7 @@ const Footer = () => {
               <span className="ml-2 text-2xl font-bold text-purple-400">
                 Asocial
               </span>
-            </div>
+            </motion.div>
             <p className="text-gray-400 mb-4">
               Le réseau anti-social où l'authenticité règne et les conventions
               meurent.

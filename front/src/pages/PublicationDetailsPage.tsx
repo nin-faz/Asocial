@@ -595,7 +595,7 @@ const PublicationDetailsPage = ({
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-              placeholder="Titre de l'article"
+              placeholder="Titre de l'article  (Optionnel)"
             />
 
             {/* Champ d'édition du contenu */}

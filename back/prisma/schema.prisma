@@ -1,61 +1,56 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id       String    @id @unique @default(uuid())
-  username     String @unique
-  password    String 
-  articles Article[]
-  comments Comment[]
-  dislikes    Dislike[]
+  id        String    @id @unique @default(uuid())
+  username  String    @unique
+  password  String
   bio       String?
-  iconName   String? @default("Skull")
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  iconName  String?   @default("Skull")
+  articles  Article[]
+  comments  Comment[]
+  dislikes  Dislike[]
 }
 
 model Dislike {
   id        String   @id @unique @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String?
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Article {
-  id       String @id @unique @default(uuid())
-  title    String
-  content  String
-  imageUrl String?
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId String
-  dislikes    Dislike[]
-  createdAt DateTime @default(now())
+  id        String    @id @unique @default(uuid())
+  title     String
+  content   String
+  authorId  String
+  createdAt DateTime  @default(now())
   updatedAt DateTime?
-  comments Comment[]
+  imageUrl  String?
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  dislikes  Dislike[]
 }
 
 model Comment {
-  id       String @id @unique @default(uuid())
-  content  String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId String
-  article  Article? @relation(fields: [articleId], references: [id])
+  id        String    @id @unique @default(uuid())
+  content   String
+  authorId  String
   articleId String?
-  dislikes    Dislike[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   updatedAt DateTime?
+  article   Article?  @relation(fields: [articleId], references: [id])
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  dislikes  Dislike[]
 }

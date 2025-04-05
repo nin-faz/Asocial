@@ -303,25 +303,51 @@ function PublicationPage() {
     }
 
     try {
+      // Mettre à jour l'état local immédiatement pour une réponse instantanée
+      const newDislikeState = !userDislikes[articleId];
       setUserDislikes((prev) => ({
         ...prev,
-        [articleId]: !prev[articleId], // Inverse le dislike localement
+        [articleId]: newDislikeState,
       }));
-      if (userDislikes[articleId]) {
-        // Supprime le dislike
-        await deleteDislike({ variables: { articleId, userId: user.id! } });
-        setUserDislikes((prev) => ({ ...prev, [articleId]: false }));
-        console.log(user.username, "a retiré son dislike.");
-      } else {
+
+      // Mettre à jour visuellement le compteur de dislikes
+      const articleElement = document.querySelector(
+        `[data-article-id="${articleId}"]`
+      );
+      if (articleElement) {
+        const dislikeCountElement =
+          articleElement.querySelector(".dislike-count");
+        if (dislikeCountElement) {
+          const currentCount = parseInt(
+            dislikeCountElement.textContent || "0",
+            10
+          );
+          dislikeCountElement.textContent = String(
+            newDislikeState ? currentCount + 1 : currentCount - 1
+          );
+        }
+      }
+
+      if (newDislikeState) {
         // Ajoute le dislike
         await addDislike({ variables: { articleId, userId: user.id! } });
-        setUserDislikes((prev) => ({ ...prev, [articleId]: true }));
         console.log(user.username, "a disliké l'article.");
+      } else {
+        // Supprime le dislike
+        await deleteDislike({ variables: { articleId, userId: user.id! } });
+        console.log(user.username, "a retiré son dislike.");
       }
+
+      // Rafraîchir les données après l'opération
       await refetchDislikeUser();
       await refetchArticles();
-      console.log("Dislikes mis à jour.", userDislikes);
+      await refetechMostDislikedArticles();
     } catch (error) {
+      // En cas d'erreur, remettre l'état précédent
+      setUserDislikes((prev) => ({
+        ...prev,
+        [articleId]: !userDislikes[articleId],
+      }));
       console.error("Erreur lors de l'ajout/suppression du dislike :", error);
     }
   };
@@ -461,6 +487,7 @@ function PublicationPage() {
               }) => (
                 <motion.div
                   key={articleId}
+                  data-article-id={articleId}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.5 }}
@@ -582,7 +609,7 @@ function PublicationPage() {
                         onClick={(e) => handleDislike(e, articleId)}
                       >
                         <ThumbsDown className="h-5 w-5" />
-                        <span>{TotalDislikes}</span>
+                        <span className="dislike-count">{TotalDislikes}</span>
                       </motion.button>
 
                       <button

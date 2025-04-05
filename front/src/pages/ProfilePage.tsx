@@ -202,6 +202,30 @@ const ProfilePage = () => {
   const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
   const [deleteArticle] = useMutation(DELETE_ARTICLE);
 
+  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
+    FIND_ARTICLES_BY_USER,
+    {
+      variables: { userId: user?.id! },
+      skip: !user,
+    }
+  );
+
+  const articleByUserData = articleByUser?.findArticlesByUser;
+
+  const [articleDislikes, setArticleDislikes] = useState<{
+    [key: string]: number;
+  }>({});
+
+  useEffect(() => {
+    if (articleByUserData) {
+      const initialDislikes = articleByUserData.reduce((acc, article) => {
+        acc[article.id] = article.TotalDislikes || 0;
+        return acc;
+      }, {} as { [key: string]: number });
+      setArticleDislikes(initialDislikes);
+    }
+  }, [articleByUserData]);
+
   const handleArticleDislike = async (
     e: React.MouseEvent,
     articleId: string
@@ -215,22 +239,42 @@ const ProfilePage = () => {
     }
 
     try {
-      if (userArticleDislikes[articleId]) {
+      // Mettre à jour l'état local immédiatement pour une réponse instantanée
+      const newDislikeState = !userArticleDislikes[articleId];
+      setUserArticleDislikes((prev) => ({
+        ...prev,
+        [articleId]: newDislikeState,
+      }));
+
+      // Mettre à jour le compteur de dislikes immédiatement
+      const currentCount = articleDislikes[articleId] || 0;
+      setArticleDislikes((prev) => ({
+        ...prev,
+        [articleId]: newDislikeState ? currentCount + 1 : currentCount - 1,
+      }));
+
+      if (newDislikeState) {
+        await addArticleDislike({ variables: { articleId, userId: user.id! } });
+        console.log(user.username, "a disliké l'article.");
+      } else {
         await deleteArticleDislike({
           variables: { articleId, userId: user.id! },
-          context: { headers: { Authorization: `Bearer ${token}` } },
         });
-        setUserArticleDislikes((prev) => ({ ...prev, [articleId]: false }));
-      } else {
-        await addArticleDislike({
-          variables: { articleId, userId: user.id! },
-          context: { headers: { Authorization: `Bearer ${token}` } },
-        });
-        setUserArticleDislikes((prev) => ({ ...prev, [articleId]: true }));
+        console.log(user.username, "a retiré son dislike.");
       }
+
       await refetchArticleDisliked();
       await refetchArticleByUser();
     } catch (err) {
+      // En cas d'erreur, remettre l'état précédent
+      setUserArticleDislikes((prev) => ({
+        ...prev,
+        [articleId]: !userArticleDislikes[articleId],
+      }));
+      setArticleDislikes((prev) => ({
+        ...prev,
+        [articleId]: articleDislikes[articleId],
+      }));
       console.error(err);
       if (err instanceof Error) {
         toast.error("Une erreur est survenue : " + err.message);
@@ -274,16 +318,6 @@ const ProfilePage = () => {
   const handleEditArticle = (articleId: string) => {
     navigate(`/publications/${articleId}?edit=true`);
   };
-
-  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
-    FIND_ARTICLES_BY_USER,
-    {
-      variables: { userId: user?.id! },
-      skip: !user,
-    }
-  );
-
-  const articleByUserData = articleByUser?.findArticlesByUser;
 
   // Effet pour rafraîchir les données quand on revient sur la page
   useEffect(() => {
@@ -723,7 +757,7 @@ const ProfilePage = () => {
                         }`}
                       >
                         <ThumbsDown className="h-5 w-5" />
-                        <span>{article.TotalDislikes}</span>
+                        <span>{articleDislikes[article.id] || 0}</span>
                       </motion.button>
                       <button
                         className="flex items-center gap-2 hover:text-purple-400"

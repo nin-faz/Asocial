@@ -226,25 +226,54 @@ const PublicationDetailsPage = ({
     }
 
     try {
+      // Mettre à jour l'état local immédiatement pour une réponse instantanée
+      const newDislikeState = !userArticleDislikes[articleId];
       setUserArticleDislikes((prev) => ({
         ...prev,
-        [articleId]: !prev[articleId],
+        [articleId]: newDislikeState,
       }));
-      if (userArticleDislikes[articleId]) {
+
+      // Créer une copie locale des données pour mettre à jour l'UI immédiatement
+      const currentDislikes = article?.TotalDislikes || 0;
+      const updatedDislikes = newDislikeState
+        ? currentDislikes + 1
+        : currentDislikes - 1;
+
+      // Mettre à jour l'UI immédiatement avec la nouvelle valeur
+      const dislikeCountElement = document.querySelector(".dislike-count");
+      if (dislikeCountElement) {
+        dislikeCountElement.textContent = String(Math.max(0, updatedDislikes));
+      }
+
+      if (newDislikeState) {
+        // Ajoute le dislike
+        await addArticleDislike({ variables: { articleId, userId: user.id! } });
+        console.log(user.username, "a disliké l'article.");
+      } else {
+        // Supprime le dislike
         await deleteArticleDislike({
           variables: { articleId, userId: user.id! },
         });
         console.log(user.username, "a retiré son dislike.");
-      } else {
-        await addArticleDislike({ variables: { articleId, userId: user.id! } });
-        console.log(user.username, "a disliké l'article.");
       }
 
+      // Rafraîchir les données après l'opération
       await refetchArticleDislikeUser();
       await refetchArticleData();
-
-      console.log("Dislikes mis à jour.", userArticleDislikes);
     } catch (error) {
+      // En cas d'erreur, remettre l'état précédent
+      setUserArticleDislikes((prev) => ({
+        ...prev,
+        [articleId]: !userArticleDislikes[articleId],
+      }));
+
+      // Remettre le compteur de dislikes à sa valeur précédente en cas d'erreur
+      const currentDislikes = article?.TotalDislikes || 0;
+      const dislikeCountElement = document.querySelector(".dislike-count");
+      if (dislikeCountElement) {
+        dislikeCountElement.textContent = String(currentDislikes);
+      }
+
       console.error("Erreur lors de l'ajout/suppression du dislike :", error);
     }
   };
@@ -366,27 +395,67 @@ const PublicationDetailsPage = ({
   const handleCommentDislike = async (comment: CommentType) => {
     if (!user) {
       showLoginRequiredToast("dislike");
+      return;
     }
 
-    const hasDisliked = userCommentDislikes[comment?.id!] ?? false;
+    const commentId = comment?.id!;
+    const hasDisliked = userCommentDislikes[commentId] ?? false;
+    const newDislikeState = !hasDisliked;
 
     try {
-      if (hasDisliked) {
-        await deleteCommentDislike({
-          variables: { commentId: comment?.id!, userId: user?.id! },
-        });
-        setUserCommentDislikes((prev) => ({ ...prev, [comment?.id!]: false }));
-        console.log(user?.username, "a retiré son dislike.");
-      } else {
-        await addCommentDislike({
-          variables: { commentId: comment?.id!, userId: user?.id! },
-        });
-        setUserCommentDislikes((prev) => ({ ...prev, [comment?.id!]: true }));
-        console.log(user?.username, "a disliké le commentaire.");
+      // Mettre à jour l'état local immédiatement pour une réponse instantanée
+      setUserCommentDislikes((prev) => ({
+        ...prev,
+        [commentId]: newDislikeState,
+      }));
+
+      // Créer une copie locale des données pour mettre à jour l'UI immédiatement
+      const currentDislikes = comment?.TotalDislikes || 0;
+      const updatedDislikes = newDislikeState
+        ? currentDislikes + 1
+        : currentDislikes - 1;
+
+      // Mettre à jour l'UI immédiatement avec la nouvelle valeur
+      const dislikeElement = document.querySelector(
+        `[data-comment-id="${commentId}"] .comment-dislike-count`
+      );
+      if (dislikeElement) {
+        dislikeElement.textContent = String(Math.max(0, updatedDislikes));
       }
+
+      if (newDislikeState) {
+        // Ajoute le dislike
+        await addCommentDislike({
+          variables: { commentId, userId: user?.id! },
+        });
+        console.log(user?.username, "a disliké le commentaire.");
+      } else {
+        // Supprime le dislike
+        await deleteCommentDislike({
+          variables: { commentId, userId: user?.id! },
+        });
+        console.log(user?.username, "a retiré son dislike.");
+      }
+
+      // Rafraîchir les données après l'opération
       await refetchComments();
       await refetchCommentDislikeUser();
     } catch (err) {
+      // En cas d'erreur, remettre l'état précédent
+      setUserCommentDislikes((prev) => ({
+        ...prev,
+        [commentId]: hasDisliked,
+      }));
+
+      // Remettre le compteur de dislikes à sa valeur précédente en cas d'erreur
+      const currentDislikes = comment?.TotalDislikes || 0;
+      const dislikeElement = document.querySelector(
+        `[data-comment-id="${commentId}"] .comment-dislike-count`
+      );
+      if (dislikeElement) {
+        dislikeElement.textContent = String(currentDislikes);
+      }
+
       console.error("Erreur dislike :", err);
     }
   };
@@ -680,7 +749,7 @@ const PublicationDetailsPage = ({
               }
             >
               <ThumbsDown className="h-5 w-5" />
-              <span>{article?.TotalDislikes}</span>
+              <span className="dislike-count">{article?.TotalDislikes}</span>
             </motion.button>
 
             <button
@@ -746,6 +815,7 @@ const PublicationDetailsPage = ({
         {commentsData?.getComments?.map((comment) => (
           <motion.div
             key={comment?.id}
+            data-comment-id={comment?.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
@@ -883,7 +953,9 @@ const PublicationDetailsPage = ({
                     }}
                   >
                     <ThumbsDown className="h-5 w-5" />
-                    <span>{comment?.TotalDislikes}</span>
+                    <span className="comment-dislike-count">
+                      {comment?.TotalDislikes}
+                    </span>
                   </motion.button>
                 </div>
               </div>

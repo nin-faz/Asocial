@@ -1,4 +1,4 @@
-import React, { useState, createContext, ReactNode } from "react";
+import React, { useState, createContext, ReactNode, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { User } from "lucide-react";
 
@@ -12,6 +12,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string) => void;
   logout: () => void;
+  verifyToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -45,6 +46,53 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     storedUser ? JSON.parse(storedUser) : null
   );
 
+  // Fonction pour vérifier la validité du token avec le serveur
+  const verifyToken = async (): Promise<boolean> => {
+    if (!token || !user) {
+      console.log("Pas de token ou d'utilisateur à vérifier");
+      logout();
+      return false;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/verify`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.log("Le token n'est plus valide côté serveur");
+        logout();
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification du token:", error);
+      logout();
+      return false;
+    }
+  };
+
+  // Vérifier le token au chargement initial
+  useEffect(() => {
+    const validateOnLoad = async () => {
+      if (token && user) {
+        await verifyToken();
+      } else if (!user && token) {
+        // Si nous avons un token mais pas d'utilisateur, quelque chose est incohérent
+        logout();
+      }
+    };
+
+    validateOnLoad();
+  }, []);
+
   const login = (token: string) => {
     const decodedUser = decodeToken(token);
 
@@ -68,7 +116,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const value = React.useMemo(
-    () => ({ user, token, login, logout }),
+    () => ({ user, token, login, logout, verifyToken }),
     [user, token]
   );
 

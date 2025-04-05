@@ -12,6 +12,9 @@ import {
 const toastStyle = {
   background: "#2a0134",
   color: "#f0aaff",
+  display: "flex",
+  justifyContent: "start",
+  alignItems: "start",
 };
 
 // --- Login requis pour actions ---

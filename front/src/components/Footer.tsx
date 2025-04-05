@@ -41,7 +41,7 @@ const Footer = () => {
               Le réseau anti-social où l'authenticité règne et les conventions
               meurent.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 md:justify-start justify-center">
               <motion.button
                 onClick={handleIconClick("network")}
                 whileHover={{ scale: 1.1 }}
@@ -82,7 +82,7 @@ const Footer = () => {
           </div>
 
           {/* Navigation */}
-          <div className="col-span-1">
+          <div className="col-span-1 text-center md:text-left">
             <h3 className="text-lg font-semibold text-purple-400 mb-4">
               Navigation
             </h3>
@@ -90,7 +90,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Accueil
                 </Link>
@@ -98,7 +98,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/publications"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Publications
                 </Link>
@@ -106,7 +106,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/about"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   À propos
                 </Link>
@@ -114,7 +114,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/profile"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Profil
                 </Link>
@@ -123,7 +123,7 @@ const Footer = () => {
           </div>
 
           {/* Resources */}
-          <div className="col-span-1">
+          <div className="col-span-1 text-center md:text-left">
             <h3 className="text-lg font-semibold text-purple-400 mb-4">
               Ressources
             </h3>
@@ -131,7 +131,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors flex items-center"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Manifeste Anti-Social
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -140,7 +140,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors flex items-center"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Guide du Chaos
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -149,7 +149,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors flex items-center"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   FAQ
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -158,7 +158,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors flex items-center"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Règles de Désordre
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -168,7 +168,7 @@ const Footer = () => {
           </div>
 
           {/* Legal */}
-          <div className="col-span-1">
+          <div className="col-span-1 text-center md:text-left">
             <h3 className="text-lg font-semibold text-purple-400 mb-4">
               Légal
             </h3>
@@ -176,7 +176,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Conditions d'Utilisation
                 </a>
@@ -184,7 +184,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Politique de Confidentialité
                 </a>
@@ -192,7 +192,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Cookies
                 </a>
@@ -200,7 +200,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-gray-400 hover:text-purple-400 transition-colors inline-flex items-center justify-center md:justify-start"
                 >
                   Mentions Légales
                 </a>

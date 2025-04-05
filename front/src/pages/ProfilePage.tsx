@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
@@ -45,9 +45,16 @@ const ProfilePage = () => {
   const location = useLocation();
   const auth = useContext(AuthContext);
 
-  // Get tab from URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const tabParam = queryParams.get("tab");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+
+  const [activeTab, setActiveTab] = useState(tabParam || "publications");
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
 
@@ -60,11 +67,7 @@ const ProfilePage = () => {
   const [error, setError] = useState("");
 
   const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
-  const [activeTab, setActiveTab] = useState(
-    tabParam === "statistiques" || tabParam === "dislikes"
-      ? tabParam
-      : "publications"
-  );
+
   const [userArticleDislikes, setUserArticleDislikes] = useState<{
     [key: string]: boolean;
   }>({});
@@ -550,7 +553,7 @@ const ProfilePage = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setIsEditing(true)}
-                  className="mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                  className="mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center mx-auto md:mx-0"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Modifier le profil

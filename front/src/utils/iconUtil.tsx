@@ -7,11 +7,11 @@ import {
   Star,
   Zap,
   Music,
-  Coffee,
-  Camera,
+  PawPrint,
+  Crown,
   Gamepad,
   Smile,
-  Award,
+  Rocket,
   Cloud,
 } from "lucide-react";
 import { CheetahIcon } from "../components/icons/CheetahIcon";
@@ -41,16 +41,16 @@ export const renderUserIcon = (
       return <Zap className={`${sizeClassName} text-purple-400`} />;
     case "Music":
       return <Music className={`${sizeClassName} text-purple-400`} />;
-    case "Coffee":
-      return <Coffee className={`${sizeClassName} text-purple-400`} />;
-    case "Camera":
-      return <Camera className={`${sizeClassName} text-purple-400`} />;
+    case "PawPrint":
+      return <PawPrint className={`${sizeClassName} text-purple-400`} />;
+    case "Crown":
+      return <Crown className={`${sizeClassName} text-purple-400`} />;
     case "Gamepad":
       return <Gamepad className={`${sizeClassName} text-purple-400`} />;
     case "Smile":
       return <Smile className={`${sizeClassName} text-purple-400`} />;
-    case "Award":
-      return <Award className={`${sizeClassName} text-purple-400`} />;
+    case "Rocket":
+      return <Rocket className={`${sizeClassName} text-purple-400`} />;
     case "Cloud":
       return <Cloud className={`${sizeClassName} text-purple-400`} />;
     case "Cheetah":

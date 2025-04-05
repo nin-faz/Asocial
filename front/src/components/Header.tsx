@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import {
   Search,
-  Skull,
   Menu,
   Home,
   Bomb,
@@ -9,6 +8,7 @@ import {
   User,
   BarChart2,
   ThumbsDown,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -110,7 +110,11 @@ const Header = () => {
 
               {/* Centered Search Bar */}
               {pathname.startsWith("/publications") && (
-                <div className="w-full max-w-md mx-auto px-4">
+                <div
+                  className={`w-full max-w-md ${
+                    !user ? "mr-32 px-8" : "mr-24 px-2"
+                  }`}
+                >
                   <div className="relative w-full">
                     <input
                       type="text"
@@ -133,7 +137,14 @@ const Header = () => {
                 <motion.button
                   className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                   whileHover={{ scale: 1.1 }}
-                  onClick={() => navigate("/profile?tab=dislikes")}
+                  onClick={() => {
+                    if (pathname === "/profile") {
+                      // Si déjà sur la page profile, mettre à jour l'URL avec le nouveau tab
+                      navigate("/profile?tab=dislikes", { replace: true });
+                    } else {
+                      navigate("/profile?tab=dislikes");
+                    }
+                  }}
                   title="Voir mes dislikes"
                 >
                   <ThumbsDown className="h-6 w-6" />
@@ -141,7 +152,14 @@ const Header = () => {
                 <motion.button
                   className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                   whileHover={{ scale: 1.1 }}
-                  onClick={() => navigate("/profile?tab=statistiques")}
+                  onClick={() => {
+                    if (pathname === "/profile") {
+                      // Si déjà sur la page profile, mettre à jour l'URL avec le nouveau tab
+                      navigate("/profile?tab=statistiques", { replace: true });
+                    } else {
+                      navigate("/profile?tab=statistiques");
+                    }
+                  }}
                   title="Voir mes statistiques"
                 >
                   <BarChart2 className="h-6 w-6" />
@@ -312,7 +330,7 @@ const Header = () => {
                     setShowMobileMenu(false);
                   }}
                 >
-                  <Skull className="h-5 w-5 text-gray-400 mr-3" />
+                  <Info className="h-5 w-5 text-gray-400 mr-3" />
                   <span className="text-gray-300">À propos</span>
                 </button>
               </nav>

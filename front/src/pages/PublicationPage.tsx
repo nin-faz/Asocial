@@ -133,7 +133,12 @@ function PublicationPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  const [createArticle] = useMutation(CREATE_ARTICLE);
+  const [createArticle, { loading: isCreatingArticle }] =
+    useMutation(CREATE_ARTICLE);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Ajoutez cette nouvelle variable d'état pour gérer l'article en cours de création
+  const [tempArticleId, setTempArticleId] = useState<string | null>(null);
 
   const handleCreateArticle = async () => {
     if (!user) {
@@ -147,6 +152,10 @@ function PublicationPage() {
     }
 
     try {
+      // Générer un ID temporaire pour l'article en cours de création
+      const newTempId = `temp-${Date.now()}`;
+      setTempArticleId(newTempId);
+
       const response = await createArticle({
         variables: {
           title: title.trim() || null,
@@ -164,17 +173,30 @@ function PublicationPage() {
         showArticleCreatedToast();
         console.log("Article créé avec succès !");
 
-        await refetchArticles();
-        await refetechMostDislikedArticles();
-
         setTitle("");
         setContent("");
         setImageUrl(null);
+
+        // Indique que le rafraîchissement est en cours
+        setIsRefreshing(true);
+
+        // Rafraîchir les articles
+        await Promise.all([refetchArticles(), refetechMostDislikedArticles()]);
+
+        // Si on n'est pas sur la première page, y retourner pour voir le nouvel article
+        if (currentPage > 1) {
+          setCurrentPage(1);
+        }
+
+        // Indiquer que le rafraîchissement est terminé
+        setIsRefreshing(false);
+        setTempArticleId(null); // Supprimer l'article temporaire
       } else {
         console.error(
           response?.data?.createArticle?.message ||
             "Echec de la création de l'article:"
         );
+        setTempArticleId(null); // Supprimer l'article temporaire en cas d'échec
       }
     } catch (err) {
       console.error(err);
@@ -183,6 +205,8 @@ function PublicationPage() {
       } else {
         toast.error("Une erreur est survenue");
       }
+      setIsRefreshing(false);
+      setTempArticleId(null); // Supprimer l'article temporaire en cas d'erreur
     }
   };
 
@@ -207,7 +231,11 @@ function PublicationPage() {
 
   const [deleteArticle] = useMutation(DELETE_ARTICLE);
 
+  const [deletedArticleIds, setDeletedArticleIds] = useState<string[]>([]);
+
   const handleDeleteArticle = async (articleId: string) => {
+    setDeletedArticleIds((prev) => [...prev, articleId]);
+
     try {
       const response = await deleteArticle({
         variables: { id: articleId },
@@ -231,6 +259,7 @@ function PublicationPage() {
           response?.data?.deleteArticle?.message ||
             "Echec de la suppression de l'article."
         );
+        setDeletedArticleIds((prev) => prev.filter((id) => id !== articleId));
       }
     } catch (err) {
       console.error(err);
@@ -239,6 +268,7 @@ function PublicationPage() {
       } else {
         toast.error("Une erreur est survenue");
       }
+      setDeletedArticleIds((prev) => prev.filter((id) => id !== articleId));
     }
   };
 
@@ -456,13 +486,42 @@ function PublicationPage() {
             {/* Ajout du téléchargeur d'image */}
             <ImageUploader imageUrl={imageUrl} onImageChange={setImageUrl} />
 
-            <div className="flex justify-end mt-3">
-              <button
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                onClick={handleCreateArticle}
-              >
-                Publier
-              </button>
+            <div className="flex flex-col w-full">
+              <div className="flex justify-end mt-3">
+                <button
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-70 flex items-center space-x-2"
+                  onClick={handleCreateArticle}
+                  disabled={isCreatingArticle || isRefreshing}
+                >
+                  {isCreatingArticle ? (
+                    <>
+                      <svg
+                        className="animate-spin h-4 w-4 mr-2 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Publication en cours...</span>
+                    </>
+                  ) : (
+                    <span>Publier</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -470,9 +529,85 @@ function PublicationPage() {
 
       {/* Articles List */}
       <div className="space-y-10">
+        {/* Article temporaire en cours de création */}
+        {tempArticleId && (
+          <motion.div
+            key={tempArticleId}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gray-900 rounded-lg p-6 border border-purple-900 relative overflow-hidden min-h-28"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                  <UserIcon iconName={userIconName} size="small" />
+                </div>
+                <div>
+                  <h3 className="text-purple-400 font-semibold">
+                    {user?.username}
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    Le {new Date().toLocaleString().replace(" ", " à ")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {title && (
+              <h2 className="text-xl font-semibold text-purple-400 mb-2">
+                {title}
+              </h2>
+            )}
+
+            <p className="text-gray-300 mb-4 whitespace-pre-wrap">{content}</p>
+
+            {imageUrl && (
+              <div className="mb-4 rounded-lg overflow-hidden">
+                <img
+                  src={imageUrl}
+                  alt="Article en cours de publication"
+                  className="w-full h-auto rounded-lg max-h-80 object-cover"
+                />
+              </div>
+            )}
+
+            {/* Overlay de chargement */}
+            <div className="absolute inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center">
+              <div className="text-center">
+                <svg
+                  className="animate-spin h-10 w-10 mx-auto mb-4 text-purple-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <p className="text-purple-400 font-medium">
+                  Publication en cours...
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {hasArticles ? (
           currentArticles
-            .filter((article) => article !== null)
+            .filter(
+              (article) =>
+                article !== null && !deletedArticleIds.includes(article.id)
+            )
             .map(
               ({
                 id: articleId,

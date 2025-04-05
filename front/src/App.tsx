@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import HomePage from "./pages/HomePage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
 import AuthPage from "./pages/AuthPage";
@@ -11,13 +11,35 @@ import PublicationPage from "./pages/PublicationPage";
 import Footer from "./components/Footer";
 import ProfilePage from "./pages/ProfilePage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
+import { AuthContext } from "./context/AuthContext";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const authContext = useContext(AuthContext);
 
   useEffect(() => {
-    setTimeout(() => setIsLoading(false), 2000);
-  }, []);
+    const init = async () => {
+      try {
+        // Vérification du token au chargement
+        if (authContext?.token && authContext?.user) {
+          await authContext.verifyToken();
+        } else if (authContext?.token && !authContext?.user) {
+          // Si nous avons un token mais pas d'utilisateur, supprimer le token
+          authContext.logout();
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'initialisation de l'application:",
+          error
+        );
+      } finally {
+        // Continue avec le chargement normal
+        setTimeout(() => setIsLoading(false), 2000);
+      }
+    };
+
+    init();
+  }, [authContext]);
 
   if (isLoading) {
     return <Loader />;
@@ -26,7 +48,7 @@ function App() {
   return (
     <>
       <ToastContainer
-        className={"text-center"}
+        className={" text-center"}
         position="top-right"
         autoClose={3000}
         hideProgressBar

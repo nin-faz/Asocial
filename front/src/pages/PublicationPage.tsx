@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -62,23 +62,38 @@ function PublicationPage() {
     loading: articlesLoading,
     refetch: refetchArticles,
   } = useQuery(FIND_ARTICLES, {
-    fetchPolicy: "network-only", // Force le rafraîchissement depuis le serveur
+    fetchPolicy: "cache-and-network", // Utilise le cache et met à jour en arrière-plan
+    nextFetchPolicy: "cache-first", // Utilise le cache pour les requêtes suivantes
   });
   const articles = data?.findArticles || [];
 
-  // Effet au chargement pour rafraîchir les données
+  // État pour suivre si un rafraîchissement est nécessaire
+  const [needsRefresh, setNeedsRefresh] = useState(true);
+
+  // Effet au chargement pour rafraîchir les données seulement si nécessaire
   useEffect(() => {
-    refetchArticles();
-    if (user?.id) {
-      refetchUserData();
+    if (needsRefresh) {
+      // Utiliser un délai pour éviter de bloquer le rendu initial
+      const timer = setTimeout(() => {
+        refetchArticles();
+        if (user?.id) {
+          refetchUserData();
+        }
+        setNeedsRefresh(false);
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
-  }, [refetchArticles, refetchUserData, user?.id]);
+  }, [refetchArticles, refetchUserData, user?.id, needsRefresh]);
 
   const {
     data: mostDislikedArticles,
     loading: mostDislikedLoading,
     refetch: refetechMostDislikedArticles,
-  } = useQuery(FIND_ARTICLE_BY_MOST_DISLIKED);
+  } = useQuery(FIND_ARTICLE_BY_MOST_DISLIKED, {
+    fetchPolicy: "cache-and-network", // Utilise le cache et met à jour en arrière-plan
+    nextFetchPolicy: "cache-first", // Utilise le cache pour les requêtes suivantes
+  });
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
   type ArticleType = NonNullable<
@@ -95,34 +110,48 @@ function PublicationPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [articlesPerPage] = useState(5);
+  const [articlesPerPage] = useState(10);
 
   const { searchTerm } = useSearch();
 
-  const filteredArticles = searchTerm.trim()
-    ? displayedArticles.filter((article) => {
-        const titleMatch = article?.title
-          ? article.title.toLowerCase().includes(searchTerm.toLowerCase())
-          : false;
-        const contentMatch = article.content
-          ? article.content.toLowerCase().includes(searchTerm.toLowerCase())
-          : false;
-        const authorMatch = article.author.username
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        return titleMatch || contentMatch || authorMatch;
-      })
-    : displayedArticles;
+  // Utiliser useMemo pour mémoriser les articles filtrés
+  const filteredArticles = useMemo(() => {
+    return searchTerm.trim()
+      ? displayedArticles.filter((article) => {
+          const lowerSearchTerm = searchTerm.toLowerCase();
+          const titleMatch = article?.title
+            ? article.title.toLowerCase().includes(lowerSearchTerm)
+            : false;
+          const contentMatch = article.content
+            ? article.content.toLowerCase().includes(lowerSearchTerm)
+            : false;
+          const authorMatch = article.author.username
+            .toLowerCase()
+            .includes(lowerSearchTerm);
+          return titleMatch || contentMatch || authorMatch;
+        })
+      : displayedArticles;
+  }, [displayedArticles, searchTerm]);
 
-  // Récupérer les articles à afficher sur la page courante
-  const currentArticles = filteredArticles.slice(
-    (currentPage - 1) * articlesPerPage,
-    currentPage * articlesPerPage
+  // Mémoriser les articles à afficher sur la page courante
+  const currentArticles = useMemo(() => {
+    return filteredArticles.slice(
+      (currentPage - 1) * articlesPerPage,
+      currentPage * articlesPerPage
+    );
+  }, [filteredArticles, currentPage, articlesPerPage]);
+
+  // Mémoriser si des articles sont disponibles
+  const hasArticles = useMemo(
+    () => filteredArticles.length > 0,
+    [filteredArticles]
   );
 
-  const hasArticles = filteredArticles.length > 0;
-
-  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+  // Mémoriser le nombre total de pages
+  const totalPages = useMemo(
+    () => Math.ceil(filteredArticles.length / articlesPerPage),
+    [filteredArticles, articlesPerPage]
+  );
 
   // Gérer le changement de page
   const handleNextPage = () => {
@@ -180,8 +209,15 @@ function PublicationPage() {
         // Indique que le rafraîchissement est en cours
         setIsRefreshing(true);
 
-        // Rafraîchir les articles
-        await Promise.all([refetchArticles(), refetechMostDislikedArticles()]);
+        // Rafraîchir uniquement les articles récents
+        await refetchArticles();
+
+        // Rafraîchir les articles les plus dislikés seulement si nécessaire
+        if (sortOption === "popular") {
+          setTimeout(() => {
+            refetechMostDislikedArticles();
+          }, 1000);
+        }
 
         // Si on n'est pas sur la première page, y retourner pour voir le nouvel article
         if (currentPage > 1) {
@@ -368,10 +404,17 @@ function PublicationPage() {
         console.log(user.username, "a retiré son dislike.");
       }
 
-      // Rafraîchir les données après l'opération
+      // Rafraîchir uniquement les données de dislike de l'utilisateur
+      // sans recharger tous les articles
       await refetchDislikeUser();
-      await refetchArticles();
-      await refetechMostDislikedArticles();
+
+      // Planifier un rafraîchissement différé des articles pour éviter
+      // de bloquer l'interface utilisateur
+      setTimeout(() => {
+        if (sortOption === "popular") {
+          refetechMostDislikedArticles();
+        }
+      }, 2000);
     } catch (error) {
       // En cas d'erreur, remettre l'état précédent
       setUserDislikes((prev) => ({
@@ -727,6 +770,9 @@ function PublicationPage() {
                         alt="Article"
                         className="w-full h-auto rounded-lg max-h-80 object-cover"
                         loading="lazy"
+                        width="800"
+                        height="450"
+                        decoding="async"
                       />
                     </div>
                   )}

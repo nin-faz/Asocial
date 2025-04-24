@@ -118,7 +118,7 @@ const Header = () => {
                   <div className="relative w-full">
                     <input
                       type="text"
-                      placeholder="Search for chaos..."
+                      placeholder="Naviguer dans le chaos..."
                       className="w-full bg-gray-900 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-800"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -254,7 +254,7 @@ const Header = () => {
                 <div className="relative mb-3">
                   <input
                     type="text"
-                    placeholder="Search for chaos..."
+                    placeholder="Naviguer dans le chaos..."
                     className="w-full bg-gray-800 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

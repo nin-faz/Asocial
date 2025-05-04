@@ -1,4 +1,5 @@
 import { MutationResolvers } from "../../types";
+import { notifyTelegram } from "../../utils/notifyTelegram.js";
 
 export const createArticle: NonNullable<
   MutationResolvers["createArticle"]
@@ -26,6 +27,21 @@ export const createArticle: NonNullable<
         },
       },
     });
+
+    const formattedDate = createdArticle.createdAt.toLocaleString("fr-FR", {
+      timeZone: "Europe/Paris",
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // ✅ Envoi d'une notif Telegram pour la création
+    await notifyTelegram(
+      `📝 Nouvel article créé par ${user.username} : ${title} \n Contenu : ${content}, \n Le ${formattedDate}`
+    );
 
     return {
       code: 201,

@@ -32,6 +32,7 @@ import { useSearch } from "../context/SearchContext";
 import {
   showArticleCreatedToast,
   showArticleDeletedToast,
+  showEmptyContentToast,
   showLoginRequiredToast,
 } from "../utils/customToasts";
 import UserIcon from "../components/UserIcon";
@@ -168,6 +169,15 @@ function PublicationPage() {
 
   // Ajoutez cette nouvelle variable d'état pour gérer l'article en cours de création
   const [tempArticleId, setTempArticleId] = useState<string | null>(null);
+  const [tempArticleData, setTempArticleData] = useState<{
+    title: string;
+    content: string;
+    imageUrl: string | null;
+  }>({
+    title: "",
+    content: "",
+    imageUrl: null,
+  });
 
   const handleCreateArticle = async () => {
     if (!user) {
@@ -176,14 +186,14 @@ function PublicationPage() {
     }
 
     if (content.trim() === "") {
-      toast.error("Le contenu de l'article ne peut pas être vide");
+      showEmptyContentToast();
       return;
     }
 
     try {
-      // Générer un ID temporaire pour l'article en cours de création
-      const newTempId = `temp-${Date.now()}`;
-      setTempArticleId(newTempId);
+      // Générer des datas temporaires pour l'article en cours de création
+      setTempArticleId(`temp-${Date.now()}`);
+      setTempArticleData({ title: title.trim(), content, imageUrl });
 
       const response = await createArticle({
         variables: {
@@ -199,9 +209,6 @@ function PublicationPage() {
       });
 
       if (response.data?.createArticle?.success) {
-        showArticleCreatedToast();
-        console.log("Article créé avec succès !");
-
         setTitle("");
         setContent("");
         setImageUrl(null);
@@ -226,7 +233,11 @@ function PublicationPage() {
 
         // Indiquer que le rafraîchissement est terminé
         setIsRefreshing(false);
-        setTempArticleId(null); // Supprimer l'article temporaire
+        setTempArticleId(null);
+        setTempArticleData({ title: "", content: "", imageUrl: null });
+
+        showArticleCreatedToast();
+        console.log("Article créé avec succès !");
       } else {
         console.error(
           response?.data?.createArticle?.message ||
@@ -242,7 +253,8 @@ function PublicationPage() {
         toast.error("Une erreur est survenue");
       }
       setIsRefreshing(false);
-      setTempArticleId(null); // Supprimer l'article temporaire en cas d'erreur
+      setTempArticleId(null);
+      setTempArticleData({ title: "", content: "", imageUrl: null });
     }
   };
 
@@ -271,6 +283,7 @@ function PublicationPage() {
 
   const handleDeleteArticle = async (articleId: string) => {
     setDeletedArticleIds((prev) => [...prev, articleId]);
+    showArticleDeletedToast();
 
     try {
       const response = await deleteArticle({
@@ -283,7 +296,6 @@ function PublicationPage() {
       });
 
       if (response.data?.deleteArticle?.success) {
-        showArticleDeletedToast();
         if (sortOption === "popular") {
           await refetechMostDislikedArticles();
         } else {
@@ -327,7 +339,9 @@ function PublicationPage() {
   // Met à jour userDislikes en fonction des articles et des dislikes de l'utilisateur
   useEffect(() => {
     if (!user) {
-      setUserDislikes({});
+      if (Object.keys(userDislikes).length !== 0) {
+        setUserDislikes({});
+      }
       return;
     }
 
@@ -596,18 +610,16 @@ function PublicationPage() {
               </div>
             </div>
 
-            {title && (
-              <h2 className="text-xl font-semibold text-purple-400 mb-2">
-                {title}
-              </h2>
-            )}
+            {tempArticleData.title && <h2>{tempArticleData.title}</h2>}
 
-            <p className="text-gray-300 mb-4 whitespace-pre-wrap">{content}</p>
+            <p className="text-gray-300 mb-4 whitespace-pre-wrap">
+              {tempArticleData.content}
+            </p>
 
-            {imageUrl && (
+            {tempArticleData.imageUrl && (
               <div className="mb-4 rounded-lg overflow-hidden">
                 <img
-                  src={imageUrl}
+                  src={tempArticleData.imageUrl}
                   alt="Article en cours de publication"
                   className="w-full h-auto rounded-lg max-h-80 object-cover"
                 />

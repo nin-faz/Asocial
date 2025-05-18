@@ -87,6 +87,13 @@ export const showArticleCreatedToast = () => {
   });
 };
 
+export const showEmptyContentToast = () => {
+  toast.error("Un article vide ? Sérieusement... Remplis-moi ça !", {
+    style: toastStyle,
+    icon: <Skull size={24} color="#f0aaff" />,
+  });
+};
+
 export const showArticleUpdatedToast = () => {
   toast.success("Mise à jour appliquée. Retour au néant.", {
     icon: <Megaphone size={24} color="#f0aaff" />,

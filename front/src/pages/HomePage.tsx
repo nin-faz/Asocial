@@ -26,7 +26,7 @@ function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          Bienvenu sur Asocial
+          Bienvenue sur Asocial
         </motion.h1>
         <motion.p
           className="mt-4 text-lg text-gray-300 text-center max-w-2xl"

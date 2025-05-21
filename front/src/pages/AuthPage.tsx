@@ -77,7 +77,7 @@ function AuthPage() {
         login(response.data.signIn.token ?? "");
 
         showLoginToast();
-        console.log("connexion réussie, bienvenue dans le chaos !");
+        console.log("Connexion réussie, bienvenue dans le chaos !");
 
         navigate("/publications");
       } else {

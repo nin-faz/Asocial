@@ -28,7 +28,6 @@ const decodeToken = (token: string): User | null => {
   }
 
   try {
-    console.log("Token  :" + JSON.stringify(token));
     const decoded: any = jwtDecode(token);
     return { id: decoded.id, username: decoded.username };
   } catch (error) {
@@ -82,11 +81,18 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Vérifier le token au chargement initial
   useEffect(() => {
     const validateOnLoad = async () => {
-      if (token && user) {
+      if (token && !user) {
+        const decodedUser = decodeToken(token);
+        if (decodedUser) {
+          setUser(decodedUser);
+        } else {
+          logout();
+          return;
+        }
+      }
+
+      if (token) {
         await verifyToken();
-      } else if (!user && token) {
-        // Si nous avons un token mais pas d'utilisateur, quelque chose est incohérent
-        logout();
       }
     };
 

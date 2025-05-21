@@ -42,7 +42,7 @@ Ce projet illustre l'architecture d'une application full-stack utilisant **Graph
 - Page principale affichant les articles récents
 - Page de détail pour chaque publication
 - Page de profil utilisateur
-- Filtrage des articles par popularité (nombre de dislikes)
+- Filtrage des articles par unpopularité (nombre de dislikes)
 
 ### 5. Performance et Sécurité :shield:
 

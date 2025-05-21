@@ -220,7 +220,7 @@ function PublicationPage() {
         await refetchArticles();
 
         // Rafraîchir les articles les plus dislikés seulement si nécessaire
-        if (sortOption === "popular") {
+        if (sortOption === "unpopular") {
           setTimeout(() => {
             refetechMostDislikedArticles();
           }, 1000);
@@ -296,7 +296,7 @@ function PublicationPage() {
       });
 
       if (response.data?.deleteArticle?.success) {
-        if (sortOption === "popular") {
+        if (sortOption === "unpopular") {
           await refetechMostDislikedArticles();
         } else {
           await refetchArticles();
@@ -425,7 +425,7 @@ function PublicationPage() {
       // Planifier un rafraîchissement différé des articles pour éviter
       // de bloquer l'interface utilisateur
       setTimeout(() => {
-        if (sortOption === "popular") {
+        if (sortOption === "unpopular") {
           refetechMostDislikedArticles();
         }
       }, 2000);
@@ -489,7 +489,7 @@ function PublicationPage() {
             className="bg-gray-800 text-gray-300 px-10 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
           >
             <option value="recent">Les plus récentes</option>
-            <option value="popular">Les plus impopulaires</option>
+            <option value="unpopular">Les plus impopulaires</option>
           </select>
           <div className="absolute right-3 pointer-events-none">
             <svg

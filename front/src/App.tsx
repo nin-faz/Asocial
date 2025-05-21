@@ -1,17 +1,17 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import HomePage from "./pages/HomePage";
 import { useEffect, useState, useContext } from "react";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
+import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
 import AboutPage from "./pages/AboutPage";
 import PublicationDetailsPage from "./pages/PublicationDetailsPage";
 import PublicationPage from "./pages/PublicationPage";
-import Footer from "./components/Footer";
 import ProfilePage from "./pages/ProfilePage";
-import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
+import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +48,7 @@ function App() {
   return (
     <>
       <ToastContainer
-        className={" text-center"}
+        className={"text-center"}
         position="top-right"
         autoClose={3000}
         hideProgressBar

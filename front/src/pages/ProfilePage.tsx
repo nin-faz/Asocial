@@ -664,15 +664,27 @@ const ProfilePage = () => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
                         {renderUserIcon(userInfosData?.iconName, "small")}
-                      </div>
+                      </div>{" "}
                       <p className="text-gray-500 text-sm">
-                        Publié le {""}
+                        Publié le{" "}
                         {article.updatedAt
                           ? new Date(parseInt(article.updatedAt, 10))
-                              .toLocaleString()
+                              .toLocaleString("fr-FR", {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                               .replace(" ", " à ")
                           : new Date(parseInt(article.createdAt ?? "0", 10))
-                              .toLocaleString()
+                              .toLocaleString("fr-FR", {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                               .replace(" ", " à ")}
                       </p>
                     </div>
@@ -848,13 +860,19 @@ const ProfilePage = () => {
                         <div>
                           <h3 className="text-purple-400 font-semibold">
                             {dislike?.article?.author.username}
-                          </h3>
+                          </h3>{" "}
                           <p className="text-gray-500 text-sm">
                             Le{" "}
                             {new Date(
                               parseInt(dislike?.article?.createdAt!, 10)
                             )
-                              .toLocaleString()
+                              .toLocaleString("fr-FR", {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                               .replace(" ", " à ")}
                           </p>
                         </div>

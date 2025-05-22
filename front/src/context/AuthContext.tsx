@@ -37,8 +37,8 @@ const decodeToken = (token: string): User | null => {
 };
 
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const storedToken = sessionStorage.getItem("token");
-  const storedUser = sessionStorage.getItem("user");
+  const storedToken = localStorage.getItem("token");
+  const storedUser = localStorage.getItem("user");
 
   const [token, setToken] = useState<string | null>(storedToken);
   const [user, setUser] = useState<User | null>(
@@ -98,7 +98,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     validateOnLoad();
   }, []);
-
   const login = (token: string) => {
     const decodedUser = decodeToken(token);
 
@@ -107,18 +106,17 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
 
-    sessionStorage.setItem("token", token);
-    sessionStorage.setItem("user", JSON.stringify(decodedUser));
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(decodedUser));
 
     setToken(token);
     setUser(decodedUser);
   };
-
   const logout = () => {
     setUser(null);
     setToken(null);
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   const value = React.useMemo(

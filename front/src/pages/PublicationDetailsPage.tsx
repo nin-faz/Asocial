@@ -589,15 +589,27 @@ const PublicationDetailsPage = ({
             <div>
               <h3 className="text-purple-400 font-semibold text-lg">
                 {article?.author.username}
-              </h3>
+              </h3>{" "}
               <p className="text-gray-500 text-sm">
-                Le {""}
+                Le{" "}
                 {article?.updatedAt
                   ? new Date(parseInt(article?.updatedAt, 10))
-                      .toLocaleString()
+                      .toLocaleString("fr-FR", {
+                        year: "numeric",
+                        month: "numeric",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       .replace(" ", " à ")
                   : new Date(parseInt(article?.createdAt ?? "0", 10))
-                      .toLocaleString()
+                      .toLocaleString("fr-FR", {
+                        year: "numeric",
+                        month: "numeric",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       .replace(" ", " à ")}
               </p>
             </div>
@@ -729,6 +741,8 @@ const PublicationDetailsPage = ({
               src={article.imageUrl}
               alt="Article"
               className="w-full h-auto rounded-lg"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         )}
@@ -841,19 +855,37 @@ const PublicationDetailsPage = ({
                   <div>
                     <span className="text-purple-400 font-medium">
                       {comment?.author.username}
-                    </span>
+                    </span>{" "}
                     <p className="text-gray-500 text-sm">
-                      Le {""}
+                      Le{" "}
                       {comment?.updatedAt
                         ? `${new Date(parseInt(comment?.createdAt ?? "0", 10))
-                            .toLocaleString()
-                            .replace(" ", " à ")} (modifié le ${new Date(
+                            .toLocaleString("fr-FR", {
+                              year: "numeric",
+                              month: "numeric",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            .replace(",", " à")} (modifié le ${new Date(
                             parseInt(comment?.updatedAt, 10)
                           )
-                            .toLocaleString()
-                            .replace(" ", " à ")})`
+                            .toLocaleString("fr-FR", {
+                              year: "numeric",
+                              month: "numeric",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            .replace("", " à ")})`
                         : new Date(parseInt(comment?.createdAt ?? "0", 10))
-                            .toLocaleString()
+                            .toLocaleString("fr-FR", {
+                              year: "numeric",
+                              month: "numeric",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
                             .replace(" ", " à ")}
                     </p>
                   </div>

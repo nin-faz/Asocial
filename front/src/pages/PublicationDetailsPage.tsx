@@ -969,7 +969,7 @@ const PublicationDetailsPage = ({
                 ) : (
                   <p className="text-gray-300 mb-2">{comment?.content}</p>
                 )}
-                <div className="flex justify-between items-center mt-8 text-gray-500 border-t border-gray-800 pt-3">
+                <div className="flex justify-between items-center mt-5 text-gray-500 border-t border-gray-800 pt-3">
                   <div></div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}

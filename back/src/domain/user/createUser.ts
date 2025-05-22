@@ -1,6 +1,7 @@
 import { hashPassword } from "../../module/auth.js";
 import { formatUsername } from "../../module/usernameFormatter.js";
 import { MutationResolvers } from "../../types.js";
+import { notifyTelegram } from "../../utils/notifyTelegram.js";
 
 export const createUser: NonNullable<MutationResolvers["createUser"]> = async (
   _,
@@ -35,6 +36,24 @@ export const createUser: NonNullable<MutationResolvers["createUser"]> = async (
         createdAt: new Date(),
       },
     });
+
+    const formattedDate = createdUser.createdAt.toLocaleString("fr-FR", {
+      timeZone: "Europe/Paris",
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const message = [
+      `👤 Nouvel utilisateur créé`,
+      `Nom d'utilisateur : ${formattedUsername}`,
+      `🕒 Le ${formattedDate}`,
+    ].join("\n");
+
+    await notifyTelegram(message);
 
     return {
       code: 201,

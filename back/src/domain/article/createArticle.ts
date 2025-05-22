@@ -39,9 +39,16 @@ export const createArticle: NonNullable<
     });
 
     // ✅ Envoi d'une notif Telegram pour la création
-    await notifyTelegram(
-      `📝 Nouvel article créé par ${user.username} : ${title} \n Contenu : ${content}, \n Le ${formattedDate}`
-    );
+    const message = [
+      `📝 Nouvel article créé par ${user.username}`,
+      title && `Titre : ${title}`,
+      `Contenu : ${content}`,
+      `🕒 Le ${formattedDate}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    await notifyTelegram(message);
 
     return {
       code: 201,

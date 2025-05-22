@@ -1,5 +1,6 @@
 import { MutationResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
+import { notifyTelegram } from "../../utils/notifyTelegram.js";
 
 export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
   _,
@@ -17,6 +18,33 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
         author: true,
       },
     });
+
+    const article = await db.article.findUnique({
+      where: { id: articleId },
+      include: { author: true },
+    });
+
+    const formattedDate = new Date().toLocaleString("fr-FR", {
+      timeZone: "Europe/Paris",
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const message = [
+      `💬 Nouveau commentaire posté par ${newComment.author.username}`,
+      `Sur l'article de ${article?.author.username} : ${
+        article?.title || article?.content.slice(0, 30) + "..."
+      }`,
+      `Contenu du commentaire : ${content}`,
+      `🕒 Le ${formattedDate}`,
+    ].join("\n");
+
+    await notifyTelegram(message);
+
     return newComment;
   } catch {
     throw new Error("Comment has not been added");

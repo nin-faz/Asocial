@@ -50,6 +50,20 @@ export const showLoginRequiredToast = (
   });
 };
 
+export const showEmptyInfoToRegister = () => {
+  toast.error("Tu comptes écrire dans le vide ? Remplis ce champ d'abord.", {
+    style: toastStyle,
+    icon: <Skull size={24} color="#f0aaff" />,
+  });
+};
+
+export const showEmptyInfoToLogin = () => {
+  toast.error("Tu veux te connecter ? Remplis ce champ d'abord.", {
+    style: toastStyle,
+    icon: <Skull size={24} color="#f0aaff" />,
+  });
+};
+
 // --- Connexion réussie ---
 export const showLoginToast = () => {
   const messages = [

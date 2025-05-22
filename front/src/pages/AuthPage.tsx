@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { CREATE_USER, SIGN_IN } from "../mutations";
 import { AuthContext } from "../context/AuthContext";
-import { showLoginToast, showWelcomeToast } from "../utils/customToasts";
+import {
+  showEmptyInfoToLogin,
+  showEmptyInfoToRegister,
+  showLoginToast,
+  showWelcomeToast,
+} from "../utils/customToasts";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
@@ -21,8 +26,18 @@ function AuthPage() {
     document.title = isLogin ? "Connexion" : "Inscription";
   }, [isLogin]);
 
-  const [createUser] = useMutation(CREATE_USER);
-  const [signIn] = useMutation(SIGN_IN);
+  const [createUser, { loading: isRegistering }] = useMutation(CREATE_USER);
+  const [signIn, { loading: isLoggingIn }] = useMutation(SIGN_IN);
+
+  const isSubmitting = isRegistering || isLoggingIn;
+
+  let buttonText = "";
+
+  if (isSubmitting) {
+    buttonText = isLogin ? "Connexion en cours..." : "Inscription en cours...";
+  } else {
+    buttonText = isLogin ? "Se connecter" : "Créer un compte";
+  }
 
   const authContext = useContext(AuthContext);
   if (!authContext) {
@@ -33,6 +48,11 @@ function AuthPage() {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      if (username === "" || password === "") {
+        showEmptyInfoToRegister();
+        return;
+      }
+
       const response = await createUser({
         variables: { username, password },
       });
@@ -69,6 +89,10 @@ function AuthPage() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      if (username === "" || password === "") {
+        showEmptyInfoToLogin();
+        return;
+      }
       const response = await signIn({
         variables: { username, password },
       });
@@ -173,11 +197,16 @@ function AuthPage() {
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors"
+                whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+                whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                disabled={isSubmitting}
+                className={`w-full py-3 rounded-lg transition-colors ${
+                  isSubmitting
+                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                    : "bg-purple-600 text-white hover:bg-purple-700"
+                }`}
               >
-                {isLogin ? "Se connecter" : "Créer un compte"}
+                {buttonText}
               </motion.button>
             </form>
 

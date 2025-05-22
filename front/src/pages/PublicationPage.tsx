@@ -363,7 +363,16 @@ function PublicationPage() {
       });
     }
 
-    setUserDislikes(dislikesMap);
+    const isEqual = (a: typeof userDislikes, b: typeof dislikesMap) => {
+      const aKeys = Object.keys(a);
+      const bKeys = Object.keys(b);
+      if (aKeys.length !== bKeys.length) return false;
+      return aKeys.every((key) => a[key] === b[key]);
+    };
+
+    if (!isEqual(userDislikes, dislikesMap)) {
+      setUserDislikes(dislikesMap);
+    }
   }, [articles, mostDisliked, dislikeUser, user?.id, sortOption]);
 
   const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);

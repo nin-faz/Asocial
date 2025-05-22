@@ -28,6 +28,9 @@ model Dislike {
   article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@unique([userId, articleId])
 }
 
 model Article {
@@ -41,6 +44,10 @@ model Article {
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments  Comment[]
   dislikes  Dislike[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([authorId, createdAt])
 }
 
 model Comment {
@@ -53,4 +60,7 @@ model Comment {
   article   Article?  @relation(fields: [articleId], references: [id])
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   dislikes  Dislike[]
+
+  @@index([articleId])
+  @@index([authorId])
 }

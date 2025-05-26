@@ -34,14 +34,6 @@ export type Article = {
   updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
-export type ArticlePaginatedResponse = {
-  __typename?: 'ArticlePaginatedResponse';
-  articles: Array<Maybe<Article>>;
-  currentPage: Scalars['Int']['output'];
-  totalArticles: Scalars['Int']['output'];
-  totalPages: Scalars['Int']['output'];
-};
-
 export type Comment = {
   __typename?: 'Comment';
   TotalDislikes?: Maybe<Scalars['Int']['output']>;
@@ -205,8 +197,8 @@ export type MutationUpdateUserArgs = {
 export type Query = {
   __typename?: 'Query';
   findArticleById?: Maybe<Article>;
-  findArticleByMostDisliked: ArticlePaginatedResponse;
-  findArticles: ArticlePaginatedResponse;
+  findArticleByMostDisliked?: Maybe<Array<Maybe<Article>>>;
+  findArticles?: Maybe<Array<Maybe<Article>>>;
   findArticlesByUser: Array<Article>;
   findUserById?: Maybe<UserSummary>;
   getComments?: Maybe<Array<Maybe<Comment>>>;
@@ -220,18 +212,6 @@ export type Query = {
 
 export type QueryFindArticleByIdArgs = {
   id: Scalars['ID']['input'];
-};
-
-
-export type QueryFindArticleByMostDislikedArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  page?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-export type QueryFindArticlesArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -405,7 +385,6 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Article: ResolverTypeWrapper<ArticleModel>;
-  ArticlePaginatedResponse: ResolverTypeWrapper<Omit<ArticlePaginatedResponse, 'articles'> & { articles: Array<Maybe<ResolversTypes['Article']>> }>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Comment: ResolverTypeWrapper<CommentModel>;
   CommentUpdateResponse: ResolverTypeWrapper<CommentUpdateResponse>;
@@ -432,7 +411,6 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Article: ArticleModel;
-  ArticlePaginatedResponse: Omit<ArticlePaginatedResponse, 'articles'> & { articles: Array<Maybe<ResolversParentTypes['Article']>> };
   Boolean: Scalars['Boolean']['output'];
   Comment: CommentModel;
   CommentUpdateResponse: CommentUpdateResponse;
@@ -468,14 +446,6 @@ export type ArticleResolvers<ContextType = Context, ParentType extends Resolvers
   imageUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ArticlePaginatedResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ArticlePaginatedResponse'] = ResolversParentTypes['ArticlePaginatedResponse']> = {
-  articles?: Resolver<Array<Maybe<ResolversTypes['Article']>>, ParentType, ContextType>;
-  currentPage?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  totalArticles?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  totalPages?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -560,8 +530,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   findArticleById?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticleByIdArgs, 'id'>>;
-  findArticleByMostDisliked?: Resolver<ResolversTypes['ArticlePaginatedResponse'], ParentType, ContextType, Partial<QueryFindArticleByMostDislikedArgs>>;
-  findArticles?: Resolver<ResolversTypes['ArticlePaginatedResponse'], ParentType, ContextType, Partial<QueryFindArticlesArgs>>;
+  findArticleByMostDisliked?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
+  findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findArticlesByUser?: Resolver<Array<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticlesByUserArgs, 'userId'>>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
@@ -626,7 +596,6 @@ export type UpdateUserResponseResolvers<ContextType = Context, ParentType extend
 
 export type Resolvers<ContextType = Context> = {
   Article?: ArticleResolvers<ContextType>;
-  ArticlePaginatedResponse?: ArticlePaginatedResponseResolvers<ContextType>;
   Comment?: CommentResolvers<ContextType>;
   CommentUpdateResponse?: CommentUpdateResponseResolvers<ContextType>;
   CreateArticleResponse?: CreateArticleResponseResolvers<ContextType>;

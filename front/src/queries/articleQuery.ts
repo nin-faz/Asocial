@@ -3,30 +3,25 @@ import { graphql } from "../gql";
 export const FIND_ARTICLES = graphql(`
   query FindArticles {
     findArticles {
-      articles {
+      id
+      title
+      content
+      imageUrl
+      author {
         id
-        title
-        content
-        imageUrl
-        author {
+        username
+        iconName
+      }
+      createdAt
+      updatedAt
+      TotalDislikes
+      TotalComments
+      dislikes {
+        id
+        user {
           id
-          username
-          iconName
-        }
-        createdAt
-        updatedAt
-        TotalDislikes
-        TotalComments
-        dislikes {
-          id
-          user {
-            id
-          }
         }
       }
-      totalPages
-      currentPage
-      totalArticles
     }
   }
 `);

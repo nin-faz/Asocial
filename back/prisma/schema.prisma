@@ -41,6 +41,7 @@ model Article {
   createdAt DateTime  @default(now())
   updatedAt DateTime?
   imageUrl  String?
+  imageDeleteUrl String?
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments  Comment[]
   dislikes  Dislike[]
@@ -51,16 +52,24 @@ model Article {
 }
 
 model Comment {
-  id        String    @id @unique @default(uuid())
+  id        String    @id @default(uuid())
   content   String
   authorId  String
   articleId String?
+  parentId  String?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime?
+
   article   Article?  @relation(fields: [articleId], references: [id])
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   dislikes  Dislike[]
 
+  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   Comment[] @relation("CommentToComment")
+
   @@index([articleId])
   @@index([authorId])
+  @@index([parentId])
 }
+

@@ -3,9 +3,9 @@ import gql from "graphql-tag";
 export const typeDefs = gql`
   type Query {
     findUserById(id: ID!): UserSummary
-    findArticles: [Article]
+    findArticles(page: Int, limit: Int): ArticlePaginatedResponse!
     findArticleById(id: ID!): Article
-    findArticleByMostDisliked: [Article]
+    findArticleByMostDisliked(page: Int, limit: Int): ArticlePaginatedResponse!
     findArticlesByUser(userId: ID!): [Article!]!
     getUserbyToken(token: String!): UserToken
     getDislikesByArticleId(articleId: ID!): [Dislike]
@@ -13,6 +13,13 @@ export const typeDefs = gql`
     getDislikesByUserIdForArticles(userId: ID!): [Dislike]
     getDislikesByUserIdForComments(userId: ID!): [Dislike]
     getComments(articleId: ID!): [Comment]
+  }
+
+  type ArticlePaginatedResponse {
+    articles: [Article]!
+    totalPages: Int!
+    currentPage: Int!
+    totalArticles: Int!
   }
 
   type Mutation {

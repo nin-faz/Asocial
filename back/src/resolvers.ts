@@ -76,7 +76,7 @@ export const resolvers: Resolvers = {
       });
 
       // Obtenir les IDs des articles
-      const articleIds = userArticles.map((article) => article.id);
+      const articleIds = userArticles.map((article: any) => article.id);
 
       // Compter les dislikes sur ces articles
       const dislikeCount = await db.dislike.count({
@@ -98,7 +98,7 @@ export const resolvers: Resolvers = {
       });
 
       // Obtenir les IDs des articles
-      const articleIds = userArticles.map((article) => article.id);
+      const articleIds = userArticles.map((article: any) => article.id);
 
       // Compter les commentaires sur ces articles
       const commentCount = await db.comment.count({

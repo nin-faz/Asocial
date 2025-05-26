@@ -10,36 +10,14 @@ import AboutPage from "./pages/AboutPage";
 import PublicationDetailsPage from "./pages/PublicationDetailsPage";
 import PublicationPage from "./pages/PublicationPage";
 import ProfilePage from "./pages/ProfilePage";
-import { AuthContext } from "./context/AuthContext";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const authContext = useContext(AuthContext);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        // Vérification du token au chargement
-        if (authContext?.token && authContext?.user) {
-          await authContext.verifyToken();
-        } else if (authContext?.token && !authContext?.user) {
-          // Si nous avons un token mais pas d'utilisateur, supprimer le token
-          authContext.logout();
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors de l'initialisation de l'application:",
-          error
-        );
-      } finally {
-        // Continue avec le chargement normal
-        setTimeout(() => setIsLoading(false), 2000);
-      }
-    };
-
-    init();
-  }, [authContext]);
+    setTimeout(() => setIsLoading(false), 200);
+  }, []);
 
   if (isLoading) {
     return <Loader />;

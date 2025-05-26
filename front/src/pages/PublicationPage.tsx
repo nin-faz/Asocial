@@ -37,6 +37,7 @@ import {
 } from "../utils/customToasts";
 import UserIcon from "../components/UserIcon";
 import ImageUploader from "../components/ImageUploader";
+import ScrollButton from "../components/ScrollButton";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -46,6 +47,10 @@ function PublicationPage() {
 
   const { token, user } = authContext;
   const navigate = useNavigate();
+
+  // const paginationRef = useRef<HTMLDivElement | null>(null);
+
+  // Obtenir les informations utilisateur, y compris l'icône
 
   const { data: userData, refetch: refetchUserData } = useQuery(
     GET_USER_BY_ID,
@@ -130,9 +135,7 @@ function PublicationPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  const { searchTerm } = useSearch();
+  const [imageUrl, setImageUrl] = useState<string | null>(n{ searchTerm } = useSearch();
 
   // Utiliser useMemo pour mémoriser les articles filtrés
   const filteredArticles = useMemo(() => {
@@ -858,7 +861,10 @@ function PublicationPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
+      <div
+        // ref={paginationRef}
+        className="flex justify-between items-center mt-6"
+      >
         <button
           onClick={handlePrevPage}
           disabled={currentPage === 1}
@@ -877,6 +883,7 @@ function PublicationPage() {
           Suivant
         </button>
       </div>
+      {/* <ScrollButton targetRef={paginationRef} /> */}
     </main>
   );
 }

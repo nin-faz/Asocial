@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
 import Footer from "./components/Footer";

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { X, Upload } from "lucide-react";
+import { imageUpload } from "../utils/imageUpload";
 
 interface ImageUploaderProps {
   imageUrl: string | null;
@@ -16,7 +17,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const dropAreaRef = useRef<HTMLDivElement>(null);
 
   const processFile = useCallback(
-    (file: File) => {
+    async (file: File) => {
       // Vérifiez si le fichier est une image
       if (!file.type.startsWith("image/")) {
         alert("Veuillez sélectionner une image valide.");
@@ -32,17 +33,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
 
       setLoading(true);
-
       try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          onImageChange(base64String);
-          setLoading(false);
-        };
-        reader.readAsDataURL(file);
+        const uploadedUrl = await imageUpload(file); // Appel à imgbb
+
+        if (uploadedUrl) {
+          onImageChange(uploadedUrl); // Stocke l'URL hébergée
+        } else {
+          alert("Échec de l'envoi de l'image.");
+        }
       } catch (error) {
-        console.error("Erreur lors du téléchargement de l'image:", error);
+        console.error("Erreur d'upload :", error);
+      } finally {
         setLoading(false);
       }
     },

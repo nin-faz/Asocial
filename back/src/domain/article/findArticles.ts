@@ -19,17 +19,32 @@ export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
       return [];
     }
 
-    const sortedArticles = articles
-      .map((article) => ({
-        ...article,
-        TotalDislikes: article._count?.dislikes,
-        TotalComments: article._count?.comments,
-      }))
+    interface ArticleWithCounts
+      extends Omit<(typeof articles)[number], "_count"> {
+      _count: {
+        dislikes: number;
+        comments: number;
+      };
+    }
+
+    interface SortedArticle extends ArticleWithCounts {
+      TotalDislikes: number;
+      TotalComments: number;
+    }
+
+    const sortedArticles: SortedArticle[] = (articles as ArticleWithCounts[])
+      .map(
+        (article): SortedArticle => ({
+          ...article,
+          TotalDislikes: article._count?.dislikes,
+          TotalComments: article._count?.comments,
+        })
+      )
       .sort((a, b) => {
-        const dateA = a.updatedAt
+        const dateA: Date = a.updatedAt
           ? new Date(a.updatedAt)
           : new Date(a.createdAt);
-        const dateB = b.updatedAt
+        const dateB: Date = b.updatedAt
           ? new Date(b.updatedAt)
           : new Date(b.createdAt);
         return dateB.getTime() - dateA.getTime(); // Tri décroissant

@@ -1,8 +1,8 @@
 import { graphql } from "../gql";
 
 export const FIND_ARTICLES = graphql(`
-  query FindArticles($page: Int, $limit: Int) {
-    findArticles(page: $page, limit: $limit) {
+  query FindArticles {
+    findArticles {
       articles {
         id
         title

@@ -2,52 +2,40 @@ import { QueryResolvers } from "../../types";
 
 export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
   _,
-  { page = 1, limit = 10 },
+  __,
   { dataSources: { db } }
 ) => {
   try {
-    // Get total count for pagination
-    const totalArticles = await db.article.count();
-    const totalPages = Math.ceil(totalArticles / limit);
-    
-    // Calculate offset
-    const offset = (page - 1) * limit;
-
     const articles = await db.article.findMany({
-      take: limit,
-      skip: offset,
       include: {
         author: true,
         dislikes: true,
         comments: true,
         _count: { select: { dislikes: true, comments: true } },
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
     });
 
     if (!articles) {
-      return {
-        articles: [],
-        totalPages: 0,
-        currentPage: page,
-        totalArticles: 0
-      };
+      return [];
     }
 
-    const processedArticles = articles.map((article) => ({
-      ...article,
-      TotalDislikes: article._count?.dislikes,
-      TotalComments: article._count?.comments,
-    }));
+    const sortedArticles = articles
+      .map((article) => ({
+        ...article,
+        TotalDislikes: article._count?.dislikes,
+        TotalComments: article._count?.comments,
+      }))
+      .sort((a, b) => {
+        const dateA = a.updatedAt
+          ? new Date(a.updatedAt)
+          : new Date(a.createdAt);
+        const dateB = b.updatedAt
+          ? new Date(b.updatedAt)
+          : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime(); // Tri décroissant
+      });
 
-    return {
-      articles: processedArticles,
-      totalPages,
-      currentPage: page,
-      totalArticles
-    };
+    return sortedArticles;
   } catch (error) {
     throw new Error(`Failed to fetch articles : ${error}`);
   }

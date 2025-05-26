@@ -41,7 +41,6 @@ model Article {
   createdAt DateTime  @default(now())
   updatedAt DateTime?
   imageUrl  String?
-  imageDeleteUrl String?
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments  Comment[]
   dislikes  Dislike[]

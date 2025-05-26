@@ -287,14 +287,18 @@ const PublicationDetailsPage = ({
     }
   );
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [createComment] = useMutation(ADD_COMMENT);
 
-  const handleAddComment = async () => {
+  const handleCreateComment = async () => {
     if (newComment.trim() === "") return;
     if (!user) {
       showLoginRequiredToast("comment");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       await createComment({
@@ -312,6 +316,8 @@ const PublicationDetailsPage = ({
       await Promise.all([refetchComments(), refetchArticleData()]);
     } catch (err) {
       console.error("Erreur lors de l'ajout du commentaire :", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -811,8 +817,9 @@ const PublicationDetailsPage = ({
               className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
             />
             <button
-              onClick={handleAddComment}
+              onClick={handleCreateComment}
               className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
+              disabled={isSubmitting}
             >
               <Send className="h-5 w-5" />
             </button>

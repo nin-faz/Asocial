@@ -51,6 +51,7 @@ function PublicationPage() {
   // const paginationRef = useRef<HTMLDivElement | null>(null);
 
   // Obtenir les informations utilisateur, y compris l'icône
+
   const { data: userData, refetch: refetchUserData } = useQuery(
     GET_USER_BY_ID,
     {
@@ -61,15 +62,38 @@ function PublicationPage() {
 
   const userIconName = userData?.findUserById?.iconName || "Skull";
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 10;
+
   const {
     data,
     loading: articlesLoading,
     refetch: refetchArticles,
   } = useQuery(FIND_ARTICLES, {
-    fetchPolicy: "cache-and-network", // Utilise le cache et met à jour en arrière-plan
-    nextFetchPolicy: "cache-first", // Utilise le cache pour les requêtes suivantes
+    variables: {
+      page: currentPage,
+      limit: articlesPerPage
+    },
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
   });
-  const articles = data?.findArticles || [];
+
+  const articles = data?.findArticles?.articles || [];
+  const totalPages = data?.findArticles?.totalPages || 0;
+
+  const currentArticles = articles;
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
 
   // État pour suivre si un rafraîchissement est nécessaire
   const [needsRefresh, setNeedsRefresh] = useState(true);
@@ -95,8 +119,8 @@ function PublicationPage() {
     loading: mostDislikedLoading,
     refetch: refetechMostDislikedArticles,
   } = useQuery(FIND_ARTICLE_BY_MOST_DISLIKED, {
-    fetchPolicy: "cache-and-network", // Utilise le cache et met à jour en arrière-plan
-    nextFetchPolicy: "cache-first", // Utilise le cache pour les requêtes suivantes
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
   });
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
@@ -111,12 +135,7 @@ function PublicationPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [articlesPerPage] = useState(10);
-
-  const { searchTerm } = useSearch();
+  const [imageUrl, setImageUrl] = useState<string | null>(n{ searchTerm } = useSearch();
 
   // Utiliser useMemo pour mémoriser les articles filtrés
   const filteredArticles = useMemo(() => {
@@ -137,34 +156,11 @@ function PublicationPage() {
       : displayedArticles;
   }, [displayedArticles, searchTerm]);
 
-  // Mémoriser les articles à afficher sur la page courante
-  const currentArticles = useMemo(() => {
-    return filteredArticles.slice(
-      (currentPage - 1) * articlesPerPage,
-      currentPage * articlesPerPage
-    );
-  }, [filteredArticles, currentPage, articlesPerPage]);
-
   // Mémoriser si des articles sont disponibles
   const hasArticles = useMemo(
     () => filteredArticles.length > 0,
     [filteredArticles]
   );
-
-  // Mémoriser le nombre total de pages
-  const totalPages = useMemo(
-    () => Math.ceil(filteredArticles.length / articlesPerPage),
-    [filteredArticles, articlesPerPage]
-  );
-
-  // Gérer le changement de page
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
 
   const [createArticle, { loading: isCreatingArticle }] =
     useMutation(CREATE_ARTICLE);
@@ -689,7 +685,7 @@ function PublicationPage() {
                 id: articleId,
                 title,
                 content,
-                imageUrl, // Ajout de imageUrl
+                imageUrl,
                 author,
                 createdAt,
                 updatedAt,
@@ -871,7 +867,7 @@ function PublicationPage() {
       >
         <button
           onClick={handlePrevPage}
-          disabled={!hasArticles || currentPage === 1}
+          disabled={currentPage === 1}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
           Précédent
@@ -881,7 +877,7 @@ function PublicationPage() {
         </span>
         <button
           onClick={handleNextPage}
-          disabled={!hasArticles || currentPage === totalPages}
+          disabled={currentPage === totalPages}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
           Suivant
@@ -893,3 +889,5 @@ function PublicationPage() {
 }
 
 export default PublicationPage;
+
+export default PublicationPage

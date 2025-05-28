@@ -5,6 +5,7 @@ export const GET_COMMENTS = graphql(`
     getComments(articleId: $articleId) {
       id
       content
+      isReply
       author {
         id
         username
@@ -18,6 +19,24 @@ export const GET_COMMENTS = graphql(`
         }
       }
       TotalDislikes
+      parent {
+        id
+        content
+        author {
+          username
+        }
+      }
+      replies {
+        id
+        content
+        author {
+          id
+          username
+          iconName
+        }
+        createdAt
+        updatedAt
+      }
     }
   }
 `);

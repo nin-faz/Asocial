@@ -289,10 +289,19 @@ const PublicationDetailsPage = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [replyingToUsername, setReplyingToUsername] = useState<string | null>(
+    null
+  );
+
   const [createComment] = useMutation(ADD_COMMENT);
 
   const handleCreateComment = async () => {
-    if (newComment.trim() === "") return;
+    // Vérifier si c'est un commentaire principal ou une réponse
+    const content = replyToCommentId ? replyContent : newComment;
+
+    if (content.trim() === "") return;
     if (!user) {
       showLoginRequiredToast("comment");
       return;
@@ -303,16 +312,25 @@ const PublicationDetailsPage = ({
     try {
       await createComment({
         variables: {
-          content: newComment,
+          content: content,
           userId: user?.id!,
           articleId: finalId!,
+          parentId: replyToCommentId,
         },
       });
 
       showCommentAddedToast();
-      console.log("Commentaire ajouté avec succès !");
+      console.log(
+        replyToCommentId
+          ? "Réponse ajoutée avec succès !"
+          : "Commentaire ajouté avec succès !"
+      );
 
+      // Réinitialiser les états
       setNewComment("");
+      setReplyContent("");
+      setReplyToCommentId(null);
+      setReplyingToUsername(null);
       await Promise.all([refetchComments(), refetchArticleData()]);
     } catch (err) {
       console.error("Erreur lors de l'ajout du commentaire :", err);
@@ -794,38 +812,40 @@ const PublicationDetailsPage = ({
       </motion.div>
 
       {/* Comment Form */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-gray-900 rounded-lg p-4 mb-8 border border-purple-900"
-      >
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-              <UserIcon
-                iconName={userData?.findUserById?.iconName}
-                size="small"
+      {!replyToCommentId && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-gray-900 rounded-lg p-4 mb-8 border border-purple-900"
+        >
+          <div className="flex items-start space-x-4">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                <UserIcon
+                  iconName={userData?.findUserById?.iconName}
+                  size="small"
+                />
+              </div>
+            </div>
+            <div className="flex-grow relative">
+              <textarea
+                placeholder="Ajoutez votre commentaire..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
               />
+              <button
+                onClick={handleCreateComment}
+                className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
+                disabled={isSubmitting}
+              >
+                <Send className="h-5 w-5" />
+              </button>
             </div>
           </div>
-          <div className="flex-grow relative">
-            <textarea
-              placeholder="Ajoutez votre commentaire..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-            />
-            <button
-              onClick={handleCreateComment}
-              className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
-              disabled={isSubmitting}
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Comments Section */}
       <div className="space-y-4">
@@ -974,10 +994,237 @@ const PublicationDetailsPage = ({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-300 mb-2">{comment?.content}</p>
+                  <>
+                    <p className="text-gray-300 mb-2">{comment?.content}</p>
+                    {/* Replies */}
+                    {comment &&
+                      comment.replies &&
+                      comment.replies.length > 0 && (
+                        <div className="ml-8 mt-4 space-y-3">
+                          <h4 className="text-purple-300 text-sm font-medium mb-2">
+                            {comment.replies.length}{" "}
+                            {comment.replies.length === 1
+                              ? "réponse"
+                              : "réponses"}
+                          </h4>
+                          {comment.replies.map((reply) => (
+                            <motion.div
+                              key={reply?.id}
+                              data-comment-id={reply?.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3 }}
+                              whileHover={{
+                                scale: 1.03,
+                                boxShadow:
+                                  "0px 0px 10px rgba(128, 0, 128, 0.6)",
+                                transition: {
+                                  duration: 0.2,
+                                  ease: "easeOut",
+                                },
+                              }}
+                              whileTap={{ scale: 0.98 }}
+                              className="bg-gray-800 rounded-lg p-4 border border-purple-700 relative hover:border-purple-500 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 rounded-l-lg"></div>
+                              <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                  <div className="w-6 h-6 rounded-full bg-purple-800 flex items-center justify-center">
+                                    <UserIcon
+                                      iconName={reply?.author?.iconName}
+                                      size="small"
+                                    />
+                                  </div>
+                                </div>{" "}
+                                <div className="flex-grow">
+                                  {" "}
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center">
+                                      <span className="text-purple-300 font-medium">
+                                        {reply?.author.username}
+                                      </span>
+                                    </div>
+                                    <p className="text-gray-500 text-xs mt-1">
+                                      {reply?.updatedAt
+                                        ? `Modifié le ${new Date(
+                                            parseInt(reply?.updatedAt, 10)
+                                          )
+                                            .toLocaleString("fr-FR", {
+                                              year: "numeric",
+                                              month: "numeric",
+                                              day: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })
+                                            .replace(" ", " à ")}`
+                                        : `Le ${new Date(
+                                            parseInt(
+                                              reply?.createdAt ?? "0",
+                                              10
+                                            )
+                                          )
+                                            .toLocaleString("fr-FR", {
+                                              year: "numeric",
+                                              month: "numeric",
+                                              day: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })
+                                            .replace(" ", " à ")}`}
+                                    </p>
+                                  </div>
+                                  {editingCommentId === reply?.id ? (
+                                    <div className="mt-2 mb-2">
+                                      <textarea
+                                        value={editedCommentContent}
+                                        onChange={(e) =>
+                                          setEditedCommentContent(
+                                            e.target.value
+                                          )
+                                        }
+                                        className="w-full bg-gray-700 text-gray-100 rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
+                                      />
+                                      <div className="flex justify-end space-x-2 mt-1">
+                                        <button
+                                          onClick={handleCancelEditComment}
+                                          className="flex items-center px-2 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors text-xs"
+                                        >
+                                          <X className="h-3 w-3 mr-1" />
+                                          Annuler
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleUpdateComment(reply?.id!)
+                                          }
+                                          className="flex items-center px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-xs"
+                                        >
+                                          <Save className="h-3 w-3 mr-1" />
+                                          Sauvegarder
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-gray-400 text-sm mt-1">
+                                      {reply?.content}
+                                    </p>
+                                  )}
+                                  {/* Actions de réponse */}{" "}
+                                  {/* Bouton de dislike pour les réponses (temporairement désactivé)
+                                  <div className="flex justify-end mt-2 text-gray-500">
+                                    <motion.button
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      className={`flex items-center space-x-1 text-xs hover:text-purple-400 ${
+                                        userCommentDislikes[reply?.id!]
+                                          ? "text-purple-400"
+                                          : "text-gray-500"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCommentDislike({
+                                          ...reply,
+                                        });
+                                      }}
+                                    >
+                                      {" "}
+                                      <ThumbsDown className="h-3 w-3" />
+                                      <span className="reply-dislike-count">
+                                        {reply?.TotalDislikes || 0}
+                                      </span>
+                                    </motion.button>
+                                  </div>
+                                  */}
+                                </div>
+                                {/* Menu pour les réponses (si l'utilisateur est l'auteur) */}
+                                {reply?.author.id === user?.id && (
+                                  <div className="relative">
+                                    <button
+                                      className="text-gray-500 hover:text-purple-400 p-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowMenu(
+                                          reply?.id === showMenu
+                                            ? null
+                                            : reply?.id ?? null
+                                        );
+                                      }}
+                                    >
+                                      <MoreVertical className="h-3 w-3" />
+                                    </button>
+
+                                    {showMenu === reply?.id && (
+                                      <motion.div
+                                        ref={menuRef}
+                                        initial={{
+                                          opacity: 0,
+                                          scale: 0.95,
+                                          x: 20,
+                                        }}
+                                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                                        exit={{
+                                          opacity: 0,
+                                          scale: 0.95,
+                                          x: 20,
+                                        }}
+                                        transition={{
+                                          duration: 0.2,
+                                          ease: "easeOut",
+                                        }}
+                                        className="absolute top-0 right-0 w-32 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-1 z-10 text-xs"
+                                      >
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteComment(reply?.id!);
+                                            setShowMenu(null);
+                                          }}
+                                          className="flex items-center space-x-2 text-red-500 hover:text-red-400 w-full"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                          <span>Supprimer</span>
+                                        </button>
+                                        <hr className="border-gray-700" />
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditComment({
+                                              ...reply,
+                                            });
+                                            setShowMenu(null);
+                                          }}
+                                          className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
+                                        >
+                                          <Edit2 className="h-3 w-3" />
+                                          <span>Modifier</span>
+                                        </button>
+                                      </motion.div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                  </>
                 )}
                 <div className="flex justify-between items-center mt-5 text-gray-500 border-t border-gray-800 pt-3">
-                  <div></div>
+                  <div>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center space-x-2 hover:text-purple-400 text-gray-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReplyToCommentId(comment?.id ?? null);
+                        setReplyingToUsername(comment?.author.username ?? null);
+                      }}
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                      <span>Répondre</span>
+                    </motion.button>
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
@@ -997,6 +1244,57 @@ const PublicationDetailsPage = ({
                     </span>
                   </motion.button>
                 </div>
+
+                {/* Reply Form inside comment */}
+                {replyToCommentId === comment?.id && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-gray-800 rounded-lg p-4 mt-4 border border-purple-700"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-purple-400 font-medium text-sm">
+                        Répondre à {replyingToUsername}
+                      </h3>
+                      <button
+                        onClick={() => {
+                          setReplyToCommentId(null);
+                          setReplyingToUsername(null);
+                          setReplyContent("");
+                        }}
+                        className="text-gray-500 hover:text-purple-400"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-purple-900 flex items-center justify-center">
+                          <UserIcon
+                            iconName={userData?.findUserById?.iconName}
+                            size="small"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-grow relative">
+                        <textarea
+                          placeholder="Écrivez votre réponse..."
+                          value={replyContent}
+                          onChange={(e) => setReplyContent(e.target.value)}
+                          className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-10 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
+                        />
+                        <button
+                          onClick={handleCreateComment}
+                          className="absolute right-2 bottom-2 text-purple-400 hover:text-purple-300"
+                          disabled={isSubmitting}
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </div>
           </motion.div>

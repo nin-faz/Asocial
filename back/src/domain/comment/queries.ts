@@ -9,10 +9,25 @@ type CommentQueries = WithRequired<QueryResolvers, "getComments">;
 export const commentQueries: CommentQueries = {
   getComments: async (_, { articleId }, _context) => {
     const comments = await prisma.comment.findMany({
-      where: { articleId },
+      where: { articleId, parentId: null },
       include: {
         author: true,
         dislikes: true,
+        parent: {
+          select: {
+            id: true,
+            content: true,
+            author: {
+              select: { username: true },
+            },
+          },
+        },
+        replies: {
+          include: {
+            author: true,
+            dislikes: true,
+          },
+        },
         _count: { select: { dislikes: true } },
       },
     });

@@ -44,6 +44,28 @@ export const resolvers: Resolvers = {
         where: { commentId: parent.id },
       });
     },
+    parent: (parent, _, { dataSources: { db } }) => {
+      if (!parent.parentId) return null;
+      return db.comment.findUnique({
+        where: { id: parent.parentId },
+        include: {
+          author: true,
+        },
+      });
+    },
+    replies: (parent, _, { dataSources: { db } }) => {
+      return db.comment.findMany({
+        where: { parentId: parent.id },
+        include: {
+          author: true,
+          dislikes: true,
+        },
+      });
+    },
+
+    isReply: (parent) => {
+      return parent.parentId !== null;
+    },
   },
   Dislike: {
     article: (parent, _, { dataSources: { db } }) => {

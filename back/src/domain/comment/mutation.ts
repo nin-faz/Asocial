@@ -4,7 +4,7 @@ import { notifyTelegram } from "../../utils/notifyTelegram.js";
 
 export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
   _,
-  { content, userId, articleId },
+  { content, userId, articleId, parentId },
   { dataSources: { db } }
 ) => {
   try {
@@ -13,9 +13,11 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
         content,
         authorId: userId,
         articleId,
+        ...(parentId && { parentId }),
       },
       include: {
         author: true,
+        parent: true,
       },
     });
 
@@ -34,14 +36,25 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
       minute: "2-digit",
     });
 
-    const message = [
-      `💬 Nouveau commentaire posté par ${newComment.author.username}`,
-      `Sur l'article de ${article?.author.username} : ${
-        article?.title || article?.content.slice(0, 30) + "..."
-      }`,
-      `Contenu du commentaire : ${content}`,
-      `🕒 Le ${formattedDate}`,
-    ].join("\n");
+    const isReply = !!parentId;
+
+    const message = isReply
+      ? [
+          `↩️ Réponse de ${newComment.author.username} à un commentaire`,
+          `Sur l'article de ${article?.author.username} : ${
+            article?.title || article?.content.slice(0, 30) + "..."
+          }`,
+          `Contenu de la réponse : ${content}`,
+          `🕒 Le ${formattedDate}`,
+        ].join("\n")
+      : [
+          `💬 Nouveau commentaire posté par ${newComment.author.username}`,
+          `Sur l'article de ${article?.author.username} : ${
+            article?.title || article?.content.slice(0, 30) + "..."
+          }`,
+          `Contenu du commentaire : ${content}`,
+          `🕒 Le ${formattedDate}`,
+        ].join("\n");
 
     await notifyTelegram(message);
 

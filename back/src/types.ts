@@ -42,6 +42,9 @@ export type Comment = {
   createdAt?: Maybe<Scalars['String']['output']>;
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   id: Scalars['ID']['output'];
+  isReply?: Maybe<Scalars['Boolean']['output']>;
+  parent?: Maybe<Comment>;
+  replies?: Maybe<Array<Maybe<Comment>>>;
   updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
@@ -124,6 +127,7 @@ export type MutationAddArticleDislikeArgs = {
 export type MutationAddCommentArgs = {
   articleId: Scalars['ID']['input'];
   content: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['ID']['input']>;
   userId: Scalars['ID']['input'];
 };
 
@@ -456,6 +460,9 @@ export type CommentResolvers<ContextType = Context, ParentType extends Resolvers
   createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isReply?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  parent?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
+  replies?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

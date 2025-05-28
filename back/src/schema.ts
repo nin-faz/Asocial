@@ -38,7 +38,12 @@ export const typeDefs = gql`
     addArticleDislike(articleId: ID!, userId: ID!): Dislike
     addCommentDislike(commentId: ID!, userId: ID!): Dislike
 
-    addComment(content: String!, userId: ID!, articleId: ID!): Comment
+    addComment(
+      content: String!
+      userId: ID!
+      articleId: ID!
+      parentId: ID
+    ): Comment
     deleteComment(commentId: ID!): DeleteCommentResponse
     updateComment(commentId: ID!, content: String!): CommentUpdateResponse
   }
@@ -153,6 +158,9 @@ export const typeDefs = gql`
     TotalDislikes: Int
     createdAt: String
     updatedAt: String
+    parent: Comment
+    replies: [Comment]
+    isReply: Boolean
   }
 
   type CommentUpdateResponse {

@@ -343,10 +343,9 @@ const PublicationDetailsPage = ({
   const [updateComment] = useMutation(UPDATE_COMMENT);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentContent, setEditedCommentContent] = useState("");
-
   const handleDeleteComment = async (commentId: string) => {
     try {
-      await deleteComment({
+      const response = await deleteComment({
         variables: { commentId },
         context: {
           headers: {
@@ -355,13 +354,29 @@ const PublicationDetailsPage = ({
         },
       });
 
-      showCommentDeletedToast();
-      console.log("suppression du commentaire", commentId);
-
-      await refetchComments();
-      await refetchArticleData();
+      if (response.data?.deleteComment?.success) {
+        showCommentDeletedToast();
+        console.log("Suppression du commentaire", commentId, "réussie");
+        await refetchComments();
+        await refetchArticleData();
+      } else {
+        console.error(
+          "Échec de la suppression du commentaire:",
+          response?.data?.deleteComment?.message || "Raison inconnue"
+        );
+        toast.error(
+          `Échec de la suppression : ${
+            response?.data?.deleteComment?.message || "Erreur inconnue"
+          }`
+        );
+      }
     } catch (err) {
       console.error("Erreur lors de la suppression du commentaire :", err);
+      if (err instanceof Error) {
+        toast.error("Erreur lors de la suppression : " + err.message);
+      } else {
+        toast.error("Une erreur inattendue est survenue");
+      }
     }
   };
 

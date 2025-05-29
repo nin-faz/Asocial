@@ -594,8 +594,29 @@ function PublicationPage() {
             </div>
           </div>
         </div>
-      </motion.div>
-
+      </motion.div>{" "}
+      {/* Pagination supérieure */}
+      {hasArticles && (
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            Précédent
+          </button>
+          <span className="text-white">
+            Page {currentPage} sur {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            Suivant
+          </button>
+        </div>
+      )}
       {/* Articles List */}
       <div className="space-y-10">
         {/* Article temporaire en cours de création */}
@@ -863,7 +884,6 @@ function PublicationPage() {
           <p className="text-center text-gray-400">Aucun article trouvé.</p>
         )}
       </div>
-
       {/* Pagination */}
       <div
         // ref={paginationRef}
@@ -876,7 +896,7 @@ function PublicationPage() {
         >
           Précédent
         </button>
-        <span>
+        <span className="text-white">
           Page {currentPage} sur {totalPages}
         </span>
         <button

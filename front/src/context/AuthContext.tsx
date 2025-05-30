@@ -1,6 +1,7 @@
 import React, { useState, createContext, ReactNode, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { User } from "lucide-react";
+import { showReconnectToast } from "../utils/customToasts";
 
 interface User {
   username: string;
@@ -48,6 +49,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Fonction pour vérifier la validité du token avec le serveur
   const verifyToken = async (): Promise<boolean> => {
     if (!token || !user) {
+      showReconnectToast();
       console.log("Pas de token ou d'utilisateur à vérifier");
       logout();
       return false;
@@ -65,6 +67,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
 
       if (!response.ok) {
+        showReconnectToast();
         console.log("Le token n'est plus valide côté serveur");
         logout();
         return false;

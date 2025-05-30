@@ -10,6 +10,7 @@ import {
   Trash2,
   Edit2,
   Share2,
+  RefreshCw,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import Loader from "../components/Loader";
@@ -169,6 +170,42 @@ function PublicationPage() {
   const [createArticle, { loading: isCreatingArticle }] =
     useMutation(CREATE_ARTICLE);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+
+    try {
+      // Rafraîchir selon l'option de tri sélectionnée
+      if (sortOption === "unpopular") {
+        await refetechMostDislikedArticles();
+      } else {
+        await refetchArticles();
+      }
+
+      // Rafraîchir les données utilisateur si connecté
+      if (user?.id) {
+        await refetchUserData();
+      }
+
+      // Rafraîchir les dislikes si l'utilisateur est connecté
+      if (user?.id) {
+        await refetchDislikeUser();
+      }
+
+      toast.success("Publications rafraîchies", {
+        style: {
+          background: "#2a0134",
+          color: "#f0aaff",
+        },
+        icon: <RefreshCw className="text-purple-400" size={18} />,
+      });
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement:", error);
+      toast.error("Impossible de rafraîchir les publications");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Ajoutez cette nouvelle variable d'état pour gérer l'article en cours de création
   const [tempArticleId, setTempArticleId] = useState<string | null>(null);
@@ -490,34 +527,48 @@ function PublicationPage() {
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-purple-400">Publications</h2>
-        <div className="relative flex items-center">
-          <SortDesc className="absolute left-3 text-gray-500 h-4 w-4" />
-          <select
-            value={sortOption}
-            onChange={(e) => {
-              setSortOption(e.target.value);
-              console.log("Nouveau tri : ", e.target.value);
-            }}
-            className="bg-gray-800 text-gray-300 px-10 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+            className="bg-gray-800 text-gray-300 p-2 rounded-lg border border-gray-700 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
+            title="Rafraîchir les publications"
           >
-            <option value="recent">Les plus récentes</option>
-            <option value="unpopular">Les plus impopulaires</option>
-          </select>
-          <div className="absolute right-3 pointer-events-none">
-            <svg
-              className="h-4 w-4 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+            <RefreshCw
+              className={`h-5 w-5 text-purple-400 ${
+                isRefreshing ? "animate-spin" : ""
+              }`}
+            />
+          </button>
+          <div className="relative flex items-center">
+            <SortDesc className="absolute left-3 text-gray-500 h-4 w-4" />
+            <select
+              value={sortOption}
+              onChange={(e) => {
+                setSortOption(e.target.value);
+                console.log("Nouveau tri : ", e.target.value);
+              }}
+              className="bg-gray-800 text-gray-300 p-2 pr-2 pl-8 sm:px-10 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 9l-7 7-7-7"
-              ></path>
-            </svg>
+              <option value="recent">Les plus récentes</option>
+              <option value="unpopular">Les plus impopulaires</option>
+            </select>
+            <div className="absolute right-3 pointer-events-none">
+              <svg
+                className="h-4 w-4 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -606,7 +657,7 @@ function PublicationPage() {
             Précédent
           </button>
           <span className="text-white">
-            Page {currentPage} sur {totalPages}
+            Page {hasArticles ? currentPage : 0} sur {totalPages}
           </span>
           <button
             onClick={handleNextPage}
@@ -834,7 +885,7 @@ function PublicationPage() {
                       <img
                         src={imageUrl}
                         alt="Article"
-                        className="w-full h-auto rounded-lg max-h-80 object-cover"
+                        className="w-full h-auto rounded-lg sm:max-h-dvh object-cover"
                         loading="lazy"
                         decoding="async"
                       />
@@ -894,10 +945,10 @@ function PublicationPage() {
           disabled={!hasArticles || currentPage === 1}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
-          Précédent
+          Précédent{" "}
         </button>
         <span className="text-white">
-          Page {currentPage} sur {totalPages}
+          Page {hasArticles ? currentPage : 0} sur {totalPages}
         </span>
         <button
           onClick={handleNextPage}

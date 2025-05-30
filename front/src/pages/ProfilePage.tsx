@@ -417,14 +417,13 @@ const ProfilePage = () => {
       toast.error("Impossible de partager cet article");
     }
   };
-
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gray-900 rounded-lg p-6 border border-purple-900"
+        className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900"
       >
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Avatar */}
@@ -444,7 +443,6 @@ const ProfilePage = () => {
               </div>
             </motion.div>
           )}
-
           {/* Profile Info */}
           <div className="flex-1 text-center md:text-left">
             {isEditing ? (
@@ -464,7 +462,6 @@ const ProfilePage = () => {
                     className="w-full bg-gray-800 text-gray-100 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
-
                 <div>
                   <label
                     htmlFor="bio"
@@ -480,28 +477,26 @@ const ProfilePage = () => {
                     className="w-full bg-gray-800 text-gray-100 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
-
-                {error && <div className="text-red-400 text-sm">{error}</div>}
-
-                <div className="flex justify-end space-x-3">
+                {error && <div className="text-red-400 text-sm">{error}</div>}{" "}
+                <div className="flex justify-end space-x-2 sm:space-x-3">
                   <button
                     onClick={cancelEditing}
-                    className="flex items-center px-3 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                    className="flex items-center px-2 sm:px-3 py-1 text-xs sm:text-sm border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
                   >
-                    <X className="h-4 w-4 mr-1" />
+                    <X className="h-3 sm:h-4 w-3 sm:w-4 mr-1" />
                     Annuler
                   </button>
 
                   <button
                     onClick={handleSaveProfile}
                     disabled={updating}
-                    className={`flex items-center px-3 py-1 ${
+                    className={`flex items-center px-2 sm:px-3 py-1 text-xs sm:text-sm ${
                       updating
                         ? "bg-purple-800"
                         : "bg-purple-600 hover:bg-purple-700"
                     } text-white rounded-lg`}
                   >
-                    <Save className="h-4 w-4 mr-1" />
+                    <Save className="h-3 sm:h-4 w-3 sm:w-4 mr-1" />
                     {updating ? "Sauvegarde..." : "Sauvegarder"}
                   </button>
                 </div>
@@ -523,7 +518,6 @@ const ProfilePage = () => {
                 <p className="text-gray-300 mb-6 max-w-2xl">
                   {userInfosData?.bio || "Bienvenue sur mon profil !"}
                 </p>
-
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
                   <button className="flex items-center space-x-2 hover:text-purple-400">
@@ -547,56 +541,53 @@ const ProfilePage = () => {
                     </button>
                   </div>
                 </div>
-
-                {/* Edit Profile Button */}
+                {/* Edit Profile Button */}{" "}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setIsEditing(true)}
-                  className="mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center mx-auto md:mx-0"
+                  className="mt-6 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center mx-auto md:mx-0"
                 >
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
                   Modifier le profil
                 </motion.button>
               </>
             )}
-          </div>
-
+          </div>{" "}
           {/* Actions */}
-          <div className="flex md:flex-col gap-3">
+          <div className="flex md:flex-col gap-2 sm:gap-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
-              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-lg"
+              className="p-1.5 sm:p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-lg"
               onClick={() => setIsEditing(!isEditing)}
               title="Modifier son profil"
             >
-              <Settings className="h-6 w-6" />
+              <Settings className="h-5 sm:h-6 w-5 sm:w-6" />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
-              className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-lg"
+              className="p-1.5 sm:p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-lg"
               onClick={handleExportUserData}
               title="Exporter mes données"
             >
-              <Download className="h-6 w-6" />
+              <Download className="h-5 sm:h-6 w-5 sm:w-6" />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
-              className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg"
+              className="p-1.5 sm:p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg"
               onClick={handleLogout}
               title="Déconnexion"
             >
-              <LogOut className="h-6 w-6" />
+              <LogOut className="h-5 sm:h-6 w-5 sm:w-6" />
             </motion.button>
           </div>
         </div>
-      </motion.div>
-
+      </motion.div>{" "}
       {/* Tabs */}
       <div className="mt-8 border-b border-purple-900">
-        <nav className="flex justify-center md:justify-between w-full mx-auto">
+        <nav className="flex justify-center md:justify-between w-full mx-auto overflow-x-auto">
           <button
-            className={`px-6 py-3 text-center flex-1 transition-all duration-200 ${
+            className={`px-3 sm:px-6 py-3 text-center flex-1 whitespace-nowrap transition-all duration-200 ${
               activeTab === "publications"
                 ? "text-purple-400 border-b-2 border-purple-500 font-medium"
                 : "text-gray-500 hover:text-gray-300 "
@@ -604,12 +595,12 @@ const ProfilePage = () => {
             onClick={() => handleTabChange("publications")}
           >
             <span className="flex items-center justify-center">
-              <MessageSquare className="h-4 w-4 mr-2" />
+              <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
               Publications
             </span>
-          </button>
+          </button>{" "}
           <button
-            className={`px-6 py-3 text-center flex-1 transition-all duration-200 ${
+            className={`px-3 sm:px-6 py-3 text-center flex-1 whitespace-nowrap transition-all duration-200 ${
               activeTab === "dislikes"
                 ? "text-purple-400 border-b-2 border-purple-500 font-medium"
                 : "text-gray-500 hover:text-gray-300 "
@@ -617,12 +608,12 @@ const ProfilePage = () => {
             onClick={() => handleTabChange("dislikes")}
           >
             <span className="flex items-center justify-center">
-              <ThumbsDown className="h-4 w-4 mr-2" />
+              <ThumbsDown className="h-4 w-4 mr-1 sm:mr-2" />
               Dislikes
             </span>
           </button>
           <button
-            className={`px-6 py-3 text-center flex-1 transition-all duration-200 ${
+            className={`px-3 sm:px-6 py-3 text-center flex-1 whitespace-nowrap transition-all duration-200 ${
               activeTab === "statistiques"
                 ? "text-purple-400 border-b-2 border-purple-500 font-medium"
                 : "text-gray-500 hover:text-gray-300 "
@@ -630,13 +621,12 @@ const ProfilePage = () => {
             onClick={() => handleTabChange("statistiques")}
           >
             <span className="flex items-center justify-center">
-              <Share2 className="h-4 w-4 mr-2" />
+              <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
               Statistiques
             </span>
           </button>
         </nav>
       </div>
-
       {/* Feed */}
       <div className="mt-8 space-y-6">
         {activeTab === "publications" && (
@@ -658,7 +648,7 @@ const ProfilePage = () => {
                   }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handlePostClick(article.id)}
-                  className="bg-gray-900 rounded-lg p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
+                  className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900 cursor-pointer hover:border-purple-700 transition-colors"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
@@ -745,27 +735,26 @@ const ProfilePage = () => {
                     </h2>
                     <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
                       {article.content}
-                    </p>
-
+                    </p>{" "}
                     {/* Ajout de l'affichage de l'image si elle existe */}
                     {article.imageUrl && (
                       <div className="mb-6 rounded-lg overflow-hidden">
                         <img
                           src={article.imageUrl}
                           alt="Article"
-                          className="w-full h-auto rounded-lg max-h-80 object-cover"
+                          className="w-full h-auto rounded-lg max-h-80 object-contain sm:object-cover"
                           loading="lazy"
                         />
                       </div>
                     )}
-                  </div>
+                  </div>{" "}
                   <div className="flex items-center justify-between text-gray-500 border-t border-gray-800 pt-4">
-                    <div className="flex items-center space-x-6 text-gray-500">
+                    <div className="flex items-center space-x-2 sm:space-x-6 text-gray-500">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => handleArticleDislike(e, article.id)}
-                        className={`flex items-center space-x-2 hover:text-purple-400 ${
+                        className={`flex items-center space-x-1 sm:space-x-2 hover:text-purple-400 ${
                           userArticleDislikes[article.id]
                             ? "text-purple-400"
                             : ""
@@ -796,10 +785,10 @@ const ProfilePage = () => {
               <p className="text-gray-500">Aucune publication trouvée.</p>
             )}
           </div>
-        )}
+        )}{" "}
         {selectedArticle && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4"
             style={{ margin: 0 }}
           >
             {" "}
@@ -824,11 +813,10 @@ const ProfilePage = () => {
               </div>
             </motion.div>
           </div>
-        )}
-
+        )}{" "}
         {/* Onglet Dislikes */}
         {activeTab === "dislikes" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mt-8">
             {dislikesByUser && dislikesByUser.length > 0 ? (
               dislikesByUser
                 .filter((dislike) => dislike?.article)
@@ -847,7 +835,7 @@ const ProfilePage = () => {
                       },
                     }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-colors flex flex-col"
+                    className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900 hover:border-purple-700 transition-colors flex flex-col"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center space-x-3">
@@ -926,10 +914,9 @@ const ProfilePage = () => {
               <p className="text-gray-500">Aucun article disliké.</p>
             )}
           </div>
-        )}
-
+        )}{" "}
         {activeTab === "statistiques" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8">
             {/* Première carte: Activité totale */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -938,7 +925,7 @@ const ProfilePage = () => {
                 scale: 1.03,
                 boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
               }}
-              className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-all h-full"
+              className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900 hover:border-purple-700 transition-all h-full"
             >
               <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
                 Activité totale
@@ -973,7 +960,7 @@ const ProfilePage = () => {
                 scale: 1.03,
                 boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
               }}
-              className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-all h-full"
+              className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900 hover:border-purple-700 transition-all h-full"
             >
               <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
                 Engagement
@@ -1013,7 +1000,7 @@ const ProfilePage = () => {
                 scale: 1.03,
                 boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
               }}
-              className="bg-gray-900 rounded-lg p-6 border border-purple-900 hover:border-purple-700 transition-all h-full md:col-span-2 lg:col-span-1"
+              className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900 hover:border-purple-700 transition-all h-full md:col-span-2 lg:col-span-1"
             >
               <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
                 Dernière activité

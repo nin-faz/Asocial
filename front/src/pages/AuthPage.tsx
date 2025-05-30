@@ -7,6 +7,7 @@ import {
   showEmptyInfoToLogin,
   showEmptyInfoToRegister,
   showLoginToast,
+  // showReconnectToast,
   showWelcomeToast,
 } from "../utils/customToasts";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
@@ -16,6 +17,16 @@ import { toast } from "react-toastify";
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
+  // useEffect(() => {
+  //   const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
+  //   const storedVersion = localStorage.getItem("app_version");
+
+  //   if (storedVersion != CURRENT_APP_VERSION) {
+  //     console.log("ok");
+  //     showReconnectToast();
+  //   }
+  // }, []);
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -114,7 +125,7 @@ function AuthPage() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+    <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16">
       <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

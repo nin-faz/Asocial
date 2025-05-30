@@ -50,6 +50,23 @@ export const showLoginRequiredToast = (
   });
 };
 
+export const showReconnectToast = () => {
+  const messages = [
+    "Hey, t'as été reset ! Reconnecte-toi avant de semer le chaos.",
+    "Ton esprit a été effacé. Reconnecte-toi pour reprendre le contrôle.",
+    "Le système a rebooté ton âme. Connecte-toi, ou reste dans l’oubli.",
+    "Nouveau départ, même désordre. Reconnecte-toi pour continuer.",
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  toast.info(randomMessage, {
+    icon: <Megaphone size={24} color="#f0aaff" />,
+    style: toastStyle,
+    autoClose: 7000,
+  });
+};
+
 export const showEmptyInfoToRegister = () => {
   toast.error("Tu comptes écrire dans le vide ? Remplis ce champ d'abord.", {
     style: toastStyle,

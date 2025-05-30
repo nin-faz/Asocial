@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { useContext, useEffect, useState } from "react";
 import Loader from "./components/Loader";
@@ -12,13 +12,30 @@ import PublicationPage from "./pages/PublicationPage";
 import ProfilePage from "./pages/ProfilePage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
+  const navigate = useNavigate();
+
   const authContext = useContext(AuthContext);
 
   useEffect(() => {
+    // const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
+    const CURRENT_APP_VERSION = "1.0.0";
+    const storedVersion = localStorage.getItem("app_version");
+
+    if (storedVersion !== CURRENT_APP_VERSION) {
+      console.log("🔄 Nouvelle version détectée, nettoyage en cours...");
+      localStorage.clear();
+      localStorage.setItem("app_version", CURRENT_APP_VERSION);
+
+      navigate("/auth");
+
+      return;
+    }
+
     const init = async () => {
       try {
         // Vérification du token au chargement
@@ -35,7 +52,7 @@ function App() {
         );
       } finally {
         // Continue avec le chargement normal
-        setTimeout(() => setIsLoading(false), 2000);
+        setTimeout(() => setIsLoading(false), 1000);
       }
     };
 
@@ -55,40 +72,38 @@ function App() {
         hideProgressBar
       />
 
-      <Router>
-        <Header />
-        <div className="min-h-screen bg-black">
-          <Routes>
-            {/* Routes publiques */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/publications/*" element={<PublicationPage />} />
-            <Route
-              path="/publications/:id"
-              element={<PublicationDetailsPage />}
-            />
-            <Route path="/about" element={<AboutPage />} />
+      <Header />
+      <div className="min-h-screen bg-black">
+        <Routes>
+          {/* Routes publiques */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/publications/*" element={<PublicationPage />} />
+          <Route
+            path="/publications/:id"
+            element={<PublicationDetailsPage />}
+          />
+          <Route path="/about" element={<AboutPage />} />
 
-            <Route element={<RedirectIfAuthenticated />}>
-              <Route path="/auth" element={<AuthPage />} />
-            </Route>
+          <Route element={<RedirectIfAuthenticated />}>
+            <Route path="/auth" element={<AuthPage />} />
+          </Route>
 
-            {/* Routes protégées */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/profile" element={<ProfilePage />} />
-            </Route>
+          {/* Routes protégées */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
 
-            <Route
-              path="*"
-              element={
-                <h1 className="flex items-center justify-center h-screen text-white text-4xl font-bold">
-                  404 - Not Found
-                </h1>
-              }
-            />
-          </Routes>
-        </div>
-        <Footer />
-      </Router>
+          <Route
+            path="*"
+            element={
+              <h1 className="flex items-center justify-center h-screen text-white text-4xl font-bold">
+                404 - Not Found
+              </h1>
+            }
+          />
+        </Routes>
+      </div>
+      <Footer />
     </>
   );
 }

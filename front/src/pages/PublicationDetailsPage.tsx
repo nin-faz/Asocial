@@ -598,7 +598,7 @@ const PublicationDetailsPage = ({
   });
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-8">
+    <main className="w-full max-w-2xl mx-auto px-4 py-8">
       {/* Back Button */}
 
       {!isModal && (
@@ -779,7 +779,7 @@ const PublicationDetailsPage = ({
             <img
               src={article.imageUrl}
               alt="Article"
-              className="w-full h-auto rounded-lg"
+              className="w-full sm:h-[40rem] rounded-lg"
               loading="lazy"
               decoding="async"
             />

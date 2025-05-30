@@ -498,7 +498,7 @@ function PublicationPage() {
               setSortOption(e.target.value);
               console.log("Nouveau tri : ", e.target.value);
             }}
-            className="bg-gray-800 text-gray-300 px-10 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+            className="bg-gray-800 text-gray-300 p-2 pr-2 pl-8 sm:px-10 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
           >
             <option value="recent">Les plus récentes</option>
             <option value="unpopular">Les plus impopulaires</option>
@@ -606,7 +606,7 @@ function PublicationPage() {
             Précédent
           </button>
           <span className="text-white">
-            Page {currentPage} sur {totalPages}
+            Page {hasArticles ? currentPage : 0} sur {totalPages}
           </span>
           <button
             onClick={handleNextPage}
@@ -834,7 +834,7 @@ function PublicationPage() {
                       <img
                         src={imageUrl}
                         alt="Article"
-                        className="w-full h-auto rounded-lg max-h-80 object-cover"
+                        className="w-full h-auto rounded-lg sm:max-h-dvh object-cover"
                         loading="lazy"
                         decoding="async"
                       />
@@ -894,10 +894,10 @@ function PublicationPage() {
           disabled={!hasArticles || currentPage === 1}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
-          Précédent
+          Précédent{" "}
         </button>
         <span className="text-white">
-          Page {currentPage} sur {totalPages}
+          Page {hasArticles ? currentPage : 0} sur {totalPages}
         </span>
         <button
           onClick={handleNextPage}

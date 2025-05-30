@@ -131,7 +131,7 @@ const Header = () => {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center space-x-4 z-10">
+          <div className="flex items-center space-x-3 sm:space-x-4 z-10">
             {user && (
               <>
                 <motion.button

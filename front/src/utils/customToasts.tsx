@@ -189,3 +189,29 @@ export const showProfileUpdatedToast = () => {
     style: toastStyle,
   });
 };
+
+// Reset Password
+export const showResetPasswordSuccessToast = () => {
+  const messages = [
+    "Mot de passe réinitialisé. T’es prêt à replonger dans Asocial ?",
+    "C’est fait. Ton mot de passe est de retour… Évite qu’il tombe dans la faille.",
+    "Mot de passe à jour. Ne va pas encore le balancer dans le vide interconnecté !",
+  ];
+
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  toast.success(randomMessage, {
+    icon: <Flame size={24} color="#f0aaff" />,
+    style: toastStyle,
+  });
+};
+
+export const showResetPasswordErrorToast = () => {
+  toast.error(
+    "Impossible de réinitialiser le mot de passe. Vérifie le nom d'utilisateur ou réessaie plus tard.",
+    {
+      icon: <Skull size={24} color="#f0aaff" />,
+      style: toastStyle,
+    }
+  );
+};

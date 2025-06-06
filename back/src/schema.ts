@@ -46,6 +46,10 @@ export const typeDefs = gql`
     ): Comment
     deleteComment(commentId: ID!): DeleteCommentResponse
     updateComment(commentId: ID!, content: String!): CommentUpdateResponse
+    resetPassword(
+      username: String!
+      newPassword: String!
+    ): ResetPasswordResponse!
   }
 
   type DeleteDislikeResponse {
@@ -164,6 +168,12 @@ export const typeDefs = gql`
   }
 
   type CommentUpdateResponse {
+    code: Int!
+    success: Boolean!
+    message: String!
+  }
+
+  type ResetPasswordResponse {
     code: Int!
     success: Boolean!
     message: String!

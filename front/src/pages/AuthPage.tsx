@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { CREATE_USER, SIGN_IN } from "../mutations";
 import { AuthContext } from "../context/AuthContext";
@@ -220,6 +220,17 @@ function AuthPage() {
                 {buttonText}
               </motion.button>
             </form>
+
+            {isLogin && (
+              <div className="mt-4 text-center">
+                <Link
+                  to="/reset-password"
+                  className="text-purple-400 hover:underline"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
+            )}
 
             <p className="mt-6 text-center text-gray-500 text-sm">
               {isLogin ? (

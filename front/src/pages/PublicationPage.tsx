@@ -360,7 +360,19 @@ function PublicationPage() {
     }
   };
 
+  useEffect(() => {
+    const scrollY = sessionStorage.getItem("publicationScroll");
+    if (scrollY) {
+      // Décale un peu le scroll pour être sûr que le DOM est prêt
+      window.requestAnimationFrame(() => {
+        window.scrollTo(0, Number(scrollY));
+        sessionStorage.removeItem("publicationScroll");
+      });
+    }
+  }, []);
+
   const handlePostClick = (articleId: string) => {
+    sessionStorage.setItem("publicationScroll", window.scrollY.toString());
     navigate(`/publications/${articleId}`);
   };
 
@@ -531,7 +543,7 @@ function PublicationPage() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing || isLoading}
-            className="bg-gray-800 text-gray-300 p-2 rounded-lg border border-gray-700 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
+            className="bg-gray-800 text-gray-300 p-1.5 sm:p-2.5 rounded-lg border border-gray-700 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
             title="Rafraîchir les publications"
           >
             <RefreshCw
@@ -548,7 +560,7 @@ function PublicationPage() {
                 setSortOption(e.target.value);
                 console.log("Nouveau tri : ", e.target.value);
               }}
-              className="bg-gray-800 text-gray-300 p-2 pr-2 pl-8 sm:px-10 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+              className="bg-gray-800 text-gray-300 text-xs sm:text-base p-2 pl-8 sm:px-10 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
             >
               <option value="recent">Les plus récentes</option>
               <option value="unpopular">Les plus impopulaires</option>

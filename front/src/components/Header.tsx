@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   Search,
   Menu,
@@ -53,6 +53,26 @@ const Header = () => {
   });
 
   const userInfosData = userInfos?.findUserById;
+
+  const userMenuRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (userMenuRef.current) {
+        setShowUserMenu(false);
+      }
+
+      if (mobileMenuRef.current) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <motion.header
@@ -168,7 +188,7 @@ const Header = () => {
             )}
 
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <motion.button
                   className={`flex items-center justify-center h-8 w-8 rounded-full bg-gray-800 hover:bg-purple-900 ${
                     pathname === "/profile" ? "ring-2 ring-purple-500" : ""
@@ -188,6 +208,7 @@ const Header = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       className="absolute right-0 mt-2 w-48 bg-gray-900 border border-purple-900 rounded-lg shadow-lg overflow-hidden z-50"
+                      ref={userMenuRef}
                     >
                       <div className="p-3 border-b border-gray-800">
                         <p className="text-purple-400 font-medium">
@@ -224,6 +245,7 @@ const Header = () => {
                 className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-800 hover:bg-purple-900"
                 whileHover={{ scale: 1.1 }}
                 onClick={() => navigate("/auth")}
+                ref={userMenuRef}
               >
                 <span className="text-sm font-medium text-purple-400">X</span>
               </motion.button>
@@ -248,6 +270,7 @@ const Header = () => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-gray-900 border-t border-gray-800"
+            ref={mobileMenuRef}
           >
             <div className="px-4 py-3">
               {pathname.startsWith("/publications") && (

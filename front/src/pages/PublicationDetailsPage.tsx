@@ -77,6 +77,10 @@ const PublicationDetailsPage = ({
     }
   }, [isEditMode]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { data: articleData, refetch: refetchArticleData } = useQuery(
     FIND_ARTICLE_BY_ID,
     {

@@ -29,8 +29,8 @@ model Dislike {
   comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([articleId])
   @@unique([userId, articleId])
+  @@index([articleId])
 }
 
 model Article {
@@ -55,20 +55,25 @@ model Comment {
   content   String
   authorId  String
   articleId String?
-  parentId  String?
-
   createdAt DateTime  @default(now())
   updatedAt DateTime?
-
+  parentId  String?
   article   Article?  @relation(fields: [articleId], references: [id])
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  dislikes  Dislike[]
-
-  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
+  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentToComment")
+  dislikes  Dislike[]
 
   @@index([articleId])
   @@index([authorId])
   @@index([parentId])
 }
 
+model PasswordResetRequest {
+  id          String @id @default(cuid())
+  email       String
+  username    String
+  token       String @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}

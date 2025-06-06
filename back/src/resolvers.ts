@@ -7,7 +7,7 @@ import { articleQueries } from "./domain/article/queries.js";
 import { commentQueries } from "./domain/comment/queries.js";
 import { commentMutations } from "./domain/comment/mutation.js";
 import { dislikeQueries } from "./domain/dislike/queries.js";
-import { resetPassword } from "./domain/user/resetPassword.js";
+import { resetPasswordWithToken } from "./domain/user/resetPasswordWithToken.js";
 
 export const resolvers: Resolvers = {
   Query: {
@@ -18,7 +18,7 @@ export const resolvers: Resolvers = {
   },
   Mutation: {
     ...userMutations,
-    resetPassword,
+    resetPasswordWithToken,
     ...dislikeMutations,
     ...articleMutations,
     ...commentMutations,

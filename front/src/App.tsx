@@ -10,7 +10,9 @@ import AboutPage from "./pages/AboutPage";
 import PublicationDetailsPage from "./pages/PublicationDetailsPage";
 import PublicationPage from "./pages/PublicationPage";
 import ProfilePage from "./pages/ProfilePage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+// import ResetPasswordPage from "./pages/ResetPasswordPage";
+import RequestPasswordResetPage from "./pages/RequestPasswordResetPage";
+import ResetPasswordWithTokenPage from "./pages/ResetPasswordWithTokenPage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
@@ -79,7 +81,14 @@ function App() {
           {/* Routes publiques */}
           <Route path="/" element={<HomePage />} />
           <Route path="/publications/*" element={<PublicationPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/reset-password"
+            element={<ResetPasswordWithTokenPage />}
+          />
+          <Route
+            path="/request-password-reset"
+            element={<RequestPasswordResetPage />}
+          />
           <Route
             path="/publications/:id"
             element={<PublicationDetailsPage />}

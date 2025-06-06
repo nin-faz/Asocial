@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo } from 'graphql';
-import { UserModel, ArticleModel, DislikeModel, CommentModel } from './model';
+import { UserModel, ArticleModel, DislikeModel, CommentModel, PasswordResetRequestModel } from './model';
 import { Context } from './context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -111,7 +111,8 @@ export type Mutation = {
   deleteArticleDislike?: Maybe<DeleteDislikeResponse>;
   deleteComment?: Maybe<DeleteCommentResponse>;
   deleteCommentDislike?: Maybe<DeleteDislikeResponse>;
-  resetPassword: ResetPasswordResponse;
+  requestPasswordReset: RequestPasswordResetResponse;
+  resetPasswordWithToken: ResetPasswordWithTokenResponse;
   signIn: SignInResponse;
   updateArticle: UpdateArticleResponse;
   updateComment?: Maybe<CommentUpdateResponse>;
@@ -174,8 +175,15 @@ export type MutationDeleteCommentDislikeArgs = {
 };
 
 
-export type MutationResetPasswordArgs = {
+export type MutationRequestPasswordResetArgs = {
+  email: Scalars['String']['input'];
+  username: Scalars['String']['input'];
+};
+
+
+export type MutationResetPasswordWithTokenArgs = {
   newPassword: Scalars['String']['input'];
+  token: Scalars['String']['input'];
   username: Scalars['String']['input'];
 };
 
@@ -265,8 +273,15 @@ export type QueryGetUserbyTokenArgs = {
   token: Scalars['String']['input'];
 };
 
-export type ResetPasswordResponse = {
-  __typename?: 'ResetPasswordResponse';
+export type RequestPasswordResetResponse = {
+  __typename?: 'RequestPasswordResetResponse';
+  code: Scalars['Int']['output'];
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
+export type ResetPasswordWithTokenResponse = {
+  __typename?: 'ResetPasswordWithTokenResponse';
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
@@ -416,7 +431,8 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
-  ResetPasswordResponse: ResolverTypeWrapper<ResetPasswordResponse>;
+  RequestPasswordResetResponse: ResolverTypeWrapper<RequestPasswordResetResponse>;
+  ResetPasswordWithTokenResponse: ResolverTypeWrapper<ResetPasswordWithTokenResponse>;
   SignInResponse: ResolverTypeWrapper<SignInResponse>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateArticleResponse: ResolverTypeWrapper<UpdateArticleResponse>;
@@ -443,7 +459,8 @@ export type ResolversParentTypes = {
   Int: Scalars['Int']['output'];
   Mutation: {};
   Query: {};
-  ResetPasswordResponse: ResetPasswordResponse;
+  RequestPasswordResetResponse: RequestPasswordResetResponse;
+  ResetPasswordWithTokenResponse: ResetPasswordWithTokenResponse;
   SignInResponse: SignInResponse;
   String: Scalars['String']['output'];
   UpdateArticleResponse: UpdateArticleResponse;
@@ -545,7 +562,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteArticleDislike?: Resolver<Maybe<ResolversTypes['DeleteDislikeResponse']>, ParentType, ContextType, RequireFields<MutationDeleteArticleDislikeArgs, 'articleId' | 'userId'>>;
   deleteComment?: Resolver<Maybe<ResolversTypes['DeleteCommentResponse']>, ParentType, ContextType, RequireFields<MutationDeleteCommentArgs, 'commentId'>>;
   deleteCommentDislike?: Resolver<Maybe<ResolversTypes['DeleteDislikeResponse']>, ParentType, ContextType, RequireFields<MutationDeleteCommentDislikeArgs, 'commentId' | 'userId'>>;
-  resetPassword?: Resolver<ResolversTypes['ResetPasswordResponse'], ParentType, ContextType, RequireFields<MutationResetPasswordArgs, 'newPassword' | 'username'>>;
+  requestPasswordReset?: Resolver<ResolversTypes['RequestPasswordResetResponse'], ParentType, ContextType, RequireFields<MutationRequestPasswordResetArgs, 'email' | 'username'>>;
+  resetPasswordWithToken?: Resolver<ResolversTypes['ResetPasswordWithTokenResponse'], ParentType, ContextType, RequireFields<MutationResetPasswordWithTokenArgs, 'newPassword' | 'token' | 'username'>>;
   signIn?: Resolver<ResolversTypes['SignInResponse'], ParentType, ContextType, RequireFields<MutationSignInArgs, 'password' | 'username'>>;
   updateArticle?: Resolver<ResolversTypes['UpdateArticleResponse'], ParentType, ContextType, RequireFields<MutationUpdateArticleArgs, 'id'>>;
   updateComment?: Resolver<Maybe<ResolversTypes['CommentUpdateResponse']>, ParentType, ContextType, RequireFields<MutationUpdateCommentArgs, 'commentId' | 'content'>>;
@@ -566,7 +584,14 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   getUserbyToken?: Resolver<Maybe<ResolversTypes['UserToken']>, ParentType, ContextType, RequireFields<QueryGetUserbyTokenArgs, 'token'>>;
 };
 
-export type ResetPasswordResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ResetPasswordResponse'] = ResolversParentTypes['ResetPasswordResponse']> = {
+export type RequestPasswordResetResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RequestPasswordResetResponse'] = ResolversParentTypes['RequestPasswordResetResponse']> = {
+  code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ResetPasswordWithTokenResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ResetPasswordWithTokenResponse'] = ResolversParentTypes['ResetPasswordWithTokenResponse']> = {
   code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -637,7 +662,8 @@ export type Resolvers<ContextType = Context> = {
   Dislike?: DislikeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-  ResetPasswordResponse?: ResetPasswordResponseResolvers<ContextType>;
+  RequestPasswordResetResponse?: RequestPasswordResetResponseResolvers<ContextType>;
+  ResetPasswordWithTokenResponse?: ResetPasswordWithTokenResponseResolvers<ContextType>;
   SignInResponse?: SignInResponseResolvers<ContextType>;
   UpdateArticleResponse?: UpdateArticleResponseResolvers<ContextType>;
   User?: UserResolvers<ContextType>;

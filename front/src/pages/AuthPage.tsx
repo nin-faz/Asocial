@@ -224,7 +224,7 @@ function AuthPage() {
             {isLogin && (
               <div className="mt-4 text-center">
                 <Link
-                  to="/reset-password"
+                  to="/request-password-reset"
                   className="text-purple-400 hover:underline"
                 >
                   Mot de passe oublié ?

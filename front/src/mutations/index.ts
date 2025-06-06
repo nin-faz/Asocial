@@ -11,7 +11,6 @@ import {
   DELETE_COMMENT_DISLIKE,
 } from "./dislikeMutation";
 import { ADD_COMMENT, DELETE_COMMENT, UPDATE_COMMENT } from "./commentMutation";
-import { RESET_PASSWORD } from "./resetPasswordMutation";
 
 export {
   CREATE_USER,
@@ -27,5 +26,4 @@ export {
   ADD_COMMENT,
   DELETE_COMMENT,
   UPDATE_COMMENT,
-  RESET_PASSWORD,
 };

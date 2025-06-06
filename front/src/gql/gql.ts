@@ -24,7 +24,8 @@ type Documents = {
     "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteArticleDislikeDocument,
     "\n  mutation AddCommentDislike($commentId: ID!, $userId: ID!) {\n    addCommentDislike(commentId: $commentId, userId: $userId) {\n      id\n    }\n  }\n": typeof types.AddCommentDislikeDocument,
     "\n  mutation DeleteCommentDislike($commentId: ID!, $userId: ID!) {\n    deleteCommentDislike(commentId: $commentId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.DeleteCommentDislikeDocument,
-    "\n  mutation ResetPassword($username: String!, $newPassword: String!) {\n    resetPassword(username: $username, newPassword: $newPassword) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.ResetPasswordDocument,
+    "\n  mutation RequestPasswordReset($email: String!, $username: String!) {\n    requestPasswordReset(email: $email, username: $username) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.RequestPasswordResetDocument,
+    "\n  mutation ResetPasswordWithToken(\n    $token: String!\n    $username: String!\n    $newPassword: String!\n  ) {\n    resetPasswordWithToken(\n      token: $token\n      username: $username\n      newPassword: $newPassword\n    ) {\n      code\n      success\n      message\n    }\n  }\n": typeof types.ResetPasswordWithTokenDocument,
     "\n  mutation CreateUser($username: String!, $password: String!) {\n    createUser(username: $username, password: $password) {\n      success\n      message\n      user {\n        username\n      }\n    }\n  }\n": typeof types.CreateUserDocument,
     "\n  mutation SignIn($username: String!, $password: String!) {\n    signIn(username: $username, password: $password) {\n      success\n      message\n      token\n    }\n  }\n": typeof types.SignInDocument,
     "\n  mutation UpdateUser($id: ID!, $body: userUpdateBody!) {\n    updateUser(id: $id, body: $body) {\n      success\n      message\n      user {\n        id\n        username\n        bio\n        iconName\n        createdAt\n      }\n    }\n  }\n": typeof types.UpdateUserDocument,
@@ -49,7 +50,8 @@ const documents: Documents = {
     "\n  mutation DeleteArticleDislike($articleId: ID!, $userId: ID!) {\n    deleteArticleDislike(articleId: $articleId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteArticleDislikeDocument,
     "\n  mutation AddCommentDislike($commentId: ID!, $userId: ID!) {\n    addCommentDislike(commentId: $commentId, userId: $userId) {\n      id\n    }\n  }\n": types.AddCommentDislikeDocument,
     "\n  mutation DeleteCommentDislike($commentId: ID!, $userId: ID!) {\n    deleteCommentDislike(commentId: $commentId, userId: $userId) {\n      code\n      success\n      message\n    }\n  }\n": types.DeleteCommentDislikeDocument,
-    "\n  mutation ResetPassword($username: String!, $newPassword: String!) {\n    resetPassword(username: $username, newPassword: $newPassword) {\n      code\n      success\n      message\n    }\n  }\n": types.ResetPasswordDocument,
+    "\n  mutation RequestPasswordReset($email: String!, $username: String!) {\n    requestPasswordReset(email: $email, username: $username) {\n      code\n      success\n      message\n    }\n  }\n": types.RequestPasswordResetDocument,
+    "\n  mutation ResetPasswordWithToken(\n    $token: String!\n    $username: String!\n    $newPassword: String!\n  ) {\n    resetPasswordWithToken(\n      token: $token\n      username: $username\n      newPassword: $newPassword\n    ) {\n      code\n      success\n      message\n    }\n  }\n": types.ResetPasswordWithTokenDocument,
     "\n  mutation CreateUser($username: String!, $password: String!) {\n    createUser(username: $username, password: $password) {\n      success\n      message\n      user {\n        username\n      }\n    }\n  }\n": types.CreateUserDocument,
     "\n  mutation SignIn($username: String!, $password: String!) {\n    signIn(username: $username, password: $password) {\n      success\n      message\n      token\n    }\n  }\n": types.SignInDocument,
     "\n  mutation UpdateUser($id: ID!, $body: userUpdateBody!) {\n    updateUser(id: $id, body: $body) {\n      success\n      message\n      user {\n        id\n        username\n        bio\n        iconName\n        createdAt\n      }\n    }\n  }\n": types.UpdateUserDocument,
@@ -121,7 +123,11 @@ export function graphql(source: "\n  mutation DeleteCommentDislike($commentId: I
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation ResetPassword($username: String!, $newPassword: String!) {\n    resetPassword(username: $username, newPassword: $newPassword) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation ResetPassword($username: String!, $newPassword: String!) {\n    resetPassword(username: $username, newPassword: $newPassword) {\n      code\n      success\n      message\n    }\n  }\n"];
+export function graphql(source: "\n  mutation RequestPasswordReset($email: String!, $username: String!) {\n    requestPasswordReset(email: $email, username: $username) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation RequestPasswordReset($email: String!, $username: String!) {\n    requestPasswordReset(email: $email, username: $username) {\n      code\n      success\n      message\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResetPasswordWithToken(\n    $token: String!\n    $username: String!\n    $newPassword: String!\n  ) {\n    resetPasswordWithToken(\n      token: $token\n      username: $username\n      newPassword: $newPassword\n    ) {\n      code\n      success\n      message\n    }\n  }\n"): (typeof documents)["\n  mutation ResetPasswordWithToken(\n    $token: String!\n    $username: String!\n    $newPassword: String!\n  ) {\n    resetPasswordWithToken(\n      token: $token\n      username: $username\n      newPassword: $newPassword\n    ) {\n      code\n      success\n      message\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

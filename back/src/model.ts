@@ -1,4 +1,9 @@
-import { Dislike, Comment, Article } from "@prisma/client";
+import {
+  Dislike,
+  Comment,
+  Article,
+  PasswordResetRequest,
+} from "@prisma/client";
 
 export type UserModel = {
   id: string;
@@ -13,3 +18,4 @@ export type UserModel = {
 export type DislikeModel = Dislike;
 export type CommentModel = Comment;
 export type ArticleModel = Article;
+export type PasswordResetRequestModel = PasswordResetRequest;

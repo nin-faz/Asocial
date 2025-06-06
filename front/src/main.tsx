@@ -3,9 +3,9 @@ import { createRoot } from "react-dom/client";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { SearchProvider } from "./context/SearchContext.tsx";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
-import "./index.css";
-import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
+import App from "./App.tsx";
+import "./index.css";
 
 const client = new ApolloClient({
   // uri: "https://back-asocial.onrender.com",

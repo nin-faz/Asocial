@@ -22,7 +22,8 @@
     "bcrypt": "^5.1.1",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.3"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.5",
@@ -31,7 +32,8 @@
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.5",
-    "prisma": "^6.5.0",
+    "@types/nodemailer": "^6.4.17",
+    "prisma": "^6.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }

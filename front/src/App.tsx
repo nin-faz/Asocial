@@ -10,7 +10,9 @@ import AboutPage from "./pages/AboutPage";
 import PublicationDetailsPage from "./pages/PublicationDetailsPage";
 import PublicationPage from "./pages/PublicationPage";
 import ProfilePage from "./pages/ProfilePage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+// import ResetPasswordPage from "./pages/ResetPasswordPage";
+import RequestPasswordResetPage from "./pages/RequestPasswordResetPage";
+import ResetPasswordWithTokenPage from "./pages/ResetPasswordWithTokenPage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,7 +26,7 @@ function App() {
 
   useEffect(() => {
     // const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
-    const CURRENT_APP_VERSION = "1.0.0";
+    const CURRENT_APP_VERSION = "1.1.0";
     const storedVersion = localStorage.getItem("app_version");
 
     if (storedVersion !== CURRENT_APP_VERSION) {
@@ -79,7 +81,14 @@ function App() {
           {/* Routes publiques */}
           <Route path="/" element={<HomePage />} />
           <Route path="/publications/*" element={<PublicationPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/reset-password"
+            element={<ResetPasswordWithTokenPage />}
+          />
+          <Route
+            path="/request-password-reset"
+            element={<RequestPasswordResetPage />}
+          />
           <Route
             path="/publications/:id"
             element={<PublicationDetailsPage />}

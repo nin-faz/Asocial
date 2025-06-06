@@ -1,35 +1,36 @@
 import { useState } from "react";
 import { useMutation } from "@apollo/client";
-import { Lock, User } from "lucide-react";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
-import { RESET_PASSWORD } from "../mutations";
+import { Lock, User } from "lucide-react";
+import { RESET_PASSWORD_WITH_TOKEN } from "../mutations/resetPasswordMutation";
 import {
-  showResetPasswordErrorToast,
   showResetPasswordSuccessToast,
+  showResetPasswordErrorToast,
+  showInvalidOrExpiredLinkToast,
 } from "../utils/customToasts";
 
-export default function ResetPasswordPage() {
-  const navigate = useNavigate();
+export default function ResetPasswordWithTokenPage() {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token") || "";
   const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [resetPassword, { loading }] = useMutation(RESET_PASSWORD);
+  const [resetPasswordWithToken, { loading }] = useMutation(
+    RESET_PASSWORD_WITH_TOKEN
+  );
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const response = await resetPassword({
-      variables: { username, newPassword },
+    const response = await resetPasswordWithToken({
+      variables: { token, username, newPassword },
     });
-    if (response.data?.resetPassword.success) {
-      navigate("/auth");
-      console.log("Mot de passe réinitialisé avec succès");
+    if (response.data?.resetPasswordWithToken.success) {
       showResetPasswordSuccessToast();
-    } else {
-      console.error(
-        "Erreur lors de la réinitialisation du mot de passe:",
-        response.data?.resetPassword.message
-      );
+      navigate("/auth");
+    } else if (response.data?.resetPasswordWithToken.code === 400) {
+      showInvalidOrExpiredLinkToast();
+    } else if (response.data?.resetPasswordWithToken.code === 404) {
       showResetPasswordErrorToast();
     }
   };
@@ -50,7 +51,6 @@ export default function ResetPasswordPage() {
               className="flex items-center cursor-pointer w-16 h-16 rounded-full border-2 border-gray-500"
             />
           </div>
-
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
             className="bg-gray-900 p-8 rounded-lg shadow-xl border border-purple-900"
           >
             <h2 className="text-2xl font-bold mb-6 text-center text-purple-400">
-              Réinitialiser le mot de passe
+              Définir un nouveau mot de passe
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="relative">
@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
                     : "bg-purple-600 text-white hover:bg-purple-700"
                 }`}
               >
-                {loading ? "En cours..." : "Réinitialiser"}
+                {loading ? "En cours..." : "Valider"}
               </motion.button>
             </form>
             <div className="mt-4 text-center">

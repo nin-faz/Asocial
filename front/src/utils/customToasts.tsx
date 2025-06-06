@@ -7,6 +7,7 @@ import {
   Megaphone,
   Bomb,
   Save,
+  AlarmClockOff,
 } from "lucide-react";
 
 const toastStyle = {
@@ -208,9 +209,34 @@ export const showResetPasswordSuccessToast = () => {
 
 export const showResetPasswordErrorToast = () => {
   toast.error(
-    "Impossible de réinitialiser le mot de passe. Vérifie le nom d'utilisateur ou réessaie plus tard.",
+    "Une erreur est surevenue ... Vérifie le nom d'utilisateur ou réessaie plus tard.",
     {
       icon: <Skull size={24} color="#f0aaff" />,
+      style: toastStyle,
+    }
+  );
+};
+
+// Reset Password: Email envoyé
+export const showResetPasswordEmailSentToast = () => {
+  const messages = [
+    "Le lien est parti. Le retrouver, c’est ton problème maintenant.",
+    "Un mail vient de partir dans le néant. Va voir ta boîte de réception (ou tes spams, on sait jamais).",
+    "Lien envoyé ! Si l'adresse existe, tu devrais recevoir un message d'ici peu.",
+    "Ta requête a été entendue. La suite se trouve dans ta boîte mail… ou pas.",
+  ];
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  toast.info(randomMessage, {
+    icon: <Megaphone size={24} color="#f0aaff" />,
+    style: toastStyle,
+  });
+};
+
+export const showInvalidOrExpiredLinkToast = () => {
+  toast.error(
+    "Trop tard, ce lien a déjà rendu l’âme en expirant... Fait une nouvelle demande !",
+    {
+      icon: <AlarmClockOff size={24} color="#d00000" />,
       style: toastStyle,
     }
   );

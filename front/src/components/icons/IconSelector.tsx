@@ -16,7 +16,7 @@ import {
   Rocket,
   Cloud,
 } from "lucide-react";
-import { CheetahIcon } from "./icons/CheetahIcon";
+import { CheetahIcon } from "./CheetahIcon";
 
 type IconOption = {
   name: string;

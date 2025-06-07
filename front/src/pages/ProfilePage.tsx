@@ -36,7 +36,7 @@ import {
 } from "../utils/customToasts";
 import { Article } from "../gql/graphql";
 import PublicationDetailsPage from "./PublicationDetailsPage";
-import IconSelector from "../components/IconSelector";
+import IconSelector from "../components/icons/IconSelector";
 import { renderUserIcon } from "../utils/iconUtil";
 import UserIcon from "../components/UserIcon";
 

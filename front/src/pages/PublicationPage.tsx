@@ -38,6 +38,7 @@ import {
 } from "../utils/customToasts";
 import UserIcon from "../components/UserIcon";
 import ImageUploader from "../components/ImageUploader";
+import Pagination from "../components/Pagination";
 // import ScrollButton from "../components/ScrollButton";
 
 function PublicationPage() {
@@ -947,29 +948,14 @@ function PublicationPage() {
           <p className="text-center text-gray-400">Aucun article trouvé.</p>
         )}
       </div>
-      {/* Pagination */}
-      <div
-        // ref={paginationRef}
-        className="flex justify-between items-center mt-6"
-      >
-        <button
-          onClick={handlePrevPage}
-          disabled={!hasArticles || currentPage === 1}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-        >
-          Précédent{" "}
-        </button>
-        <span className="text-white">
-          Page {hasArticles ? currentPage : 0} sur {totalPages}
-        </span>
-        <button
-          onClick={handleNextPage}
-          disabled={!hasArticles || currentPage === totalPages}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-        >
-          Suivant
-        </button>
-      </div>
+      <Pagination
+        currentPage={hasArticles ? currentPage : 0}
+        totalPages={totalPages}
+        onPrev={handlePrevPage}
+        onNext={handleNextPage}
+        disabledPrev={!hasArticles || currentPage === 1}
+        disabledNext={!hasArticles || currentPage === totalPages}
+      />
       {/* <ScrollButton targetRef={paginationRef} /> */}
     </main>
   );

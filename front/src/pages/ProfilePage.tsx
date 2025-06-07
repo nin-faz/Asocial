@@ -35,10 +35,10 @@ import {
   showProfileUpdatedToast,
 } from "../utils/customToasts";
 import { Article } from "../gql/graphql";
-import PublicationDetailsPage from "./PublicationDetailsPage";
+import PublicationDetailsPage from "./publications/PublicationDetailsPage";
 import IconSelector from "../components/icons/IconSelector";
 import { renderUserIcon } from "../utils/iconUtil";
-import UserIcon from "../components/UserIcon";
+import UserIcon from "../components/icons/UserIcon";
 
 const ProfilePage = () => {
   const navigate = useNavigate();

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { DownloadIcon } from "lucide-react";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ function HomePage() {
             onClick={() => {
               !user ? navigate("/auth") : navigate("/publications");
             }}
-            className="p-4 sm:px-6 sm:py-3 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-4 py-3 sm:px-6 sm:py-3 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             {!user ? "Rejoindre le" : "Participier au"} chaos
           </motion.button>
@@ -67,11 +68,28 @@ function HomePage() {
             }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/about")}
-            className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base border border-purple-600 text-purple-400 rounded-lg hover:bg-purple-900/30 transition-colors"
+            className="px-4 py-3 sm:px-6 sm:py-3 text-sm sm:text-base border border-purple-600 text-purple-400 rounded-lg hover:bg-purple-900/30 transition-colors"
           >
             En savoir plus
           </motion.button>
         </motion.div>
+        <motion.button
+          transition={{ duration: 1, delay: 0.5 }}
+          whileHover={{
+            scale: 1.05,
+            boxShadow: "0px 0px 20px rgba(128, 0, 128, 0.5)",
+            transition: { duration: 0.15 },
+          }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate("/install-tuto")}
+          className="flex sm:hidden mt-4 px-4 py-3 text-sm bg-purple-500 text-white rounded-lg shadow-md hover:bg-purple-700 transition-colors"
+        >
+          {" "}
+          <DownloadIcon className="w-6 h-5 pr-2" />
+          Installer Asocial en 2 clics
+        </motion.button>
       </div>
     </main>
   );

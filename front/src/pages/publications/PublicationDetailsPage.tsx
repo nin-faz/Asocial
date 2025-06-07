@@ -8,7 +8,7 @@ import {
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS,
   GET_COMMENTS,
   GET_USER_BY_ID,
-} from "../queries";
+} from "../../queries";
 import {
   ADD_ARTICLE_DISLIKE,
   ADD_COMMENT,
@@ -19,7 +19,7 @@ import {
   DELETE_COMMENT_DISLIKE,
   UPDATE_ARTICLE,
   UPDATE_COMMENT,
-} from "../mutations";
+} from "../../mutations";
 import {
   ThumbsDown,
   MessageSquare,
@@ -33,8 +33,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { AuthContext } from "../context/AuthContext";
-import { GetCommentsQuery } from "../gql/graphql";
+import { AuthContext } from "../../context/AuthContext";
+import { GetCommentsQuery } from "../../gql/graphql";
 import {
   showArticleDeletedToast,
   showArticleUpdatedToast,
@@ -42,9 +42,9 @@ import {
   showCommentDeletedToast,
   showCommentUpdatedToast,
   showLoginRequiredToast,
-} from "../utils/customToasts";
-import UserIcon from "../components/UserIcon";
-import ImageUploader from "../components/ImageUploader";
+} from "../../utils/customToasts";
+import UserIcon from "../../components/icons/UserIcon";
+import ImageUploader from "../../components/ImageUploader";
 
 interface PublicationDetailsPageProps {
   articleId?: string;

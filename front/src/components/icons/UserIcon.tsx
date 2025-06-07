@@ -1,5 +1,5 @@
 import React from "react";
-import { renderUserIcon } from "../utils/iconUtil";
+import { renderUserIcon } from "../../utils/iconUtil";
 
 interface UserIconProps {
   iconName: string | null | undefined;

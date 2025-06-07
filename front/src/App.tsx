@@ -2,20 +2,20 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { useContext, useEffect, useState } from "react";
 import Loader from "./components/Loader";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "./components/fragments/Header";
+import Footer from "./components/fragments/Footer";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
 import AboutPage from "./pages/AboutPage";
-import PublicationDetailsPage from "./pages/PublicationDetailsPage";
-import PublicationPage from "./pages/PublicationPage";
+import PublicationDetailsPage from "./pages/publications/PublicationDetailsPage";
+import PublicationPage from "./pages/publications/PublicationPage";
 import ProfilePage from "./pages/ProfilePage";
-// import ResetPasswordPage from "./pages/ResetPasswordPage";
 import RequestPasswordResetPage from "./pages/RequestPasswordResetPage";
 import ResetPasswordWithTokenPage from "./pages/ResetPasswordWithTokenPage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
+import InstallTutoPage from "./pages/InstallTutoPage";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +80,7 @@ function App() {
         <Routes>
           {/* Routes publiques */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/install-tuto" element={<InstallTutoPage />} />
           <Route path="/publications/*" element={<PublicationPage />} />
           <Route
             path="/reset-password"

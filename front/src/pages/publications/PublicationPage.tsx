@@ -13,33 +13,32 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
-import Loader from "../components/Loader";
+import Loader from "../../components/Loader";
 import {
   CREATE_ARTICLE,
   ADD_ARTICLE_DISLIKE,
   DELETE_ARTICLE_DISLIKE,
   DELETE_ARTICLE,
-} from "../mutations";
+} from "../../mutations";
 import {
   FIND_ARTICLES,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLE_BY_MOST_DISLIKED,
   GET_USER_BY_ID,
-} from "../queries";
-import { FindArticlesQuery } from "../gql/graphql";
+} from "../../queries";
+import { FindArticlesQuery } from "../../gql/graphql";
 import { toast } from "react-toastify";
-import { AuthContext } from "../context/AuthContext";
-import { useSearch } from "../context/SearchContext";
+import { AuthContext } from "../../context/AuthContext";
+import { useSearch } from "../../context/SearchContext";
 import {
   showArticleCreatedToast,
   showArticleDeletedToast,
   showEmptyContentToast,
   showLoginRequiredToast,
-} from "../utils/customToasts";
-import UserIcon from "../components/UserIcon";
-import ImageUploader from "../components/ImageUploader";
-import Pagination from "../components/Pagination";
-// import ScrollButton from "../components/ScrollButton";
+} from "../../utils/customToasts";
+import UserIcon from "../../components/icons/UserIcon";
+import ImageUploader from "../../components/ImageUploader";
+import Pagination from "../../components/Pagination";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -49,8 +48,6 @@ function PublicationPage() {
 
   const { token, user } = authContext;
   const navigate = useNavigate();
-
-  // const paginationRef = useRef<HTMLDivElement | null>(null);
 
   // Obtenir les informations utilisateur, y compris l'icône
   const { data: userData, refetch: refetchUserData } = useQuery(
@@ -956,7 +953,6 @@ function PublicationPage() {
         disabledPrev={!hasArticles || currentPage === 1}
         disabledNext={!hasArticles || currentPage === totalPages}
       />
-      {/* <ScrollButton targetRef={paginationRef} /> */}
     </main>
   );
 }

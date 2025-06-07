@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
-import { useSearch } from "../context/SearchContext";
-import { GET_USER_BY_ID } from "../queries";
+import { AuthContext } from "../../context/AuthContext";
+import { useSearch } from "../../context/SearchContext";
+import { GET_USER_BY_ID } from "../../queries";
 import { useQuery } from "@apollo/client";
 
 const Header = () => {

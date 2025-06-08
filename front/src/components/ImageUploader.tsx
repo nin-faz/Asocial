@@ -182,10 +182,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               {/* Le reste du contenu n'est affiché que si on n'est pas en train de glisser */}
               {!isDragging && (
                 <>
-                  <p className="text-gray-500 text-sm">
+                  <p className="hidden sm:block text-gray-500 text-sm">
                     Glissez-déposez une image ou cliquez pour la sélectionner
                   </p>
-                  <p className="text-gray-500 text-xs mt-1">
+                  <p className="hidden sm:block text-gray-500 text-xs mt-1">
                     Vous pouvez aussi copier une image ailleurs puis appuyer sur
                     Ctrl+V ici
                   </p>

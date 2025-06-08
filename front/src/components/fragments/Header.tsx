@@ -56,14 +56,33 @@ const Header = () => {
 
   const userMenuRef = useRef(null);
   const mobileMenuRef = useRef(null);
+  const menuButtonRef = useRef(null); // Ajout du ref pour le bouton menu mobile
 
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (userMenuRef.current) {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Pour le menu utilisateur
+      if (
+        userMenuRef.current &&
+        !(
+          event.composedPath &&
+          event.composedPath().includes(userMenuRef.current)
+        )
+      ) {
         setShowUserMenu(false);
       }
-
-      if (mobileMenuRef.current) {
+      // Pour le menu mobile
+      if (
+        showMobileMenu &&
+        mobileMenuRef.current &&
+        !(
+          event.composedPath &&
+          event.composedPath().includes(mobileMenuRef.current)
+        ) &&
+        !(
+          menuButtonRef.current &&
+          event.composedPath().includes(menuButtonRef.current)
+        )
+      ) {
         setShowMobileMenu(false);
       }
     };
@@ -72,7 +91,7 @@ const Header = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [showMobileMenu]);
 
   return (
     <motion.header
@@ -255,6 +274,7 @@ const Header = () => {
               className="md:hidden p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
               whileHover={{ scale: 1.1 }}
               onClick={() => setShowMobileMenu(!showMobileMenu)}
+              ref={menuButtonRef} // Ajout du ref ici
             >
               <Menu className="h-6 w-6" />
             </motion.button>

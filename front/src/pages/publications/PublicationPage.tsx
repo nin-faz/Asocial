@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
@@ -48,6 +48,7 @@ function PublicationPage() {
 
   const { token, user } = authContext;
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Obtenir les informations utilisateur, y compris l'icône
   const { data: userData, refetch: refetchUserData } = useQuery(
@@ -150,6 +151,16 @@ function PublicationPage() {
     [filteredArticles]
   );
 
+  // Lire le numéro de page depuis l'URL si présent
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const pageFromUrl = parseInt(params.get("page") || "1", 10);
+    if (!isNaN(pageFromUrl) && pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+    // eslint-disable-next-line
+  }, [location.search]);
+
   // Mémoriser le nombre total de pages
   const totalPages = useMemo(
     () => Math.ceil(filteredArticles.length / articlesPerPage),
@@ -158,11 +169,21 @@ function PublicationPage() {
 
   // Gérer le changement de page
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      navigate(`?page=${nextPage}`);
+      window.scrollTo(0, 550);
+    }
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      setCurrentPage(prevPage);
+      navigate(`?page=${prevPage}`);
+      window.scrollTo(0, 550);
+    }
   };
 
   const [createArticle, { loading: isCreatingArticle }] =
@@ -371,7 +392,7 @@ function PublicationPage() {
 
   const handlePostClick = (articleId: string) => {
     sessionStorage.setItem("publicationScroll", window.scrollY.toString());
-    navigate(`/publications/${articleId}`);
+    navigate(`/publications/${articleId}?page=${currentPage}`);
   };
 
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
@@ -785,7 +806,7 @@ function PublicationPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.5 }}
                   whileHover={{
-                    scale: 1.05,
+                    scale: 1.03,
                     boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
                     transition: {
                       duration: 0.2,
@@ -798,13 +819,29 @@ function PublicationPage() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                      <button
+                        className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/users/${author.id}`);
+                        }}
+                        title={`Voir le profil de ${author.username}`}
+                      >
                         <UserIcon iconName={author.iconName} size="small" />
-                      </div>
+                      </button>
                       <div>
-                        <h3 className="text-purple-400 font-semibold">
-                          {author.username}
-                        </h3>{" "}
+                        <div>
+                          <button
+                            className="text-purple-400 font-semibold hover:underline focus:outline-none"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/users/${author.id}`);
+                            }}
+                            title={`Voir le profil de ${author.username}`}
+                          >
+                            {author.username}
+                          </button>
+                        </div>
                         <p className="text-gray-500 text-sm">
                           Le{" "}
                           {updatedAt

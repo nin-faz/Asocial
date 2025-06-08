@@ -8,4 +8,7 @@ export default defineConfig({
   //   allowedHosts: ["f554-89-2-117-106.ngrok-free.app", "all"],
   // },
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
 });

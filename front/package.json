@@ -1,14 +1,15 @@
 {
   "name": "front",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --config codegen.ts",
+    "bump-version": "npm version patch --no-git-tag-version"
   },
   "dependencies": {
     "@apollo/client": "^3.13.1",

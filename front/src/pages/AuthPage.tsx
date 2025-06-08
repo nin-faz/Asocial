@@ -7,7 +7,7 @@ import {
   showEmptyInfoToLogin,
   showEmptyInfoToRegister,
   showLoginToast,
-  // showReconnectToast,
+  showReconnectToast,
   showWelcomeToast,
 } from "../utils/customToasts";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
@@ -18,15 +18,19 @@ function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
-  // useEffect(() => {
-  //   const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
-  //   const storedVersion = localStorage.getItem("app_version");
+  useEffect(() => {
+    const redirected = localStorage.getItem("redirect_after_update");
 
-  //   if (storedVersion != CURRENT_APP_VERSION) {
-  //     console.log("ok");
-  //     showReconnectToast();
-  //   }
-  // }, []);
+    if (redirected === "true") {
+      showReconnectToast();
+      console.log("Reconnexion après mise à jour détectée");
+      localStorage.removeItem("redirect_after_update");
+    }
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");

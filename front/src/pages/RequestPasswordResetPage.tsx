@@ -101,6 +101,11 @@ export default function RequestPasswordResetPage() {
             {submitted && (
               <div className="mt-4 text-center text-gray-400 text-sm">
                 Si l'adresse existe, un email a été envoyé.
+                <br />
+                <span className="text-xs">
+                  {" "}
+                  Ps : possibilité de se retrouver dans les spams
+                </span>
               </div>
             )}
           </motion.div>

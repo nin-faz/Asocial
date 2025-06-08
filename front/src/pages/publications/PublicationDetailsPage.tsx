@@ -70,6 +70,7 @@ const PublicationDetailsPage = ({
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const isEditMode = queryParams.get("edit") === "true";
+  const pageParam = queryParams.get("page");
 
   useEffect(() => {
     if (isEditMode) {
@@ -610,7 +611,9 @@ const PublicationDetailsPage = ({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
-          onClick={() => navigate("/publications")}
+          onClick={() => {
+            navigate(`/publications?page=${pageParam}`);
+          }}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Retour aux publications
@@ -626,13 +629,27 @@ const PublicationDetailsPage = ({
         {/* Post Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+            <div
+              className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/users/${article?.author.id}`);
+              }}
+              title={`Voir le profil de ${article?.author.username}`}
+            >
               <UserIcon iconName={article?.author.iconName} size="small" />
             </div>
             <div>
-              <h3 className="text-purple-400 font-semibold text-lg">
+              <h3
+                className="text-purple-400 font-semibold text-lg cursor-pointer hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/users/${article?.author.id}`);
+                }}
+                title={`Voir le profil de ${article?.author.username}`}
+              >
                 {article?.author.username}
-              </h3>{" "}
+              </h3>
               <p className="text-gray-500 text-sm">
                 Le{" "}
                 {article?.updatedAt
@@ -892,16 +909,31 @@ const PublicationDetailsPage = ({
           >
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center">
+                <div
+                  className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/users/${comment?.author.id}`);
+                  }}
+                  title={`Voir le profil de ${comment?.author.username}`}
+                >
                   <UserIcon iconName={comment?.author?.iconName} size="small" />
                 </div>
               </div>
               <div className="flex-grow">
                 <div className="flex items-center justify-between mb-1">
                   <div>
-                    <span className="text-purple-400 font-medium">
+                    {/* Username clickable */}
+                    <button
+                      className="text-purple-400 font-medium hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/users/${comment?.author.id}`);
+                      }}
+                      title={`Voir le profil de ${comment?.author.username}`}
+                    >
                       {comment?.author.username}
-                    </span>{" "}
+                    </button>{" "}
                     <p className="text-gray-500 text-sm">
                       Le{" "}
                       {comment?.updatedAt
@@ -1049,7 +1081,14 @@ const PublicationDetailsPage = ({
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 rounded-l-lg"></div>
                               <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0">
-                                  <div className="w-6 h-6 rounded-full bg-purple-800 flex items-center justify-center">
+                                  <div
+                                    className="w-8 h-8 rounded-full bg-purple-800 flex items-center justify-center cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/users/${reply?.author.id}`);
+                                    }}
+                                    title={`Voir le profil de ${reply?.author.username}`}
+                                  >
                                     <UserIcon
                                       iconName={reply?.author?.iconName}
                                       size="small"
@@ -1060,9 +1099,18 @@ const PublicationDetailsPage = ({
                                   {" "}
                                   <div className="flex flex-col">
                                     <div className="flex items-center">
-                                      <span className="text-purple-300 font-medium">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(
+                                            `/users/${reply?.author.id}`
+                                          );
+                                        }}
+                                        title={`Voir le profil de ${reply?.author.username}`}
+                                        className="text-purple-300 font-medium hover:underline"
+                                      >
                                         {reply?.author.username}
-                                      </span>
+                                      </button>
                                     </div>
                                     <p className="text-gray-500 text-xs mt-1">
                                       {reply?.updatedAt

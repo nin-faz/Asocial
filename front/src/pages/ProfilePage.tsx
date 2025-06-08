@@ -40,7 +40,7 @@ import IconSelector from "../components/icons/IconSelector";
 import { renderUserIcon } from "../utils/iconUtil";
 import UserIcon from "../components/icons/UserIcon";
 
-const ProfilePage = () => {
+const MyProfilePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useContext(AuthContext);
@@ -55,6 +55,10 @@ const ProfilePage = () => {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
 
@@ -816,7 +820,7 @@ const ProfilePage = () => {
         )}{" "}
         {/* Onglet Dislikes */}
         {activeTab === "dislikes" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mt-8">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4">
             {dislikesByUser && dislikesByUser.length > 0 ? (
               dislikesByUser
                 .filter((dislike) => dislike?.article)
@@ -835,42 +839,51 @@ const ProfilePage = () => {
                       },
                     }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-purple-900 hover:border-purple-700 transition-colors flex flex-col"
+                    className="bg-gray-900 rounded-lg p-2 sm:p-6 border border-purple-900 hover:border-purple-700 transition-colors flex flex-col"
                   >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
-                          <UserIcon
-                            iconName={dislike?.article?.author.iconName}
-                            size="small"
-                          />
-                        </div>
-                        <div>
-                          <h3 className="text-purple-400 font-semibold">
-                            {dislike?.article?.author.username}
-                          </h3>{" "}
-                          <p className="text-gray-500 text-sm">
-                            Le{" "}
-                            {new Date(
-                              parseInt(dislike?.article?.createdAt!, 10)
-                            )
-                              .toLocaleString("fr-FR", {
-                                year: "numeric",
-                                month: "numeric",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                              .replace(" ", " à ")}
-                          </p>
-                        </div>
+                    <div className="flex items-start sm:items-center space-x-2 mb-1 pb-5">
+                      <button
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-900 flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/users/${dislike?.article?.author.id}`);
+                        }}
+                        title={`Voir le profil de ${dislike?.article?.author.username}`}
+                      >
+                        <UserIcon
+                          iconName={dislike?.article?.author.iconName}
+                          size="small"
+                        />
+                      </button>
+                      <div>
+                        <button
+                          className="text-purple-400 font-semibold text-xs sm:text-sm leading-tight break-words max-w-[5.5em] sm:max-w-full hover:underline focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/users/${dislike?.article?.author.id}`);
+                          }}
+                          title={`Voir le profil de ${dislike?.article?.author.username}`}
+                        >
+                          {dislike?.article?.author.username}
+                        </button>{" "}
+                        <p className="text-gray-500 text-sm">
+                          {new Date(parseInt(dislike?.article?.createdAt!, 10))
+                            .toLocaleString("fr-FR", {
+                              year: "2-digit",
+                              month: "2-digit",
+                              day: "2-digit",
+                            })
+                            .replace(" ", " à ")}
+                        </p>
                       </div>
                     </div>
                     <div className="flex flex-col flex-grow justify-between">
-                      <h1 className="text-2xl font-semibold text-gray-100 h-8 mb-4">
-                        {dislike?.article?.title}
-                      </h1>
-                      <p className="text-gray-300 mb-4 whitespace-pre-wrap flex-grow">
+                      {dislike?.article?.title && (
+                        <h1 className="sm:text-2xl font-semibold text-gray-100 pb-3">
+                          {dislike?.article?.title}
+                        </h1>
+                      )}
+                      <p className="text-sm sm:text-base text-gray-300 mb-4 whitespace-pre-wrap flex-grow">
                         {dislike?.article?.content}
                       </p>
                       {/* Ajout de l'affichage de l'image si elle existe */}
@@ -891,14 +904,14 @@ const ProfilePage = () => {
                           onClick={(e) =>
                             handleArticleDislike(e, dislike?.article?.id!)
                           }
-                          className="flex items-end space-x-2 text-purple-400"
+                          className="flex items-end space-x-2 text-sm text-purple-400"
                         >
-                          <ThumbsDown className="h-5 w-5" />
+                          <ThumbsDown className="w-4 h-4 sm:h-5 sm:w-5" />
                           <span>Disliké</span>
                         </motion.button>
 
                         <button
-                          className="flex items-center space-x-2 hover:text-purple-400"
+                          className="hidden sm:flex items-center space-x-2 hover:text-purple-400"
                           onClick={(e) =>
                             handleShareArticle(e, dislike?.article?.id!)
                           }
@@ -1045,4 +1058,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default MyProfilePage;

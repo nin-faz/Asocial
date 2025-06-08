@@ -5,17 +5,19 @@ import Loader from "./components/Loader";
 import Header from "./components/fragments/Header";
 import Footer from "./components/fragments/Footer";
 import HomePage from "./pages/HomePage";
+import InstallTutoPage from "./pages/InstallTutoPage";
 import AuthPage from "./pages/AuthPage";
+import MyProfilePage from "./pages/ProfilePage";
 import AboutPage from "./pages/AboutPage";
-import PublicationDetailsPage from "./pages/publications/PublicationDetailsPage";
 import PublicationPage from "./pages/publications/PublicationPage";
-import ProfilePage from "./pages/ProfilePage";
+import PublicationDetailsPage from "./pages/publications/PublicationDetailsPage";
+import UserProfilePage from "./pages/UserProfilePage";
 import RequestPasswordResetPage from "./pages/RequestPasswordResetPage";
 import ResetPasswordWithTokenPage from "./pages/ResetPasswordWithTokenPage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
-import InstallTutoPage from "./pages/InstallTutoPage";
+import { showReconnectToast } from "./utils/customToasts";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +28,7 @@ function App() {
 
   useEffect(() => {
     // const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
-    const CURRENT_APP_VERSION = "1.1.0";
+    const CURRENT_APP_VERSION = "1.2.0";
     const storedVersion = localStorage.getItem("app_version");
 
     if (storedVersion !== CURRENT_APP_VERSION) {
@@ -35,6 +37,8 @@ function App() {
       localStorage.setItem("app_version", CURRENT_APP_VERSION);
 
       navigate("/auth");
+
+      showReconnectToast();
 
       return;
     }
@@ -95,6 +99,7 @@ function App() {
             element={<PublicationDetailsPage />}
           />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/users/:userId" element={<UserProfilePage />} />
 
           <Route element={<RedirectIfAuthenticated />}>
             <Route path="/auth" element={<AuthPage />} />
@@ -102,7 +107,7 @@ function App() {
 
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile" element={<MyProfilePage />} />
           </Route>
 
           <Route

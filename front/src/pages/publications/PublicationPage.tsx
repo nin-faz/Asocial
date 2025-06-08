@@ -798,13 +798,29 @@ function PublicationPage() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                      <button
+                        className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/users/${author.id}`);
+                        }}
+                        title={`Voir le profil de ${author.username}`}
+                      >
                         <UserIcon iconName={author.iconName} size="small" />
-                      </div>
+                      </button>
                       <div>
-                        <h3 className="text-purple-400 font-semibold">
-                          {author.username}
-                        </h3>{" "}
+                        <div>
+                          <button
+                            className="text-purple-400 font-semibold hover:underline focus:outline-none"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/users/${author.id}`);
+                            }}
+                            title={`Voir le profil de ${author.username}`}
+                          >
+                            {author.username}
+                          </button>
+                        </div>
                         <p className="text-gray-500 text-sm">
                           Le{" "}
                           {updatedAt

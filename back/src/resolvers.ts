@@ -8,6 +8,8 @@ import { commentQueries } from "./domain/comment/queries.js";
 import { commentMutations } from "./domain/comment/mutation.js";
 import { dislikeQueries } from "./domain/dislike/queries.js";
 import { resetPasswordWithToken } from "./domain/user/resetPasswordWithToken.js";
+import { notificationQueries } from "./domain/notification/queries.js";
+import { notificationMutations } from "./domain/notification/mutation.js";
 
 export const resolvers: Resolvers = {
   Query: {
@@ -15,6 +17,7 @@ export const resolvers: Resolvers = {
     ...articleQueries,
     ...commentQueries,
     ...dislikeQueries,
+    ...notificationQueries,
   },
   Mutation: {
     ...userMutations,
@@ -22,6 +25,7 @@ export const resolvers: Resolvers = {
     ...dislikeMutations,
     ...articleMutations,
     ...commentMutations,
+    ...notificationMutations,
   },
 
   Article: {
@@ -135,5 +139,9 @@ export const resolvers: Resolvers = {
 
       return commentCount;
     },
+  },
+  Notification: {
+    // Le champ type est maintenant un string, donc on le retourne tel quel
+    type: (parent) => parent.type,
   },
 };

@@ -70,6 +70,8 @@ const PublicationDetailsPage = ({
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const isEditMode = queryParams.get("edit") === "true";
+  const targetCommentId = queryParams.get("commentId");
+
   const pageParam = queryParams.get("page");
 
   useEffect(() => {
@@ -291,6 +293,47 @@ const PublicationDetailsPage = ({
       variables: { articleId: finalId! },
     }
   );
+
+  useEffect(() => {
+    if (targetCommentId) {
+      let attempts = 0;
+      const maxAttempts = 20; // 2s max (20 x 100ms)
+      const interval = setInterval(() => {
+        const el = document.querySelector(
+          `[data-comment-id="${targetCommentId}"]`
+        );
+        if (el) {
+          // Log pour debug
+          console.log(
+            "[ScrollToComment] Element trouvé pour:",
+            targetCommentId,
+            el
+          );
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-purple-500");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-purple-500");
+          }, 2000);
+          clearInterval(interval);
+        } else {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.warn(
+              "[ScrollToComment] Échec: élément non trouvé pour:",
+              targetCommentId
+            );
+            // Fallback : naviguer vers l'article sans le paramètre commentId
+            const url = window.location.pathname.split("?")[0];
+            window.history.replaceState({}, "", url); // Nettoie l'URL
+            // Optionnel : scroll en haut
+            window.scrollTo(0, 0);
+            clearInterval(interval);
+          }
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [commentsData, targetCommentId]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 

@@ -18,6 +18,7 @@ model User {
   articles  Article[]
   comments  Comment[]
   dislikes  Dislike[]
+  notifications Notification[] // Ajout relation notifications reçues
 }
 
 model Dislike {
@@ -44,6 +45,7 @@ model Article {
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments  Comment[]
   dislikes  Dislike[]
+  notifications Notification[] // Ajout relation notifications liées à l'article
 
   @@index([authorId])
   @@index([createdAt])
@@ -63,6 +65,7 @@ model Comment {
   parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentToComment")
   dislikes  Dislike[]
+  notifications Notification[] // Ajout relation notifications liées au commentaire
 
   @@index([articleId])
   @@index([authorId])
@@ -76,4 +79,22 @@ model PasswordResetRequest {
   token       String @unique
   expiresAt   DateTime
   createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        String
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId   String?  // Lien optionnel vers un article
+  commentId   String?  // Lien optionnel vers un commentaire
+  article     Article? @relation(fields: [articleId], references: [id])
+  comment     Comment? @relation(fields: [commentId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }

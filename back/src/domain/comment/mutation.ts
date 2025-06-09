@@ -58,6 +58,74 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
 
     await notifyTelegram(message);
 
+    // Création de la notification pour l'auteur de l'article si ce n'est pas lui-même
+    if (!isReply && article && article.authorId !== userId) {
+      await db.notification.create({
+        data: {
+          type: "COMMENT",
+          message: `${
+            newComment.author.username
+          } a commenté votre publication (${
+            article.title || article.content.slice(0, 30) + "..."
+          }) : "${
+            newComment.content.length > 15
+              ? newComment.content.slice(0, 15) + "..."
+              : newComment.content
+          }"`,
+          userId: article.authorId,
+          articleId: article.id,
+          commentId: newComment.id,
+        },
+      });
+    }
+
+    // Création de la notification pour l'auteur du commentaire parent si ce n'est pas lui-même
+    if (isReply && newComment.parent && newComment.parent.authorId !== userId) {
+      await db.notification.create({
+        data: {
+          type: "REPLY",
+          message: `${
+            newComment.author.username
+          } a répondu à votre commentaire sous (${
+            article?.title || article?.content.slice(0, 30) + "..."
+          }) : "${
+            newComment.content.length > 15
+              ? newComment.content.slice(0, 15) + "..."
+              : newComment.content
+          }"`,
+          userId: newComment.parent.authorId,
+          articleId: article?.id,
+          commentId: newComment.parent.id,
+        },
+      });
+    }
+
+    // Notifier aussi l'auteur de l'article lors d'une réponse à un commentaire (sauf si c'est lui-même ou l'auteur du commentaire parent)
+    if (
+      isReply &&
+      article &&
+      article.authorId !== userId &&
+      (!newComment.parent || article.authorId !== newComment.parent.authorId)
+    ) {
+      await db.notification.create({
+        data: {
+          type: "REPLY",
+          message: `${
+            newComment.author.username
+          } a répondu à un commentaire sous votre publication (${
+            article.title || article.content.slice(0, 30) + "..."
+          }) : "${
+            newComment.content.length > 15
+              ? newComment.content.slice(0, 15) + "..."
+              : newComment.content
+          }"`,
+          userId: article.authorId,
+          articleId: article.id,
+          commentId: newComment.id,
+        },
+      });
+    }
+
     return newComment;
   } catch {
     throw new Error("Comment has not been added");
@@ -70,7 +138,7 @@ export const deleteComment: NonNullable<
   try {
     if (!user) {
       return {
-        code: 403,
+        code: 401,
         success: false,
         message: `Unauthorized`,
       };
@@ -100,6 +168,85 @@ export const deleteComment: NonNullable<
         id: commentId,
       },
     });
+
+    // Supprimer les notifications liées à ce commentaire (réponse, dislike, etc.)
+    await db.notification.deleteMany({
+      where: {
+        commentId: commentId,
+      },
+    });
+
+    // Supprimer aussi les notifications dont le champ replyId (si tu utilises un champ replyId) ou commentId pointe vers ce commentaire comme réponse
+    await db.notification.deleteMany({
+      where: {
+        // notification liée à une réponse à ce commentaire
+        type: "REPLY",
+        commentId: commentId,
+      },
+    });
+
+    // Supprimer les notifications de type REPLY liées à une réponse supprimée (notification envoyée à l'auteur du parent)
+    if (existComment.parentId) {
+      // On cherche le parent pour récupérer son auteur
+      const parent = await db.comment.findUnique({
+        where: { id: existComment.parentId },
+      });
+      const authorUser = await db.user.findUnique({
+        where: { id: existComment.authorId },
+      });
+      if (parent && authorUser) {
+        await db.notification.deleteMany({
+          where: {
+            type: "REPLY",
+            commentId: existComment.parentId,
+            userId: parent.authorId,
+            message: { contains: authorUser.username },
+          },
+        });
+      }
+    }
+
+    // Supprimer la notification REPLY envoyée à l'auteur de l'article lors d'une réponse à un commentaire sous sa publication
+    if (existComment.parentId && existComment.articleId) {
+      // On cherche l'article pour récupérer son auteur
+      const article = await db.article.findUnique({
+        where: { id: existComment.articleId },
+      });
+      const authorUser = await db.user.findUnique({
+        where: { id: existComment.authorId },
+      });
+      if (article && authorUser) {
+        await db.notification.deleteMany({
+          where: {
+            type: "REPLY",
+            articleId: existComment.articleId,
+            userId: article.authorId,
+            message: { contains: authorUser.username },
+          },
+        });
+      }
+    }
+
+    // Supprimer la notification COMMENT envoyée à l'auteur de la publication lors de la suppression d'un commentaire sous sa publication
+    if (!existComment.parentId && existComment.articleId) {
+      // On cherche l'article pour récupérer son auteur
+      const article = await db.article.findUnique({
+        where: { id: existComment.articleId },
+      });
+      const authorUser = await db.user.findUnique({
+        where: { id: existComment.authorId },
+      });
+      if (article && authorUser) {
+        await db.notification.deleteMany({
+          where: {
+            type: "COMMENT",
+            articleId: existComment.articleId,
+            userId: article.authorId,
+            message: { contains: authorUser.username },
+          },
+        });
+      }
+    }
 
     return {
       code: 200,
@@ -172,3 +319,9 @@ export const commentMutations: CommentMutations = {
   deleteComment,
   updateComment,
 };
+
+// Helper pour récupérer le username à partir de l'id
+async function parentIdToUsername(userId: string, db: any): Promise<string> {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  return user?.username || "";
+}

@@ -100,6 +100,14 @@ export type Dislike = {
   user?: Maybe<User>;
 };
 
+export type MarkNotificationsAsReadResponse = {
+  __typename?: 'MarkNotificationsAsReadResponse';
+  code: Scalars['Int']['output'];
+  message: Scalars['String']['output'];
+  notifications: Array<Notification>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addArticleDislike?: Maybe<Dislike>;
@@ -111,6 +119,7 @@ export type Mutation = {
   deleteArticleDislike?: Maybe<DeleteDislikeResponse>;
   deleteComment?: Maybe<DeleteCommentResponse>;
   deleteCommentDislike?: Maybe<DeleteDislikeResponse>;
+  markNotificationsAsRead: MarkNotificationsAsReadResponse;
   requestPasswordReset: RequestPasswordResetResponse;
   resetPasswordWithToken: ResetPasswordWithTokenResponse;
   signIn: SignInResponse;
@@ -175,6 +184,11 @@ export type MutationDeleteCommentDislikeArgs = {
 };
 
 
+export type MutationMarkNotificationsAsReadArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationRequestPasswordResetArgs = {
   email: Scalars['String']['input'];
   username: Scalars['String']['input'];
@@ -213,6 +227,19 @@ export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type Notification = {
+  __typename?: 'Notification';
+  article?: Maybe<Article>;
+  articleId?: Maybe<Scalars['String']['output']>;
+  comment?: Maybe<Comment>;
+  commentId?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isRead: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
   findArticleById?: Maybe<Article>;
@@ -225,6 +252,7 @@ export type Query = {
   getDislikesByCommentId?: Maybe<Array<Maybe<Dislike>>>;
   getDislikesByUserIdForArticles?: Maybe<Array<Maybe<Dislike>>>;
   getDislikesByUserIdForComments?: Maybe<Array<Maybe<Dislike>>>;
+  getNotifications: Array<Notification>;
   getUserbyToken?: Maybe<UserToken>;
 };
 
@@ -265,6 +293,11 @@ export type QueryGetDislikesByUserIdForArticlesArgs = {
 
 
 export type QueryGetDislikesByUserIdForCommentsArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetNotificationsArgs = {
   userId: Scalars['ID']['input'];
 };
 
@@ -429,7 +462,9 @@ export type ResolversTypes = {
   Dislike: ResolverTypeWrapper<DislikeModel>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  MarkNotificationsAsReadResponse: ResolverTypeWrapper<Omit<MarkNotificationsAsReadResponse, 'notifications'> & { notifications: Array<ResolversTypes['Notification']> }>;
   Mutation: ResolverTypeWrapper<{}>;
+  Notification: ResolverTypeWrapper<Omit<Notification, 'article' | 'comment'> & { article?: Maybe<ResolversTypes['Article']>, comment?: Maybe<ResolversTypes['Comment']> }>;
   Query: ResolverTypeWrapper<{}>;
   RequestPasswordResetResponse: ResolverTypeWrapper<RequestPasswordResetResponse>;
   ResetPasswordWithTokenResponse: ResolverTypeWrapper<ResetPasswordWithTokenResponse>;
@@ -457,7 +492,9 @@ export type ResolversParentTypes = {
   Dislike: DislikeModel;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
+  MarkNotificationsAsReadResponse: Omit<MarkNotificationsAsReadResponse, 'notifications'> & { notifications: Array<ResolversParentTypes['Notification']> };
   Mutation: {};
+  Notification: Omit<Notification, 'article' | 'comment'> & { article?: Maybe<ResolversParentTypes['Article']>, comment?: Maybe<ResolversParentTypes['Comment']> };
   Query: {};
   RequestPasswordResetResponse: RequestPasswordResetResponse;
   ResetPasswordWithTokenResponse: ResetPasswordWithTokenResponse;
@@ -552,6 +589,14 @@ export type DislikeResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MarkNotificationsAsReadResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['MarkNotificationsAsReadResponse'] = ResolversParentTypes['MarkNotificationsAsReadResponse']> = {
+  code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  notifications?: Resolver<Array<ResolversTypes['Notification']>, ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddArticleDislikeArgs, 'articleId' | 'userId'>>;
   addComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationAddCommentArgs, 'articleId' | 'content' | 'userId'>>;
@@ -562,12 +607,26 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteArticleDislike?: Resolver<Maybe<ResolversTypes['DeleteDislikeResponse']>, ParentType, ContextType, RequireFields<MutationDeleteArticleDislikeArgs, 'articleId' | 'userId'>>;
   deleteComment?: Resolver<Maybe<ResolversTypes['DeleteCommentResponse']>, ParentType, ContextType, RequireFields<MutationDeleteCommentArgs, 'commentId'>>;
   deleteCommentDislike?: Resolver<Maybe<ResolversTypes['DeleteDislikeResponse']>, ParentType, ContextType, RequireFields<MutationDeleteCommentDislikeArgs, 'commentId' | 'userId'>>;
+  markNotificationsAsRead?: Resolver<ResolversTypes['MarkNotificationsAsReadResponse'], ParentType, ContextType, RequireFields<MutationMarkNotificationsAsReadArgs, 'ids'>>;
   requestPasswordReset?: Resolver<ResolversTypes['RequestPasswordResetResponse'], ParentType, ContextType, RequireFields<MutationRequestPasswordResetArgs, 'email' | 'username'>>;
   resetPasswordWithToken?: Resolver<ResolversTypes['ResetPasswordWithTokenResponse'], ParentType, ContextType, RequireFields<MutationResetPasswordWithTokenArgs, 'newPassword' | 'token' | 'username'>>;
   signIn?: Resolver<ResolversTypes['SignInResponse'], ParentType, ContextType, RequireFields<MutationSignInArgs, 'password' | 'username'>>;
   updateArticle?: Resolver<ResolversTypes['UpdateArticleResponse'], ParentType, ContextType, RequireFields<MutationUpdateArticleArgs, 'id'>>;
   updateComment?: Resolver<Maybe<ResolversTypes['CommentUpdateResponse']>, ParentType, ContextType, RequireFields<MutationUpdateCommentArgs, 'commentId' | 'content'>>;
   updateUser?: Resolver<ResolversTypes['updateUserResponse'], ParentType, ContextType, RequireFields<MutationUpdateUserArgs, 'body' | 'id'>>;
+};
+
+export type NotificationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Notification'] = ResolversParentTypes['Notification']> = {
+  article?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType>;
+  articleId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  comment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
+  commentId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isRead?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
@@ -581,6 +640,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   getDislikesByCommentId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByCommentIdArgs, 'commentId'>>;
   getDislikesByUserIdForArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdForArticlesArgs, 'userId'>>;
   getDislikesByUserIdForComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdForCommentsArgs, 'userId'>>;
+  getNotifications?: Resolver<Array<ResolversTypes['Notification']>, ParentType, ContextType, RequireFields<QueryGetNotificationsArgs, 'userId'>>;
   getUserbyToken?: Resolver<Maybe<ResolversTypes['UserToken']>, ParentType, ContextType, RequireFields<QueryGetUserbyTokenArgs, 'token'>>;
 };
 
@@ -660,7 +720,9 @@ export type Resolvers<ContextType = Context> = {
   DeleteCommentResponse?: DeleteCommentResponseResolvers<ContextType>;
   DeleteDislikeResponse?: DeleteDislikeResponseResolvers<ContextType>;
   Dislike?: DislikeResolvers<ContextType>;
+  MarkNotificationsAsReadResponse?: MarkNotificationsAsReadResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  Notification?: NotificationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RequestPasswordResetResponse?: RequestPasswordResetResponseResolvers<ContextType>;
   ResetPasswordWithTokenResponse?: ResetPasswordWithTokenResponseResolvers<ContextType>;

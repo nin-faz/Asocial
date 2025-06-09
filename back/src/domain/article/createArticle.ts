@@ -7,7 +7,7 @@ export const createArticle: NonNullable<
   try {
     if (!user) {
       return {
-        code: 403,
+        code: 401,
         success: false,
         message: `Unauthorized`,
         article: null,

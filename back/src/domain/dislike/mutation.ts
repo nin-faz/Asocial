@@ -13,6 +13,17 @@ export const deleteArticleDislike: NonNullable<
       },
     });
 
+    // Supprimer la notification associée à ce dislike d'article
+    await db.notification.deleteMany({
+      where: {
+        articleId: articleId,
+        type: "DISLIKE",
+        userId: (
+          await db.article.findUnique({ where: { id: articleId } })
+        )?.authorId,
+      },
+    });
+
     return {
       code: 200,
       success: true,
@@ -50,12 +61,14 @@ export const addArticleDislike: NonNullable<
 
     const articleExists = await db.article.findUnique({
       where: { id: articleId },
+      include: { author: true },
     });
 
     if (!articleExists) {
       throw new Error("Article not found");
     }
 
+    // Création du dislike
     const dislike = await db.dislike.create({
       data: {
         userId,
@@ -64,8 +77,18 @@ export const addArticleDislike: NonNullable<
       include: { user: true },
     });
 
-    if (!dislike) {
-      throw new Error("Failed to create dislike");
+    // Création de la notification pour l'auteur de l'article (sauf si self-dislike)
+    if (articleExists.authorId !== userId) {
+      await db.notification.create({
+        data: {
+          type: "DISLIKE",
+          message: `${userExists.username} a disliké votre publication : ${
+            articleExists.title || articleExists.content.slice(0, 30) + "..."
+          }`,
+          userId: articleExists.authorId,
+          articleId: articleExists.id,
+        },
+      });
     }
 
     return dislike;
@@ -87,6 +110,17 @@ export const deleteCommentDislike: NonNullable<
       },
     });
 
+    // Supprimer la notification associée à ce dislike de commentaire
+    await db.notification.deleteMany({
+      where: {
+        commentId: commentId,
+        type: "DISLIKE",
+        userId: (
+          await db.comment.findUnique({ where: { id: commentId } })
+        )?.authorId,
+      },
+    });
+
     return {
       code: 200,
       success: true,
@@ -101,6 +135,12 @@ export const addCommentDislike: NonNullable<
   MutationResolvers["addCommentDislike"]
 > = async (_, { commentId, userId }, { dataSources: { db } }) => {
   try {
+    const comment = await db.comment.findUnique({
+      where: { id: commentId },
+      include: { author: true },
+    });
+    if (!comment) throw new Error("Comment not found");
+
     const dislike = await db.dislike.create({
       data: {
         userId,
@@ -112,8 +152,24 @@ export const addCommentDislike: NonNullable<
       },
     });
 
+    // Création de la notification pour l'auteur du commentaire (sauf si self-dislike)
+    if (comment.authorId !== userId) {
+      await db.notification.create({
+        data: {
+          type: "DISLIKE",
+          message: `${dislike.user.username} a disliké votre commentaire : ${
+            comment.content.slice(0, 30) + "..."
+          }`,
+          userId: comment.authorId,
+          commentId: comment.id,
+          articleId: comment.articleId, // <-- Ajout pour navigation front
+        },
+      });
+    }
+
     return dislike;
-  } catch {
+  } catch (error) {
+    console.error(error);
     return null;
   }
 };

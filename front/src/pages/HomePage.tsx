@@ -16,7 +16,9 @@ function HomePage() {
 
   useEffect(() => {
     document.title = "Accueil";
+    window.scrollTo(0, 0);
   }, []);
+
   return (
     <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-16">
       <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">

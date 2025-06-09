@@ -16,6 +16,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { useSearch } from "../../context/SearchContext";
 import { GET_USER_BY_ID } from "../../queries";
 import { useQuery } from "@apollo/client";
+import NotificationsBell from "../NotificationsBell";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ const Header = () => {
                     isPublicationsActive
                       ? "text-purple-400"
                       : "text-gray-400 hover:text-purple-400"
-                  }`}
+                  } && ${!user ? "ml-[4em] px-" : "ml-[7em]"}`}
                   whileHover={{ scale: 1.1 }}
                   onClick={() => navigate("/publications")}
                 >
@@ -173,23 +174,10 @@ const Header = () => {
           <div className="flex items-center space-x-3 sm:space-x-4 z-10">
             {user && (
               <>
+                <NotificationsBell />
+
                 <motion.button
-                  className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
-                  whileHover={{ scale: 1.1 }}
-                  onClick={() => {
-                    if (pathname === "/profile") {
-                      // Si déjà sur la page profile, mettre à jour l'URL avec le nouveau tab
-                      navigate("/profile?tab=dislikes", { replace: true });
-                    } else {
-                      navigate("/profile?tab=dislikes");
-                    }
-                  }}
-                  title="Voir mes dislikes"
-                >
-                  <ThumbsDown className="h-6 w-6" />
-                </motion.button>
-                <motion.button
-                  className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                  className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                   whileHover={{ scale: 1.1 }}
                   onClick={() => {
                     if (pathname === "/profile") {

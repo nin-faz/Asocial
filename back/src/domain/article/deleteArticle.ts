@@ -58,6 +58,9 @@ export const deleteArticle: NonNullable<
       db.dislike.deleteMany({
         where: { articleId: id },
       }),
+      db.notification.deleteMany({
+        where: { articleId: id },
+      }),
       db.article.delete({
         where: { id },
       }),

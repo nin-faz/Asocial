@@ -19,6 +19,7 @@ model User {
   comments  Comment[]
   dislikes  Dislike[]
   notifications Notification[] // Ajout relation notifications reçues
+  pushSubscriptions PushSubscription[]
 }
 
 model Dislike {
@@ -97,4 +98,16 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

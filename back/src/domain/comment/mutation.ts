@@ -2,6 +2,7 @@ import { MutationResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
 import { notifyTelegram } from "../../utils/notifyTelegram.js";
 import { io } from "../../index.js";
+import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
 export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
   _,
@@ -61,7 +62,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
 
     // Création de la notification pour l'auteur de l'article si ce n'est pas lui-même
     if (!isReply && article && article.authorId !== userId) {
-      await db.notification.create({
+      const notif = await db.notification.create({
         data: {
           type: "COMMENT",
           message: `${
@@ -78,13 +79,20 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           commentId: newComment.id,
         },
       });
-      // --- Notif temps réel ---
       io.to(article.authorId).emit("notification", { type: "COMMENT" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(article.authorId, {
+        title: "Nouveau commentaire",
+        body: notif.message,
+        url: `/publications/${article.id}${
+          newComment.id ? `?commentId=${newComment.id}` : ""
+        }`,
+      });
     }
 
     // Création de la notification pour l'auteur du commentaire parent si ce n'est pas lui-même
     if (isReply && newComment.parent && newComment.parent.authorId !== userId) {
-      await db.notification.create({
+      const notif = await db.notification.create({
         data: {
           type: "REPLY",
           message: `${
@@ -101,8 +109,13 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           commentId: newComment.parent.id,
         },
       });
-      // --- Notif temps réel ---
       io.to(newComment.parent.authorId).emit("notification", { type: "REPLY" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(newComment.parent.authorId, {
+        title: "Nouvelle réponse",
+        body: notif.message,
+        url: `/publications/${article?.id}?commentId=${newComment.parent.id}`,
+      });
     }
 
     // Notifier aussi l'auteur de l'article lors d'une réponse à un commentaire (sauf si c'est lui-même ou l'auteur du commentaire parent)
@@ -112,7 +125,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
       article.authorId !== userId &&
       (!newComment.parent || article.authorId !== newComment.parent.authorId)
     ) {
-      await db.notification.create({
+      const notif = await db.notification.create({
         data: {
           type: "REPLY",
           message: `${
@@ -129,8 +142,13 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           commentId: newComment.id,
         },
       });
-      // --- Notif temps réel ---
       io.to(article.authorId).emit("notification", { type: "REPLY" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(article.authorId, {
+        title: "Nouvelle réponse",
+        body: notif.message,
+        url: `/publications/${article.id}?commentId=${newComment.id}`,
+      });
     }
 
     return newComment;

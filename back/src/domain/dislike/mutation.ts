@@ -1,6 +1,7 @@
 import { MutationResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
 import { io } from "../../index.js";
+import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
 // Article Dislike
 export const deleteArticleDislike: NonNullable<
@@ -85,7 +86,7 @@ export const addArticleDislike: NonNullable<
 
     // Création de la notification pour l'auteur de l'article (sauf si self-dislike)
     if (articleExists.authorId !== userId) {
-      await db.notification.create({
+      const notif = await db.notification.create({
         data: {
           type: "DISLIKE",
           message: `${userExists.username} a disliké votre publication : ${
@@ -95,8 +96,13 @@ export const addArticleDislike: NonNullable<
           articleId: articleExists.id,
         },
       });
-      // --- Notif temps réel ---
       io.to(articleExists.authorId).emit("notification", { type: "DISLIKE" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(articleExists.authorId, {
+        title: "Nouveau dislike",
+        body: notif.message,
+        url: `/publications/${articleExists.id}`,
+      });
     }
 
     return dislike;
@@ -167,7 +173,7 @@ export const addCommentDislike: NonNullable<
 
     // Création de la notification pour l'auteur du commentaire (sauf si self-dislike)
     if (comment.authorId !== userId) {
-      await db.notification.create({
+      const notif = await db.notification.create({
         data: {
           type: "DISLIKE",
           message: `${dislike.user.username} a disliké votre commentaire : ${
@@ -178,8 +184,13 @@ export const addCommentDislike: NonNullable<
           articleId: comment.articleId, // <-- Ajout pour navigation front
         },
       });
-      // --- Notif temps réel ---
       io.to(comment.authorId).emit("notification", { type: "DISLIKE" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(comment.authorId, {
+        title: "Nouveau dislike",
+        body: notif.message,
+        url: `/publications/${comment.articleId}?commentId=${comment.id}`,
+      });
     }
 
     return dislike;

@@ -7,8 +7,12 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { io as socketIOClient, Socket } from "socket.io-client";
+import { registerServiceWorkerAndSubscribe } from "../utils/pushNotifications";
 
 const PAGE_SIZE = 20;
+
+const VAPID_PUBLIC_KEY =
+  "BJaZF6hvnoVCh-55CRdAd6Vy5E_0D0YEhoqwXBFJGYwArsNVTKHI3g5143_I6Gn5fMIeoBItCuO-pQRzMUfm_TM";
 
 const NotificationsBell = () => {
   const [open, setOpen] = useState(false);
@@ -19,6 +23,8 @@ const NotificationsBell = () => {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
 
   const { data, loading, refetch, fetchMore } = useQuery(
     GetNotificationsDocument,
@@ -72,6 +78,47 @@ const NotificationsBell = () => {
     setOffset(data?.getNotifications?.length ?? 0);
     setHasMore((data?.getNotifications?.length ?? 0) === PAGE_SIZE);
   }, [data]);
+
+  const handleEnablePush = async () => {
+    setPushError(null);
+    const subscription = await registerServiceWorkerAndSubscribe(
+      VAPID_PUBLIC_KEY
+    );
+    if (subscription) {
+      // Envoie l'abonnement au backend (à implémenter côté back)
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription }),
+      });
+      setPushEnabled(true);
+    } else {
+      setPushError("Impossible d'activer les notifications push.");
+    }
+  };
+
+  const handleDisablePush = async () => {
+    setPushError(null);
+    try {
+      // Récupère l’abonnement courant
+      const registration = await navigator.serviceWorker.getRegistration();
+      const subscription =
+        registration && (await registration.pushManager.getSubscription());
+      if (subscription) {
+        // Désabonne côté navigateur
+        await subscription.unsubscribe();
+        // Supprime côté backend
+        await fetch("/api/push/unsubscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        });
+      }
+      setPushEnabled(false);
+    } catch (e) {
+      setPushError("Impossible de désactiver les notifications push.");
+    }
+  };
 
   const unreadNotifications = notifications.filter((n: any) => !n.isRead);
   const readNotifications = notifications.filter((n: any) => n.isRead);
@@ -295,6 +342,41 @@ const NotificationsBell = () => {
                 </>
               )}
             </div>
+            {/* Bouton d’activation push, bien intégré */}
+            {!pushEnabled && (
+              <div className="flex flex-col items-center gap-2 px-4 py-3 border-t border-gray-800 bg-gray-950/90">
+                <button
+                  className="flex items-center gap-2 px-4 py-2 rounded-md bg-purple-700 hover:bg-purple-800 text-white font-semibold shadow transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  onClick={handleEnablePush}
+                  disabled={!!pushError}
+                >
+                  <Bell className="w-4 h-4" />
+                  Activer les notifications
+                </button>
+                {pushError && (
+                  <span className="text-xs text-red-400 mt-1">{pushError}</span>
+                )}
+              </div>
+            )}
+            {pushEnabled && (
+              <div className="flex flex-col items-center gap-2 px-4 py-3 border-t border-gray-800 bg-gray-950/90">
+                <div className="flex items-center justify-center">
+                  <span className="text-xs text-green-400 flex items-center gap-1">
+                    <Bell className="w-3 h-3" /> Notifications activées
+                  </span>
+                </div>
+                <button
+                  className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-800 hover:bg-red-700 text-red-300 font-semibold shadow transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mt-2"
+                  onClick={handleDisablePush}
+                >
+                  <Bell className="w-4 h-4" />
+                  Désactiver les notifications
+                </button>
+                {pushError && (
+                  <span className="text-xs text-red-400 mt-1">{pushError}</span>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

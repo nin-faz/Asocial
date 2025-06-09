@@ -75,6 +75,59 @@ io.on("connection", (socket) => {
 
 export { io };
 
+// --- API REST pour l’abonnement push ---
+app.post("/api/push/subscribe", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+  const token = authHeader.split("Bearer ")[1];
+  const user = getUser(token);
+  if (!user) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+  const { endpoint, keys } = req.body;
+  if (!endpoint || !keys?.auth || !keys?.p256dh) {
+    return res.status(400).json({ error: "Invalid subscription object" });
+  }
+  try {
+    // Upsert l’abonnement (endpoint unique)
+    await db.pushSubscription.upsert({
+      where: { endpoint },
+      update: {
+        auth: keys.auth,
+        p256dh: keys.p256dh,
+        userId: user.id,
+      },
+      create: {
+        endpoint,
+        auth: keys.auth,
+        p256dh: keys.p256dh,
+        userId: user.id,
+      },
+    });
+    return res.status(201).json({ success: true });
+  } catch (e) {
+    console.error("Erreur enregistrement push subscription:", e);
+    return res.status(500).json({ error: "Failed to save subscription" });
+  }
+});
+
+// --- API REST pour la désinscription push ---
+app.post("/api/push/unsubscribe", async (req, res) => {
+  const { endpoint } = req.body;
+  if (!endpoint) {
+    return res.status(400).json({ error: "Endpoint manquant" });
+  }
+  try {
+    await db.pushSubscription.deleteMany({ where: { endpoint } });
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    console.error("Erreur suppression push subscription:", e);
+    return res.status(500).json({ error: "Failed to unsubscribe" });
+  }
+});
+
 const PORT = 4000;
 httpServer.listen(PORT, () => {
   console.log(`🚀  Server ready at: http://localhost:${PORT}/graphql`);

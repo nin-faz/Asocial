@@ -14,7 +14,7 @@ import App from "./App.tsx";
 import "./index.css";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:4000",
+  uri: "http://localhost:4000/graphql",
   // uri: "https://back-asocial.onrender.com",
   // uri: "https://asocial-production.up.railway.app/",
 });

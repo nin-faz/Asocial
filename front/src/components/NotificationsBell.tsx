@@ -1,23 +1,38 @@
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_NOTIFICATIONS } from "../queries/notificationQuery";
+import { GetNotificationsDocument } from "../gql/graphql";
 import { MARK_NOTIFICATIONS_AS_READ } from "../mutations/notificationMutation";
-import { Bell } from "lucide-react";
+import { Bell, Loader } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { io as socketIOClient, Socket } from "socket.io-client";
+
+const PAGE_SIZE = 20;
 
 const NotificationsBell = () => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { user } = React.useContext(AuthContext)!;
+  const { user, token } = React.useContext(AuthContext)!;
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const { data, loading, refetch } = useQuery(GET_NOTIFICATIONS, {
-    variables: { userId: user?.id! },
-    skip: !user,
-    fetchPolicy: "network-only",
-  });
+  const { data, loading, refetch, fetchMore } = useQuery(
+    GetNotificationsDocument,
+    {
+      variables: { userId: user?.id!, limit: PAGE_SIZE, offset: 0 },
+      skip: !user,
+      fetchPolicy: "network-only",
+      onCompleted: (data) => {
+        setNotifications(data?.getNotifications ?? []);
+        setOffset(data?.getNotifications?.length ?? 0);
+        setHasMore((data?.getNotifications?.length ?? 0) === PAGE_SIZE);
+      },
+    }
+  );
 
   const [markAllAsRead, { loading: marking }] = useMutation(
     MARK_NOTIFICATIONS_AS_READ,
@@ -28,7 +43,36 @@ const NotificationsBell = () => {
     }
   );
 
-  const notifications = data?.getNotifications ?? [];
+  // Infinite scroll handler
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+      if (
+        !loadingMore &&
+        hasMore &&
+        scrollHeight - scrollTop - clientHeight < 100
+      ) {
+        setLoadingMore(true);
+        fetchMore({
+          variables: { userId: user?.id!, limit: PAGE_SIZE, offset },
+        }).then((res) => {
+          const newNotifs = res.data?.getNotifications ?? [];
+          setNotifications((prev) => [...prev, ...newNotifs]);
+          setOffset((prev) => prev + newNotifs.length);
+          setHasMore(newNotifs.length === PAGE_SIZE);
+          setLoadingMore(false);
+        });
+      }
+    },
+    [loadingMore, hasMore, offset, user, fetchMore]
+  );
+
+  useEffect(() => {
+    setNotifications(data?.getNotifications ?? []);
+    setOffset(data?.getNotifications?.length ?? 0);
+    setHasMore((data?.getNotifications?.length ?? 0) === PAGE_SIZE);
+  }, [data]);
+
   const unreadNotifications = notifications.filter((n: any) => !n.isRead);
   const readNotifications = notifications.filter((n: any) => n.isRead);
   const unreadCount = notifications.filter((n: any) => !n.isRead).length;
@@ -42,6 +86,36 @@ const NotificationsBell = () => {
     if (open) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
+
+  // --- Socket.IO pour notifications temps réel ---
+  useEffect(() => {
+    if (!user || !token) return;
+    // Connexion Socket.IO avec auth
+    const socket: Socket = socketIOClient(
+      import.meta.env.VITE_API_URL ?? "http://localhost:4000",
+      {
+        auth: { token },
+        transports: ["websocket"],
+        reconnection: true,
+      }
+    );
+
+    socket.on("connect", () => {
+      /* Socket.IO connecté pour notifications */
+    });
+
+    socket.on("notification", () => {
+      refetch();
+    });
+
+    socket.on("disconnect", () => {
+      /* Socket.IO déconnecté */
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, token]);
 
   return (
     <div className="relative" ref={menuRef}>
@@ -64,11 +138,12 @@ const NotificationsBell = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute sm:right-0 ml-[-1em] mt-2 w-[50vw] max-w-lg sm:w-80 sm:max-w-80 max-h-96 overflow-y-auto bg-gray-950/95 border border-purple-900 rounded-lg shadow-lg z-50"
+            className="absolute sm:right-0 ml-[-1em] mt-2 w-[90vw] max-w-lg sm:w-80 sm:max-w-80 max-h-60 overflow-y-scroll bg-gray-950/95 border border-purple-900 rounded-lg shadow-lg z-50"
             style={{
               boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
               backdropFilter: "blur(6px)",
             }}
+            onScroll={handleScroll}
           >
             <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
               <span className="text-purple-400 font-semibold">
@@ -89,8 +164,8 @@ const NotificationsBell = () => {
               )}
             </div>
             <div className="divide-y divide-gray-800">
-              {loading ? (
-                <div className="p-4 text-gray-400">Chargement...</div>
+              {loading && notifications.length === 0 ? (
+                <Loader />
               ) : notifications.length === 0 ? (
                 <div className="p-4 text-gray-400">Aucune notification</div>
               ) : (
@@ -102,7 +177,6 @@ const NotificationsBell = () => {
                       </div>
                       {unreadNotifications.map((notif: any) => {
                         let link = undefined;
-                        // Navigation contextuelle stricte pour DISLIKE sur commentaire
                         if (
                           notif.type === "DISLIKE" &&
                           notif.articleId &&
@@ -121,7 +195,6 @@ const NotificationsBell = () => {
                               marking ? "opacity-60 pointer-events-none" : ""
                             }`}
                             onClick={async () => {
-                              console.log("Notification click", notif, link);
                               setOpen(false);
                               if (!notif.isRead && !marking) {
                                 await markAllAsRead({
@@ -130,11 +203,6 @@ const NotificationsBell = () => {
                               }
                               if (link) {
                                 navigate(link);
-                              } else {
-                                console.warn(
-                                  "No navigation link for notification",
-                                  notif
-                                );
                               }
                             }}
                           >
@@ -168,7 +236,6 @@ const NotificationsBell = () => {
                       </div>
                       {readNotifications.map((notif: any) => {
                         let link = undefined;
-                        // Navigation contextuelle stricte pour DISLIKE sur commentaire
                         if (
                           notif.type === "DISLIKE" &&
                           notif.articleId &&
@@ -188,7 +255,6 @@ const NotificationsBell = () => {
                             }`}
                             style={{ opacity: 0.6 }}
                             onClick={async () => {
-                              console.log("Notification click", notif, link);
                               setOpen(false);
                               if (!notif.isRead && !marking) {
                                 await markAllAsRead({
@@ -197,11 +263,6 @@ const NotificationsBell = () => {
                               }
                               if (link) {
                                 navigate(link);
-                              } else {
-                                console.warn(
-                                  "No navigation link for notification",
-                                  notif
-                                );
                               }
                             }}
                           >
@@ -223,6 +284,12 @@ const NotificationsBell = () => {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+                  {loadingMore && <Loader />}
+                  {!hasMore && notifications.length > 0 && (
+                    <div className="p-2 text-center text-xs text-gray-500">
+                      Toutes les notifications sont chargées.
                     </div>
                   )}
                 </>

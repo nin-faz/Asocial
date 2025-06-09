@@ -2,13 +2,15 @@ import { QueryResolvers } from "../../types.js";
 
 export const getNotifications: QueryResolvers["getNotifications"] = async (
   _,
-  { userId },
+  { userId, limit = 20, offset = 0 },
   { dataSources: { db } }
 ) => {
   try {
     const notifications = await db.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      skip: offset ?? 0,
+      take: limit ?? 20,
       include: {
         article: true,
         comment: true,

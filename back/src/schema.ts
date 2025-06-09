@@ -13,7 +13,7 @@ export const typeDefs = gql`
     getDislikesByUserIdForArticles(userId: ID!): [Dislike]
     getDislikesByUserIdForComments(userId: ID!): [Dislike]
     getComments(articleId: ID!): [Comment]
-    getNotifications(userId: ID!): [Notification!]!
+    getNotifications(userId: ID!, limit: Int, offset: Int): [Notification!]!
   }
 
   type Mutation {

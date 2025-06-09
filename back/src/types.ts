@@ -298,6 +298,8 @@ export type QueryGetDislikesByUserIdForCommentsArgs = {
 
 
 export type QueryGetNotificationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   userId: Scalars['ID']['input'];
 };
 

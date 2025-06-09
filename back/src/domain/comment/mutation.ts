@@ -1,6 +1,7 @@
 import { MutationResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
 import { notifyTelegram } from "../../utils/notifyTelegram.js";
+import { io } from "../../index.js";
 
 export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
   _,
@@ -42,7 +43,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
       ? [
           `↩️ Réponse de ${newComment.author.username} à un commentaire`,
           `Sur l'article de ${article?.author.username} : ${
-            article?.title || article?.content.slice(0, 30) + "..."
+            article?.title ?? article?.content.slice(0, 30) + "..."
           }`,
           `Contenu de la réponse : ${content}`,
           `🕒 Le ${formattedDate}`,
@@ -50,7 +51,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
       : [
           `💬 Nouveau commentaire posté par ${newComment.author.username}`,
           `Sur l'article de ${article?.author.username} : ${
-            article?.title || article?.content.slice(0, 30) + "..."
+            article?.title ?? article?.content.slice(0, 30) + "..."
           }`,
           `Contenu du commentaire : ${content}`,
           `🕒 Le ${formattedDate}`,
@@ -66,7 +67,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           message: `${
             newComment.author.username
           } a commenté votre publication (${
-            article.title || article.content.slice(0, 30) + "..."
+            article.title ?? article.content.slice(0, 30) + "..."
           }) : "${
             newComment.content.length > 15
               ? newComment.content.slice(0, 15) + "..."
@@ -77,6 +78,8 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           commentId: newComment.id,
         },
       });
+      // --- Notif temps réel ---
+      io.to(article.authorId).emit("notification", { type: "COMMENT" });
     }
 
     // Création de la notification pour l'auteur du commentaire parent si ce n'est pas lui-même
@@ -87,7 +90,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           message: `${
             newComment.author.username
           } a répondu à votre commentaire sous (${
-            article?.title || article?.content.slice(0, 30) + "..."
+            article?.title ?? article?.content.slice(0, 30) + "..."
           }) : "${
             newComment.content.length > 15
               ? newComment.content.slice(0, 15) + "..."
@@ -98,6 +101,8 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           commentId: newComment.parent.id,
         },
       });
+      // --- Notif temps réel ---
+      io.to(newComment.parent.authorId).emit("notification", { type: "REPLY" });
     }
 
     // Notifier aussi l'auteur de l'article lors d'une réponse à un commentaire (sauf si c'est lui-même ou l'auteur du commentaire parent)
@@ -113,7 +118,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           message: `${
             newComment.author.username
           } a répondu à un commentaire sous votre publication (${
-            article.title || article.content.slice(0, 30) + "..."
+            article.title ?? article.content.slice(0, 30) + "..."
           }) : "${
             newComment.content.length > 15
               ? newComment.content.slice(0, 15) + "..."
@@ -124,6 +129,8 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           commentId: newComment.id,
         },
       });
+      // --- Notif temps réel ---
+      io.to(article.authorId).emit("notification", { type: "REPLY" });
     }
 
     return newComment;
@@ -244,6 +251,26 @@ export const deleteComment: NonNullable<
             userId: article.authorId,
             message: { contains: authorUser.username },
           },
+        });
+      }
+    }
+
+    // Après suppression des notifications COMMENT et REPLY, notifie les destinataires
+    if (existComment.parentId) {
+      const parent = await db.comment.findUnique({
+        where: { id: existComment.parentId },
+      });
+      if (parent && parent.authorId !== user.id) {
+        io.to(parent.authorId).emit("notification", { type: "REPLY_REMOVED" });
+      }
+    }
+    if (existComment.articleId) {
+      const article = await db.article.findUnique({
+        where: { id: existComment.articleId },
+      });
+      if (article && article.authorId !== user.id) {
+        io.to(article.authorId).emit("notification", {
+          type: existComment.parentId ? "REPLY_REMOVED" : "COMMENT_REMOVED",
         });
       }
     }

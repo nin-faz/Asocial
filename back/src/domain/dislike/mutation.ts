@@ -1,5 +1,6 @@
 import { MutationResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
+import { io } from "../../index.js";
 
 // Article Dislike
 export const deleteArticleDislike: NonNullable<
@@ -23,6 +24,11 @@ export const deleteArticleDislike: NonNullable<
         )?.authorId,
       },
     });
+    // --- Notif temps réel suppression ---
+    const article = await db.article.findUnique({ where: { id: articleId } });
+    if (article && article.authorId !== userId) {
+      io.to(article.authorId).emit("notification", { type: "DISLIKE_REMOVED" });
+    }
 
     return {
       code: 200,
@@ -89,6 +95,8 @@ export const addArticleDislike: NonNullable<
           articleId: articleExists.id,
         },
       });
+      // --- Notif temps réel ---
+      io.to(articleExists.authorId).emit("notification", { type: "DISLIKE" });
     }
 
     return dislike;
@@ -120,6 +128,11 @@ export const deleteCommentDislike: NonNullable<
         )?.authorId,
       },
     });
+    // --- Notif temps réel suppression ---
+    const comment = await db.comment.findUnique({ where: { id: commentId } });
+    if (comment && comment.authorId !== userId) {
+      io.to(comment.authorId).emit("notification", { type: "DISLIKE_REMOVED" });
+    }
 
     return {
       code: 200,
@@ -165,6 +178,8 @@ export const addCommentDislike: NonNullable<
           articleId: comment.articleId, // <-- Ajout pour navigation front
         },
       });
+      // --- Notif temps réel ---
+      io.to(comment.authorId).emit("notification", { type: "DISLIKE" });
     }
 
     return dislike;

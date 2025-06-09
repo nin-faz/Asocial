@@ -18,12 +18,15 @@
     "@apollo/datasource-rest": "^6.4.1",
     "@apollo/server": "^4.11.3",
     "@prisma/client": "^6.4.1",
+    "@types/web-push": "^3.6.4",
     "back": "file:",
     "bcrypt": "^5.1.1",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^7.0.3"
+    "nodemailer": "^7.0.3",
+    "socket.io": "^4.8.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.5",

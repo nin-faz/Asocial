@@ -1,5 +1,7 @@
 import { MutationResolvers } from "../../types.js";
 import { WithRequired } from "../../utils/mapped-type.js";
+import { io } from "../../index.js";
+import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
 // Article Dislike
 export const deleteArticleDislike: NonNullable<
@@ -12,6 +14,22 @@ export const deleteArticleDislike: NonNullable<
         userId,
       },
     });
+
+    // Supprimer la notification associée à ce dislike d'article
+    await db.notification.deleteMany({
+      where: {
+        articleId: articleId,
+        type: "DISLIKE",
+        userId: (
+          await db.article.findUnique({ where: { id: articleId } })
+        )?.authorId,
+      },
+    });
+    // --- Notif temps réel suppression ---
+    const article = await db.article.findUnique({ where: { id: articleId } });
+    if (article && article.authorId !== userId) {
+      io.to(article.authorId).emit("notification", { type: "DISLIKE_REMOVED" });
+    }
 
     return {
       code: 200,
@@ -50,12 +68,14 @@ export const addArticleDislike: NonNullable<
 
     const articleExists = await db.article.findUnique({
       where: { id: articleId },
+      include: { author: true },
     });
 
     if (!articleExists) {
       throw new Error("Article not found");
     }
 
+    // Création du dislike
     const dislike = await db.dislike.create({
       data: {
         userId,
@@ -64,8 +84,25 @@ export const addArticleDislike: NonNullable<
       include: { user: true },
     });
 
-    if (!dislike) {
-      throw new Error("Failed to create dislike");
+    // Création de la notification pour l'auteur de l'article (sauf si self-dislike)
+    if (articleExists.authorId !== userId) {
+      const notif = await db.notification.create({
+        data: {
+          type: "DISLIKE",
+          message: `${userExists.username} a disliké votre publication : ${
+            articleExists.title || articleExists.content.slice(0, 30) + "..."
+          }`,
+          userId: articleExists.authorId,
+          articleId: articleExists.id,
+        },
+      });
+      io.to(articleExists.authorId).emit("notification", { type: "DISLIKE" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(articleExists.authorId, {
+        title: "Nouveau dislike",
+        body: notif.message,
+        url: `/publications/${articleExists.id}`,
+      });
     }
 
     return dislike;
@@ -87,6 +124,22 @@ export const deleteCommentDislike: NonNullable<
       },
     });
 
+    // Supprimer la notification associée à ce dislike de commentaire
+    await db.notification.deleteMany({
+      where: {
+        commentId: commentId,
+        type: "DISLIKE",
+        userId: (
+          await db.comment.findUnique({ where: { id: commentId } })
+        )?.authorId,
+      },
+    });
+    // --- Notif temps réel suppression ---
+    const comment = await db.comment.findUnique({ where: { id: commentId } });
+    if (comment && comment.authorId !== userId) {
+      io.to(comment.authorId).emit("notification", { type: "DISLIKE_REMOVED" });
+    }
+
     return {
       code: 200,
       success: true,
@@ -101,6 +154,12 @@ export const addCommentDislike: NonNullable<
   MutationResolvers["addCommentDislike"]
 > = async (_, { commentId, userId }, { dataSources: { db } }) => {
   try {
+    const comment = await db.comment.findUnique({
+      where: { id: commentId },
+      include: { author: true },
+    });
+    if (!comment) throw new Error("Comment not found");
+
     const dislike = await db.dislike.create({
       data: {
         userId,
@@ -112,8 +171,31 @@ export const addCommentDislike: NonNullable<
       },
     });
 
+    // Création de la notification pour l'auteur du commentaire (sauf si self-dislike)
+    if (comment.authorId !== userId) {
+      const notif = await db.notification.create({
+        data: {
+          type: "DISLIKE",
+          message: `${dislike.user.username} a disliké votre commentaire : ${
+            comment.content.slice(0, 30) + "..."
+          }`,
+          userId: comment.authorId,
+          commentId: comment.id,
+          articleId: comment.articleId, // <-- Ajout pour navigation front
+        },
+      });
+      io.to(comment.authorId).emit("notification", { type: "DISLIKE" });
+      // --- Push Web ---
+      await sendPushNotificationToUser(comment.authorId, {
+        title: "Nouveau dislike",
+        body: notif.message,
+        url: `/publications/${comment.articleId}?commentId=${comment.id}`,
+      });
+    }
+
     return dislike;
-  } catch {
+  } catch (error) {
+    console.error(error);
     return null;
   }
 };

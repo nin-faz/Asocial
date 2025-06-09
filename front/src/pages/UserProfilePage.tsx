@@ -227,7 +227,7 @@ const UserProfilePage = () => {
                   onClick={() => navigate(`/publications/${article.id}`)}
                 >
                   <div className="flex items-center space-x-2 mb-1 pb-3">
-                    <div>
+                    <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
                       <UserIcon
                         iconName={article.author?.iconName ?? user?.iconName}
                         size="small"

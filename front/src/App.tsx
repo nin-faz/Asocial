@@ -17,6 +17,7 @@ import ResetPasswordWithTokenPage from "./pages/ResetPasswordWithTokenPage";
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
+import NotificationsPage from "./pages/NotificationsPage";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +115,7 @@ function App() {
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<MyProfilePage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
 
           <Route

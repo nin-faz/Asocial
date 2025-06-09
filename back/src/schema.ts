@@ -13,6 +13,7 @@ export const typeDefs = gql`
     getDislikesByUserIdForArticles(userId: ID!): [Dislike]
     getDislikesByUserIdForComments(userId: ID!): [Dislike]
     getComments(articleId: ID!): [Comment]
+    getNotifications(userId: ID!, limit: Int, offset: Int): [Notification!]!
   }
 
   type Mutation {
@@ -55,6 +56,7 @@ export const typeDefs = gql`
       username: String!
       newPassword: String!
     ): ResetPasswordWithTokenResponse!
+    markNotificationsAsRead(ids: [ID!]!): MarkNotificationsAsReadResponse!
   }
 
   type DeleteDislikeResponse {
@@ -188,5 +190,24 @@ export const typeDefs = gql`
     code: Int!
     success: Boolean!
     message: String!
+  }
+
+  type Notification {
+    id: ID!
+    type: String!
+    message: String!
+    isRead: Boolean!
+    createdAt: String!
+    articleId: String
+    commentId: String
+    article: Article
+    comment: Comment
+  }
+
+  type MarkNotificationsAsReadResponse {
+    code: Int!
+    success: Boolean!
+    message: String!
+    notifications: [Notification!]!
   }
 `;

@@ -3,6 +3,7 @@ import {
   Comment,
   Article,
   PasswordResetRequest,
+  Notification,
 } from "@prisma/client";
 
 export type UserModel = {
@@ -19,3 +20,4 @@ export type DislikeModel = Dislike;
 export type CommentModel = Comment;
 export type ArticleModel = Article;
 export type PasswordResetRequestModel = PasswordResetRequest;
+export type NotificationModel = Notification;

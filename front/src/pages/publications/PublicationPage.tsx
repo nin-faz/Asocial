@@ -38,7 +38,6 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
-import Pagination from "../../components/Pagination";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -113,10 +112,15 @@ function PublicationPage() {
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [articlesPerPage] = useState(10);
+  // Infinite scroll : combien d'articles afficher ?
+  const [articlesToShow, setArticlesToShow] = useState(10);
+  const articlesPerScroll = 10;
 
   const { searchTerm } = useSearch();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Utiliser useMemo pour mémoriser les articles filtrés
   const filteredArticles = useMemo(() => {
@@ -137,54 +141,39 @@ function PublicationPage() {
       : displayedArticles;
   }, [displayedArticles, searchTerm]);
 
-  // Mémoriser les articles à afficher sur la page courante
-  const currentArticles = useMemo(() => {
-    return filteredArticles.slice(
-      (currentPage - 1) * articlesPerPage,
-      currentPage * articlesPerPage
-    );
-  }, [filteredArticles, currentPage, articlesPerPage]);
+  // Infinite scroll : articles à afficher
+  const visibleArticles = useMemo(() => {
+    return filteredArticles.slice(0, articlesToShow);
+  }, [filteredArticles, articlesToShow]);
 
-  // Mémoriser si des articles sont disponibles
   const hasArticles = useMemo(
     () => filteredArticles.length > 0,
     [filteredArticles]
   );
+  const hasMore = articlesToShow < filteredArticles.length;
 
-  // Lire le numéro de page depuis l'URL si présent
+  // Gestion du scroll infini
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const pageFromUrl = parseInt(params.get("page") || "1", 10);
-    if (!isNaN(pageFromUrl) && pageFromUrl !== currentPage) {
-      setCurrentPage(pageFromUrl);
-    }
-    // eslint-disable-next-line
-  }, [location.search]);
+    const handleScroll = () => {
+      if (!hasMore) return;
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.body.offsetHeight - 800; // Déclenche 800px avant le bas
+      if (scrollPosition >= threshold) {
+        setArticlesToShow((prev) =>
+          Math.min(prev + articlesPerScroll, filteredArticles.length)
+        );
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasMore, filteredArticles.length]);
 
-  // Mémoriser le nombre total de pages
-  const totalPages = useMemo(
-    () => Math.ceil(filteredArticles.length / articlesPerPage),
-    [filteredArticles, articlesPerPage]
-  );
-
-  // Gérer le changement de page
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      navigate(`?page=${nextPage}`);
-      window.scrollTo(0, 550);
+  // Rafraîchir les articles au chargement
+  useEffect(() => {
+    if (user?.id) {
+      refetchUserData();
     }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      const prevPage = currentPage - 1;
-      setCurrentPage(prevPage);
-      navigate(`?page=${prevPage}`);
-      window.scrollTo(0, 550);
-    }
-  };
+  }, [user?.id, refetchUserData]);
 
   const [createArticle, { loading: isCreatingArticle }] =
     useMutation(CREATE_ARTICLE);
@@ -192,6 +181,9 @@ function PublicationPage() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+
+    // Indique aux pages de détails de rafraîchir les commentaires si besoin
+    sessionStorage.setItem("forceRefetchComments", "1");
 
     try {
       // Rafraîchir selon l'option de tri sélectionnée
@@ -285,11 +277,6 @@ function PublicationPage() {
           }, 1000);
         }
 
-        // Si on n'est pas sur la première page, y retourner pour voir le nouvel article
-        if (currentPage > 1) {
-          setCurrentPage(1);
-        }
-
         // Indiquer que le rafraîchissement est terminé
         setIsRefreshing(false);
         setTempArticleId(null);
@@ -379,20 +366,80 @@ function PublicationPage() {
     }
   };
 
+  // Restauration du scroll APRÈS que la page soit assez longue
+  const hasRestoredScroll = useRef(false);
+  const [isRestoringScroll, setIsRestoringScroll] = useState(false);
   useEffect(() => {
-    const scrollY = sessionStorage.getItem("publicationScroll");
-    if (scrollY) {
-      // Décale un peu le scroll pour être sûr que le DOM est prêt
-      window.requestAnimationFrame(() => {
-        window.scrollTo(0, Number(scrollY));
-        sessionStorage.removeItem("publicationScroll");
-      });
+    const scrollY =
+      location.state?.scrollY ??
+      Number(sessionStorage.getItem("publicationScroll"));
+    if (
+      !hasRestoredScroll.current &&
+      typeof scrollY === "number" &&
+      scrollY > 0
+    ) {
+      setIsRestoringScroll(true);
+      // Masque le scroll pendant la restauration
+      document.body.style.overflow = "hidden";
+      const tryRestore = () => {
+        const maxScroll = document.body.scrollHeight - window.innerHeight;
+        if (maxScroll >= scrollY || !hasMore) {
+          window.scrollTo(0, scrollY);
+          hasRestoredScroll.current = true;
+          sessionStorage.removeItem("publicationScroll");
+          setTimeout(() => {
+            setIsRestoringScroll(false);
+            document.body.style.overflow = "";
+            navigate("/publications", { replace: true, state: {} });
+          }, 0);
+        } else {
+          setArticlesToShow((prev) =>
+            Math.min(prev + articlesPerScroll, filteredArticles.length)
+          );
+          setTimeout(tryRestore);
+        }
+      };
+      tryRestore();
+      return () => {
+        document.body.style.overflow = "";
+      };
+    } else {
+      setIsRestoringScroll(false);
+      document.body.style.overflow = "";
+    }
+  }, [
+    location.state,
+    hasMore,
+    filteredArticles.length,
+    navigate,
+    articlesPerScroll,
+    articlesToShow,
+  ]);
+
+  // Correction : forcer le scroll à la position 1px au chargement si une restauration est attendue
+  useEffect(() => {
+    const scrollY =
+      location.state?.scrollY ??
+      Number(sessionStorage.getItem("publicationScroll"));
+    if (typeof scrollY === "number" && scrollY > 0) {
+      window.scrollTo(0, 1); // Empêche le navigateur de scroller tout en bas par défaut sur mobile
     }
   }, []);
+  // Remet au cas où c'est bizarre
+  // useEffect(() => {
+  //   const scrollY = sessionStorage.getItem("publicationScroll");
+  //   if (scrollY) {
+  //     // Décale un peu le scroll pour être sûr que le DOM est prêt
+  //     window.requestAnimationFrame(() => {
+  //       window.scrollTo(0, Number(scrollY));
+  //       sessionStorage.removeItem("publicationScroll");
+  //     });
+  //   }
+  // }, []);
 
   const handlePostClick = (articleId: string) => {
     sessionStorage.setItem("publicationScroll", window.scrollY.toString());
-    navigate(`/publications/${articleId}?page=${currentPage}`);
+    navigate(`/publications/${articleId}`);
   };
 
   const { data: dislikeUser, refetch: refetchDislikeUser } = useQuery(
@@ -554,6 +601,10 @@ function PublicationPage() {
     return <Loader />;
   }
 
+  if (isRestoringScroll) {
+    return <Loader />;
+  }
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -677,28 +728,6 @@ function PublicationPage() {
           </div>
         </div>
       </motion.div>{" "}
-      {/* Pagination supérieure */}
-      {hasArticles && (
-        <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-          >
-            Précédent
-          </button>
-          <span className="text-white">
-            Page {hasArticles ? currentPage : 0} sur {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-          >
-            Suivant
-          </button>
-        </div>
-      )}
       {/* Articles List */}
       <div className="space-y-10">
         {/* Article temporaire en cours de création */}
@@ -782,7 +811,7 @@ function PublicationPage() {
         )}
 
         {hasArticles ? (
-          currentArticles
+          visibleArticles
             .filter(
               (article) =>
                 article !== null && !deletedArticleIds.includes(article.id)
@@ -982,14 +1011,17 @@ function PublicationPage() {
           <p className="text-center text-gray-400">Aucun article trouvé.</p>
         )}
       </div>
-      <Pagination
-        currentPage={hasArticles ? currentPage : 0}
-        totalPages={totalPages}
-        onPrev={handlePrevPage}
-        onNext={handleNextPage}
-        disabledPrev={!hasArticles || currentPage === 1}
-        disabledNext={!hasArticles || currentPage === totalPages}
-      />
+      {/* Optionnel : loader en bas si hasMore */}
+      {hasMore && (
+        <div className="flex justify-center py-48">
+          <motion.div
+            className="w-16 h-16 border-t-4 border-purple-500 rounded-full animate-spin"
+            initial={{ rotate: 0 }}
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          />
+        </div>
+      )}
     </main>
   );
 }

@@ -199,9 +199,13 @@ const UserProfilePage = () => {
       </motion.div>
       {/* Publications */}
       <div className="mt-8">
-        <h2 className="text-2xl font-semibold text-purple-400 mb-4">
+        <button
+          onClick={() => navigate("/publications")}
+          className="text-2xl font-semibold text-purple-400 mb-4 hover:text-purple-300 hover:underline transition-colors"
+        >
           Publications
-        </h2>
+          {/* </h2> */}
+        </button>
         {/* Grille 3 colonnes sur tous les écrans, même mobile */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4">
           {articles.length === 0 ? (

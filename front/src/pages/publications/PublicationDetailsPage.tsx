@@ -72,8 +72,6 @@ const PublicationDetailsPage = ({
   const isEditMode = queryParams.get("edit") === "true";
   const targetCommentId = queryParams.get("commentId");
 
-  const pageParam = queryParams.get("page");
-
   useEffect(() => {
     if (isEditMode) {
       setIsEditing(true);
@@ -293,6 +291,14 @@ const PublicationDetailsPage = ({
       variables: { articleId: finalId! },
     }
   );
+
+  // Rafraîchit les commentaires si le flag sessionStorage est présent (après un refresh global)
+  useEffect(() => {
+    if (sessionStorage.getItem("forceRefetchComments")) {
+      refetchComments();
+      sessionStorage.removeItem("forceRefetchComments");
+    }
+  }, [refetchComments]);
 
   useEffect(() => {
     if (targetCommentId) {
@@ -655,7 +661,7 @@ const PublicationDetailsPage = ({
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
           onClick={() => {
-            navigate(`/publications?page=${pageParam}`);
+            navigate(`/publications`);
           }}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />

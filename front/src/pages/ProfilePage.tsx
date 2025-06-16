@@ -6,7 +6,6 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-  Users,
   Save,
   X,
   Share2,
@@ -508,41 +507,40 @@ const MyProfilePage = () => {
             ) : (
               <>
                 <h1 className="text-3xl font-bold text-purple-400 mb-2">
-                  {userInfosData?.username}
+                  {username}
                 </h1>
                 <p className="text-gray-500 mb-4">
                   Membre depuis{" "}
-                  {new Date(
-                    userInfosData?.createdAt || Date.now()
-                  ).toLocaleDateString("fr-FR", {
-                    month: "short",
-                    year: "numeric",
-                  })}
+                  {userInfosData?.createdAt
+                    ? new Date(userInfosData.createdAt).toLocaleDateString(
+                        "fr-FR",
+                        {
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )
+                    : "?"}
                 </p>
                 <p className="text-gray-300 mb-6 max-w-2xl">
-                  {userInfosData?.bio || "Bienvenue sur mon profil !"}
+                  {bio || "Cet utilisateur n'a pas encore de bio."}
                 </p>
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
-                  <button className="flex items-center space-x-2 hover:text-purple-400">
+                  <div className="flex items-center space-x-2 hover:text-purple-400">
+                    <MessageSquare className="h-5 w-5" />
+                    <span>{articleByUserData?.length || 0} publications</span>
+                  </div>
+                  <div className="flex items-center space-x-2 hover:text-purple-400">
+                    <ThumbsDown className="h-5 w-5" />
+                    <span>
+                      {userInfosData?.TotalDislikes ?? 0} dislikes reçus
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 hover:text-purple-400">
                     <MessageSquare className="h-5 w-5" />
                     <span>
-                      {articleByUser?.findArticlesByUser.length} publications
+                      {userInfosData?.TotalComments || 0} commentaires reçus
                     </span>
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button className="flex items-center space-x-2 hover:text-purple-400">
-                      <ThumbsDown className="h-5 w-5" />
-                      <span>
-                        {userInfosData?.TotalDislikes || 0} dislikes reçus
-                      </span>
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="flex items-center space-x-2 hover:text-purple-400">
-                      <Users className="h-5 w-5" />
-                      <span>{numberOfPostDisliked} dislikes donnés</span>
-                    </button>
                   </div>
                 </div>
                 {/* Edit Profile Button */}{" "}
@@ -978,13 +976,19 @@ const MyProfilePage = () => {
               <h3 className="text-purple-400 font-semibold mb-4 text-lg border-b border-gray-800 pb-2">
                 Engagement
               </h3>
+              <p className="text-gray-400 text-xs mb-4">
+                <span className="block mb-1">
+                  <strong>Taux d'engagement</strong> = dislikes reçus /
+                  publications (mesure la moyenne de dislikes reçus par
+                  publication).
+                </span>
+                <span>
+                  <strong>Quotient de haine</strong> = dislikes donnés /
+                  publications (mesure la moyenne de dislikes que tu as donnés
+                  par publication).
+                </span>
+              </p>
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Commentaires reçus</span>
-                  <span className="text-purple-400 font-semibold">
-                    {userInfosData?.TotalComments || 0}
-                  </span>
-                </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Taux d'engagement</span>
                   <span className="text-purple-400 font-semibold">

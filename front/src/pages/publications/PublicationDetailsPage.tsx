@@ -46,7 +46,7 @@ import {
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
-import { Trophy } from "lucide-react";
+import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
 interface PublicationDetailsPageProps {
   articleId?: string;
@@ -709,9 +709,12 @@ const PublicationDetailsPage = ({
                 {article?.author.username}
               </button>
               {top1User && article?.author.id === top1User.id && (
-                <span className="ml-2 px-2 py-1 bg-yellow-400/80 text-yellow-900 rounded text-xs font-bold shadow flex items-center gap-1 animate-pulse">
-                  <Trophy className="h-4 w-4 text-yellow-700" /> TOP 1
-                </span>
+                <BadgeTop1
+                  message={top1User.top1BadgeMessage}
+                  color={top1User.top1BadgeColor}
+                  preset={top1User.top1BadgePreset as BadgePreset}
+                  className="ml-2"
+                />
               )}
             </div>
           </div>

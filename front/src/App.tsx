@@ -7,7 +7,7 @@ import Footer from "./components/fragments/Footer";
 import HomePage from "./pages/HomePage";
 import InstallTutoPage from "./pages/InstallTutoPage";
 import AuthPage from "./pages/AuthPage";
-import MyProfilePage from "./pages/ProfilePage";
+import MyProfilePage from "./pages/MyProfilePage";
 import AboutPage from "./pages/AboutPage";
 import PublicationPage from "./pages/publications/PublicationPage";
 import PublicationDetailsPage from "./pages/publications/PublicationDetailsPage";

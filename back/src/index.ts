@@ -9,6 +9,7 @@ import { resolvers } from "./resolvers.js";
 import { typeDefs } from "./schema.js";
 import { getUser } from "./module/auth.js";
 import db from "./datasource/db.js";
+import "dotenv/config";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -41,7 +42,7 @@ app.use(
 // --- Socket.IO setup ---
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: "*", // à restreindre en prod
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });

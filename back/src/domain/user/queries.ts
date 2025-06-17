@@ -20,6 +20,9 @@ export const userQueries: UserQueries = {
     return {
       ...user,
       createdAt: user.createdAt.toISOString(),
+      top1BadgeMessage: user.top1BadgeMessage,
+      top1BadgeColor: user.top1BadgeColor,
+      top1BadgePreset: user.top1BadgePreset,
     };
   },
   findAllUsers: async () => {
@@ -27,6 +30,9 @@ export const userQueries: UserQueries = {
     return users.map((user) => ({
       ...user,
       createdAt: user.createdAt.toISOString(),
+      top1BadgeMessage: user.top1BadgeMessage,
+      top1BadgeColor: user.top1BadgeColor,
+      top1BadgePreset: user.top1BadgePreset,
     }));
   },
 };

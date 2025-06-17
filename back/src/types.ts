@@ -347,6 +347,9 @@ export type User = {
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  top1BadgeColor?: Maybe<Scalars['String']['output']>;
+  top1BadgeMessage?: Maybe<Scalars['String']['output']>;
+  top1BadgePreset?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
 };
 
@@ -359,6 +362,9 @@ export type UserSummary = {
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   scoreGlobal?: Maybe<Scalars['Float']['output']>;
+  top1BadgeColor?: Maybe<Scalars['String']['output']>;
+  top1BadgeMessage?: Maybe<Scalars['String']['output']>;
+  top1BadgePreset?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
 };
 
@@ -380,6 +386,9 @@ export type UserUpdateBody = {
   bio?: InputMaybe<Scalars['String']['input']>;
   iconName?: InputMaybe<Scalars['String']['input']>;
   password?: InputMaybe<Scalars['String']['input']>;
+  top1BadgeColor?: InputMaybe<Scalars['String']['input']>;
+  top1BadgeMessage?: InputMaybe<Scalars['String']['input']>;
+  top1BadgePreset?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -688,6 +697,9 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  top1BadgeColor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgeMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgePreset?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -700,6 +712,9 @@ export type UserSummaryResolvers<ContextType = Context, ParentType extends Resol
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   scoreGlobal?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  top1BadgeColor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgeMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgePreset?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

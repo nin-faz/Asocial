@@ -33,6 +33,9 @@ export const UPDATE_USER = graphql(`
         bio
         iconName
         createdAt
+        top1BadgeMessage
+        top1BadgeColor
+        top1BadgePreset
       }
     }
   }

@@ -81,6 +81,9 @@ export const typeDefs = gql`
     TotalDislikes: Int
     TotalComments: Int
     scoreGlobal: Float
+    top1BadgeMessage: String
+    top1BadgeColor: String
+    top1BadgePreset: String
   }
 
   type CreateUserResponse {
@@ -108,6 +111,9 @@ export const typeDefs = gql`
     username: String
     password: String
     iconName: String
+    top1BadgeMessage: String
+    top1BadgeColor: String
+    top1BadgePreset: String
   }
 
   type CreateArticleResponse {
@@ -135,6 +141,9 @@ export const typeDefs = gql`
     bio: String
     iconName: String
     createdAt: String!
+    top1BadgeMessage: String
+    top1BadgeColor: String
+    top1BadgePreset: String
   }
 
   type UserToken {

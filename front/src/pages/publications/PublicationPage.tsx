@@ -11,7 +11,6 @@ import {
   Edit2,
   Share2,
   RefreshCw,
-  Trophy,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import Loader from "../../components/Loader";
@@ -40,6 +39,7 @@ import {
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
+import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -60,7 +60,7 @@ function PublicationPage() {
     }
   );
 
-  const userIconName = userData?.findUserById?.iconName || "Skull";
+  const userIconName = userData?.findUserById?.iconName ?? "Skull";
 
   const {
     data,
@@ -831,10 +831,8 @@ function PublicationPage() {
                 id: articleId,
                 title,
                 content,
-                imageUrl, // Ajout de imageUrl
+                imageUrl,
                 author,
-                createdAt,
-                updatedAt,
                 TotalDislikes,
                 TotalComments,
               }) => (
@@ -880,9 +878,12 @@ function PublicationPage() {
                           {author.username}
                         </button>
                         {top1User && author.id === top1User.id && (
-                          <span className="ml-2 px-2 py-1 bg-yellow-400/80 text-yellow-900 rounded text-xs font-bold shadow flex items-center gap-1 animate-pulse">
-                            <Trophy className="h-4 w-4 text-yellow-700" /> TOP 1
-                          </span>
+                          <BadgeTop1
+                            message={top1User.top1BadgeMessage}
+                            color={top1User.top1BadgeColor}
+                            preset={top1User.top1BadgePreset as BadgePreset}
+                            className="ml-2"
+                          />
                         )}
                       </div>
                     </div>

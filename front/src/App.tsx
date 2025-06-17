@@ -18,6 +18,7 @@ import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import NotificationsPage from "./pages/NotificationsPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -107,6 +108,7 @@ function App() {
           />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/users/:userId" element={<UserProfilePage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
 
           <Route element={<RedirectIfAuthenticated />}>
             <Route path="/auth" element={<AuthPage />} />

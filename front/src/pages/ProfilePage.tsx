@@ -13,6 +13,8 @@ import {
   MoreVertical,
   Trash2,
   Edit2,
+  BarChart2,
+  Trophy,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { useQuery, useMutation } from "@apollo/client";
@@ -33,11 +35,11 @@ import {
   showArticleDeletedToast,
   showProfileUpdatedToast,
 } from "../utils/customToasts";
-import { Article } from "../gql/graphql";
 import PublicationDetailsPage from "./publications/PublicationDetailsPage";
 import IconSelector from "../components/icons/IconSelector";
 import { renderUserIcon } from "../utils/iconUtil";
 import UserIcon from "../components/icons/UserIcon";
+import { GET_LEADERBOARD } from "../queries/userQuery";
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
@@ -112,14 +114,52 @@ const MyProfilePage = () => {
 
   const userInfosData = userInfos?.findUserById;
 
+  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
+
+  const top1User = leaderboardData?.findAllUsers?.length
+    ? [...leaderboardData.findAllUsers].sort(
+        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
+      )[0]
+    : null;
+  const isTop1 = userInfosData?.id && top1User?.id === userInfosData.id;
+
   const { data: articleDisliked, refetch: refetchArticleDisliked } = useQuery(
     FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
     {
       variables: { userId: user?.id! },
+      skip: !user,
     }
   );
 
-  const dislikesByUser = articleDisliked?.getDislikesByUserIdForArticles;
+  const dislikesByUser = articleDisliked?.getDislikesByUserIdForArticles ?? [];
+
+  const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
+  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
+  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+  const [deleteArticle] = useMutation(DELETE_ARTICLE);
+  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
+    FIND_ARTICLES_BY_USER,
+    {
+      variables: { userId: user?.id ?? "" },
+      skip: !user,
+    }
+  );
+
+  const articleByUserData = articleByUser?.findArticlesByUser ?? [];
+
+  const [articleDislikes, setArticleDislikes] = useState<{
+    [key: string]: number;
+  }>({});
+
+  useEffect(() => {
+    if (articleByUserData) {
+      const initialDislikes = articleByUserData.reduce((acc, article) => {
+        acc[article.id] = article.TotalDislikes ?? 0;
+        return acc;
+      }, {} as { [key: string]: number });
+      setArticleDislikes(initialDislikes);
+    }
+  }, [articleByUserData]);
 
   useEffect(() => {
     if (!user) {
@@ -139,21 +179,14 @@ const MyProfilePage = () => {
 
     setUserArticleDislikes(dislikesMap);
 
-    if (dislikesByUser && user) {
-      setNumberOfPostDisliked(dislikesByUser.length);
-      dislikesByUser
-        .map((dislike) => dislike?.article)
-        .filter((article): article is Article => article !== null);
-    }
+    setNumberOfPostDisliked(dislikesByUser.length);
   }, [dislikesByUser, user, articleDisliked]);
-
-  const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
 
   useEffect(() => {
     if (userInfosData) {
-      setUsername(userInfosData.username);
-      setBio(userInfosData?.bio! || "");
-      setIconName(userInfosData.iconName || "Skull");
+      setUsername(userInfosData.username ?? "");
+      setBio(userInfosData.bio ?? "");
+      setIconName(userInfosData.iconName ?? "Skull");
     }
   }, [userInfosData]);
 
@@ -198,39 +231,11 @@ const MyProfilePage = () => {
     if (user) {
       setUsername(userInfosData?.username! ?? "");
       setBio(userInfosData?.bio! ?? "");
-      setIconName(userInfosData?.iconName || "Skull");
+      setIconName(userInfosData?.iconName ?? "Skull");
     }
     setIsEditing(false);
     setError("");
   };
-
-  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
-  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
-  const [deleteArticle] = useMutation(DELETE_ARTICLE);
-
-  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
-    FIND_ARTICLES_BY_USER,
-    {
-      variables: { userId: user?.id! },
-      skip: !user,
-    }
-  );
-
-  const articleByUserData = articleByUser?.findArticlesByUser;
-
-  const [articleDislikes, setArticleDislikes] = useState<{
-    [key: string]: number;
-  }>({});
-
-  useEffect(() => {
-    if (articleByUserData) {
-      const initialDislikes = articleByUserData.reduce((acc, article) => {
-        acc[article.id] = article.TotalDislikes || 0;
-        return acc;
-      }, {} as { [key: string]: number });
-      setArticleDislikes(initialDislikes);
-    }
-  }, [articleByUserData]);
 
   const handleArticleDislike = async (
     e: React.MouseEvent,
@@ -420,6 +425,7 @@ const MyProfilePage = () => {
       toast.error("Impossible de partager cet article");
     }
   };
+
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Profile Header */}
@@ -506,8 +512,13 @@ const MyProfilePage = () => {
               </div>
             ) : (
               <>
-                <h1 className="text-3xl font-bold text-purple-400 mb-2">
+                <h1 className="text-3xl font-bold text-purple-400 mb-2 flex items-center justify-center md:justify-start">
                   {username}
+                  {isTop1 && (
+                    <span className="ml-3 px-2 py-1 bg-yellow-400/80 text-yellow-900 rounded text-xs font-bold shadow flex items-center gap-1 animate-pulse">
+                      <Trophy className="h-4 w-4 text-yellow-700" /> TOP 1
+                    </span>
+                  )}
                 </h1>
                 <p className="text-gray-500 mb-4">
                   Membre depuis{" "}
@@ -521,9 +532,7 @@ const MyProfilePage = () => {
                       )
                     : "?"}
                 </p>
-                <p className="text-gray-300 mb-6 max-w-2xl">
-                  {bio || "Cet utilisateur n'a pas encore de bio."}
-                </p>
+                <p className="text-gray-300 mb-6 max-w-2xl">{bio}</p>
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
                   <div className="flex items-center space-x-2 hover:text-purple-400">
@@ -623,7 +632,7 @@ const MyProfilePage = () => {
             onClick={() => handleTabChange("statistiques")}
           >
             <span className="flex items-center justify-center">
-              <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
+              <BarChart2 className="h-4 w-4 mr-1 sm:mr-2" />
               Statistiques
             </span>
           </button>

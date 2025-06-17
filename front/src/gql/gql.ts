@@ -40,6 +40,7 @@ type Documents = {
     "\n  query GetNotifications($userId: ID!, $limit: Int, $offset: Int) {\n    getNotifications(userId: $userId, limit: $limit, offset: $offset) {\n      id\n      type\n      message\n      isRead\n      createdAt\n      articleId\n      commentId\n    }\n  }\n": typeof types.GetNotificationsDocument,
     "\n  query GetUserbyToken($token: String!) {\n    getUserbyToken(token: $token) {\n      id\n      username\n    }\n  }\n": typeof types.GetUserbyTokenDocument,
     "\n  query GetUserById($id: ID!) {\n    findUserById(id: $id) {\n      id\n      username\n      bio\n      iconName\n      createdAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n": typeof types.GetUserByIdDocument,
+    "\n  query GetLeaderboard {\n    findAllUsers {\n      id\n      username\n      iconName\n      bio\n      createdAt\n      scoreGlobal\n      TotalDislikes\n      TotalComments\n    }\n  }\n": typeof types.GetLeaderboardDocument,
 };
 const documents: Documents = {
     "\n  mutation CreateArticle($title: String, $content: String!, $imageUrl: String) {\n    createArticle(title: $title, content: $content, imageUrl: $imageUrl) {\n      code\n      success\n      message\n      article {\n        id\n        title\n        content\n        createdAt\n        updatedAt\n        author {\n          id\n          username\n        }\n      }\n    }\n  }\n": types.CreateArticleDocument,
@@ -68,6 +69,7 @@ const documents: Documents = {
     "\n  query GetNotifications($userId: ID!, $limit: Int, $offset: Int) {\n    getNotifications(userId: $userId, limit: $limit, offset: $offset) {\n      id\n      type\n      message\n      isRead\n      createdAt\n      articleId\n      commentId\n    }\n  }\n": types.GetNotificationsDocument,
     "\n  query GetUserbyToken($token: String!) {\n    getUserbyToken(token: $token) {\n      id\n      username\n    }\n  }\n": types.GetUserbyTokenDocument,
     "\n  query GetUserById($id: ID!) {\n    findUserById(id: $id) {\n      id\n      username\n      bio\n      iconName\n      createdAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n": types.GetUserByIdDocument,
+    "\n  query GetLeaderboard {\n    findAllUsers {\n      id\n      username\n      iconName\n      bio\n      createdAt\n      scoreGlobal\n      TotalDislikes\n      TotalComments\n    }\n  }\n": types.GetLeaderboardDocument,
 };
 
 /**
@@ -188,6 +190,10 @@ export function graphql(source: "\n  query GetUserbyToken($token: String!) {\n  
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetUserById($id: ID!) {\n    findUserById(id: $id) {\n      id\n      username\n      bio\n      iconName\n      createdAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n"): (typeof documents)["\n  query GetUserById($id: ID!) {\n    findUserById(id: $id) {\n      id\n      username\n      bio\n      iconName\n      createdAt\n      TotalDislikes\n      TotalComments\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetLeaderboard {\n    findAllUsers {\n      id\n      username\n      iconName\n      bio\n      createdAt\n      scoreGlobal\n      TotalDislikes\n      TotalComments\n    }\n  }\n"): (typeof documents)["\n  query GetLeaderboard {\n    findAllUsers {\n      id\n      username\n      iconName\n      bio\n      createdAt\n      scoreGlobal\n      TotalDislikes\n      TotalComments\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

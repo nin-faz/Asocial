@@ -3,6 +3,7 @@ import gql from "graphql-tag";
 export const typeDefs = gql`
   type Query {
     findUserById(id: ID!): UserSummary
+    findAllUsers: [UserSummary!]!
     findArticles: [Article]
     findArticleById(id: ID!): Article
     findArticleByMostDisliked: [Article]
@@ -79,6 +80,7 @@ export const typeDefs = gql`
     createdAt: String!
     TotalDislikes: Int
     TotalComments: Int
+    scoreGlobal: Float
   }
 
   type CreateUserResponse {

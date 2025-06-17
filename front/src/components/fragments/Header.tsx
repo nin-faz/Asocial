@@ -10,6 +10,7 @@ import {
   ThumbsDown,
   Info,
   Bell,
+  Trophy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -186,6 +187,14 @@ const Header = () => {
                 <>
                   <NotificationsBell />
 
+                  <motion.button
+                    className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => navigate("/leaderboard")}
+                    title="Classement global"
+                  >
+                    <Trophy className="h-6 w-6" />
+                  </motion.button>
                   <motion.button
                     className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                     whileHover={{ scale: 1.1 }}

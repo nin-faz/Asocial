@@ -11,6 +11,7 @@ import {
   Edit2,
   Share2,
   RefreshCw,
+  Trophy,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import Loader from "../../components/Loader";
@@ -38,6 +39,7 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
+import { GET_LEADERBOARD } from "../../queries/userQuery";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -593,6 +595,14 @@ function PublicationPage() {
     }
   };
 
+  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
+  // Récupérer le top 1 du leaderboard
+  const top1User = leaderboardData?.findAllUsers?.length
+    ? [...leaderboardData.findAllUsers].sort(
+        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
+      )[0]
+    : null;
+
   // Vérifier si les données sont en cours de chargement
   const isLoading = articlesLoading || mostDislikedLoading;
 
@@ -858,41 +868,22 @@ function PublicationPage() {
                       >
                         <UserIcon iconName={author.iconName} size="small" />
                       </button>
-                      <div>
-                        <div>
-                          <button
-                            className="text-purple-400 font-semibold hover:underline focus:outline-none"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/users/${author.id}`);
-                            }}
-                            title={`Voir le profil de ${author.username}`}
-                          >
-                            {author.username}
-                          </button>
-                        </div>
-                        <p className="text-gray-500 text-sm">
-                          Le{" "}
-                          {updatedAt
-                            ? new Date(parseInt(updatedAt, 10))
-                                .toLocaleString("fr-FR", {
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                                .replace(" ", " à ")
-                            : new Date(parseInt(createdAt ?? "0", 10))
-                                .toLocaleString("fr-FR", {
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                                .replace(" ", " à ")}
-                        </p>
+                      <div className="flex items-center">
+                        <button
+                          className="text-purple-400 font-semibold hover:underline focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/users/${author.id}`);
+                          }}
+                          title={`Voir le profil de ${author.username}`}
+                        >
+                          {author.username}
+                        </button>
+                        {top1User && author.id === top1User.id && (
+                          <span className="ml-2 px-2 py-1 bg-yellow-400/80 text-yellow-900 rounded text-xs font-bold shadow flex items-center gap-1 animate-pulse">
+                            <Trophy className="h-4 w-4 text-yellow-700" /> TOP 1
+                          </span>
+                        )}
                       </div>
                     </div>
 

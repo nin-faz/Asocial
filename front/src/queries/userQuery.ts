@@ -22,3 +22,18 @@ export const GET_USER_BY_ID = graphql(`
     }
   }
 `);
+
+export const GET_LEADERBOARD = graphql(`
+  query GetLeaderboard {
+    findAllUsers {
+      id
+      username
+      iconName
+      bio
+      createdAt
+      scoreGlobal
+      TotalDislikes
+      TotalComments
+    }
+  }
+`);

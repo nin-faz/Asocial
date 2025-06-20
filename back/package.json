@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node ./dist/src/index.js",
+    "start:prod": "node dist/src/index.js",
     "dev": "cross-env NODE_OPTIONS=--loader=ts-node/esm node --watch src/index.ts",
     "codegen": "graphql-codegen",
     "prisma": "prisma"

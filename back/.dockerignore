@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+dist
+.env
+*.local
+*.env*
+
+.git
+.gitignore
+.idea
+.vscode
+*.tsbuildinfo
+coverage
+
+prisma/migrations

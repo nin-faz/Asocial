@@ -142,8 +142,8 @@ app.get("/api/auth/verify", (req, res) => {
   return res.status(200).json({ valid: true, user });
 });
 
-const PORT = 4000;
-httpServer.listen(PORT, () => {
+const PORT = process.env.PORT ?? 4000;
+httpServer.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`🚀  Server ready at: http://localhost:${PORT}/graphql`);
   console.log(`🟣  Socket.IO ready at: http://localhost:${PORT}`);
 });

@@ -3,9 +3,11 @@ import db from "../datasource/db.js";
 
 // Les clés VAPID doivent être dans le .env
 webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
+  process.env.VAPID_SUBJECT! ?? "mailto:asocial.network.contact@gmail.com",
+  process.env.VAPID_PUBLIC_KEY! ??
+    "BJaZF6hvnoVCh-55CRdAd6Vy5E_0D0YEhoqwXBFJGYwArsNVTKHI3g5143_I6Gn5fMIeoBItCuO-pQRzMUfm_TM",
+  process.env.VAPID_PRIVATE_KEY! ??
+    "hMvjU5EK3NvoWRWNGVnfHCYRVTE5LGNXc46MrhCG2HI"
 );
 
 /**

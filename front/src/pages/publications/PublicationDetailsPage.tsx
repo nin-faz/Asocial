@@ -45,6 +45,8 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
+import { GET_LEADERBOARD } from "../../queries/userQuery";
+import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
 interface PublicationDetailsPageProps {
   articleId?: string;
@@ -651,6 +653,13 @@ const PublicationDetailsPage = ({
     skip: !user?.id,
   });
 
+  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
+  const top1User = leaderboardData?.findAllUsers?.length
+    ? [...leaderboardData.findAllUsers].sort(
+        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
+      )[0]
+    : null;
+
   return (
     <main className="w-full max-w-2xl mx-auto px-4 py-8">
       {/* Back Button */}
@@ -661,11 +670,11 @@ const PublicationDetailsPage = ({
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
           onClick={() => {
-            navigate(`/publications`);
+            navigate(-1);
           }}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Retour aux publications
+          Retour
         </motion.button>
       )}
 
@@ -678,8 +687,8 @@ const PublicationDetailsPage = ({
         {/* Post Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <div
-              className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center cursor-pointer"
+            <button
+              className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/users/${article?.author.id}`);
@@ -687,40 +696,52 @@ const PublicationDetailsPage = ({
               title={`Voir le profil de ${article?.author.username}`}
             >
               <UserIcon iconName={article?.author.iconName} size="small" />
-            </div>
-            <div>
-              <h3
-                className="text-purple-400 font-semibold text-lg cursor-pointer hover:underline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/users/${article?.author.id}`);
-                }}
-                title={`Voir le profil de ${article?.author.username}`}
-              >
-                {article?.author.username}
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Le{" "}
-                {article?.updatedAt
-                  ? new Date(parseInt(article?.updatedAt, 10))
-                      .toLocaleString("fr-FR", {
-                        year: "numeric",
-                        month: "numeric",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                      .replace(" ", " à ")
-                  : new Date(parseInt(article?.createdAt ?? "0", 10))
-                      .toLocaleString("fr-FR", {
-                        year: "numeric",
-                        month: "numeric",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                      .replace(" ", " à ")}
-              </p>
+            </button>
+            <div className="flex flex-col">
+              <div className="flex items-center">
+                <button
+                  className="text-purple-400 font-semibold hover:underline focus:outline-none"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/users/${article?.author.id}`);
+                  }}
+                  title={`Voir le profil de ${article?.author.username}`}
+                >
+                  {article?.author.username}
+                </button>
+                {top1User && article?.author.id === top1User.id && (
+                  <BadgeTop1
+                    message={top1User.top1BadgeMessage}
+                    color={top1User.top1BadgeColor}
+                    preset={top1User.top1BadgePreset as BadgePreset}
+                    className="ml-2"
+                  />
+                )}
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">
+                  Le{" "}
+                  {article?.updatedAt
+                    ? new Date(parseInt(article?.updatedAt, 10))
+                        .toLocaleString("fr-FR", {
+                          year: "numeric",
+                          month: "numeric",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        .replace(" ", " à ")
+                    : new Date(parseInt(article?.createdAt ?? "0", 10))
+                        .toLocaleString("fr-FR", {
+                          year: "numeric",
+                          month: "numeric",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        .replace(" ", " à ")}
+                </p>
+              </div>
             </div>
           </div>
 

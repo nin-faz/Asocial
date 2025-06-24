@@ -139,6 +139,27 @@ export const resolvers: Resolvers = {
 
       return commentCount;
     },
+    scoreGlobal: async (parent, _, { dataSources: { db } }) => {
+      // Nombre de publications
+      const publications = await db.article.count({
+        where: { authorId: parent.id },
+      });
+      // Total des commentaires reçus
+      const userArticles = await db.article.findMany({
+        where: { authorId: parent.id },
+        select: { id: true },
+      });
+      const articleIds = userArticles.map((article) => article.id);
+      const totalComments = await db.comment.count({
+        where: { articleId: { in: articleIds } },
+      });
+      // Total des dislikes reçus
+      const totalDislikes = await db.dislike.count({
+        where: { articleId: { in: articleIds } },
+      });
+      // Score global (sans dislikes donnés)
+      return publications * 2 + totalComments * 1.5 + totalDislikes * 1;
+    },
   },
   Notification: {
     // Le champ type est maintenant un string, donc on le retourne tel quel

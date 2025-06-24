@@ -242,6 +242,7 @@ export type Notification = {
 
 export type Query = {
   __typename?: 'Query';
+  findAllUsers: Array<UserSummary>;
   findArticleById?: Maybe<Article>;
   findArticleByMostDisliked?: Maybe<Array<Maybe<Article>>>;
   findArticles?: Maybe<Array<Maybe<Article>>>;
@@ -346,6 +347,9 @@ export type User = {
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  top1BadgeColor?: Maybe<Scalars['String']['output']>;
+  top1BadgeMessage?: Maybe<Scalars['String']['output']>;
+  top1BadgePreset?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
 };
 
@@ -357,6 +361,10 @@ export type UserSummary = {
   createdAt: Scalars['String']['output'];
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  scoreGlobal?: Maybe<Scalars['Float']['output']>;
+  top1BadgeColor?: Maybe<Scalars['String']['output']>;
+  top1BadgeMessage?: Maybe<Scalars['String']['output']>;
+  top1BadgePreset?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
 };
 
@@ -378,6 +386,9 @@ export type UserUpdateBody = {
   bio?: InputMaybe<Scalars['String']['input']>;
   iconName?: InputMaybe<Scalars['String']['input']>;
   password?: InputMaybe<Scalars['String']['input']>;
+  top1BadgeColor?: InputMaybe<Scalars['String']['input']>;
+  top1BadgeMessage?: InputMaybe<Scalars['String']['input']>;
+  top1BadgePreset?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -462,6 +473,7 @@ export type ResolversTypes = {
   DeleteCommentResponse: ResolverTypeWrapper<DeleteCommentResponse>;
   DeleteDislikeResponse: ResolverTypeWrapper<DeleteDislikeResponse>;
   Dislike: ResolverTypeWrapper<DislikeModel>;
+  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   MarkNotificationsAsReadResponse: ResolverTypeWrapper<Omit<MarkNotificationsAsReadResponse, 'notifications'> & { notifications: Array<ResolversTypes['Notification']> }>;
@@ -492,6 +504,7 @@ export type ResolversParentTypes = {
   DeleteCommentResponse: DeleteCommentResponse;
   DeleteDislikeResponse: DeleteDislikeResponse;
   Dislike: DislikeModel;
+  Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
   MarkNotificationsAsReadResponse: Omit<MarkNotificationsAsReadResponse, 'notifications'> & { notifications: Array<ResolversParentTypes['Notification']> };
@@ -632,6 +645,7 @@ export type NotificationResolvers<ContextType = Context, ParentType extends Reso
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  findAllUsers?: Resolver<Array<ResolversTypes['UserSummary']>, ParentType, ContextType>;
   findArticleById?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticleByIdArgs, 'id'>>;
   findArticleByMostDisliked?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
   findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
@@ -683,6 +697,9 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  top1BadgeColor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgeMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgePreset?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -694,6 +711,10 @@ export type UserSummaryResolvers<ContextType = Context, ParentType extends Resol
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  scoreGlobal?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  top1BadgeColor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgeMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  top1BadgePreset?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

@@ -43,7 +43,7 @@ app.use(
 // --- Socket.IO setup ---
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: "*", // à restreindre en prod
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });

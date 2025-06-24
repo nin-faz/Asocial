@@ -1,4 +1,8 @@
-import { GET_USER_BY_ID, GET_USER_BY_TOKEN } from "./userQuery";
+import {
+  GET_USER_BY_ID,
+  GET_USER_BY_TOKEN,
+  GET_LEADERBOARD,
+} from "./userQuery";
 import {
   FIND_ARTICLES,
   FIND_ARTICLE_BY_ID,
@@ -14,6 +18,7 @@ import { GET_COMMENTS } from "./commentQuery";
 export {
   GET_USER_BY_TOKEN,
   GET_USER_BY_ID,
+  GET_LEADERBOARD,
   FIND_ARTICLES,
   FIND_ARTICLE_BY_ID,
   FIND_ARTICLE_BY_MOST_DISLIKED,

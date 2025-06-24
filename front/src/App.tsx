@@ -8,7 +8,7 @@ import Footer from "./components/fragments/Footer";
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const InstallTutoPage = React.lazy(() => import("./pages/InstallTutoPage"));
 const AuthPage = React.lazy(() => import("./pages/AuthPage"));
-const MyProfilePage = React.lazy(() => import("./pages/ProfilePage"));
+const MyProfilePage = React.lazy(() => import("./pages/MyProfilePage"));
 const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const PublicationPage = React.lazy(
   () => import("./pages/publications/PublicationPage")
@@ -24,6 +24,7 @@ const ResetPasswordWithTokenPage = React.lazy(
   () => import("./pages/ResetPasswordWithTokenPage")
 );
 const NotificationsPage = React.lazy(() => import("./pages/NotificationsPage"));
+const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
@@ -160,6 +161,15 @@ function App() {
             element={
               <Suspense fallback={<Loader />}>
                 <UserProfilePage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <Suspense fallback={<Loader />}>
+                <LeaderboardPage />
               </Suspense>
             }
           />

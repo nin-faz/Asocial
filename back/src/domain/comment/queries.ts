@@ -32,13 +32,13 @@ export const commentQueries: CommentQueries = {
       },
     });
 
-    const processedComments = comments.map((comment) => ({
+    const processedComments = comments.map((comment: any) => ({
       ...comment,
       TotalDislikes: comment._count.dislikes,
     }));
 
     // Tri des commentaires du moins récent au plus récent, en tenant compte de updatedAt
-    const sortedComments = processedComments.sort((a, b) => {
+    const sortedComments = processedComments.sort((a: any, b: any) => {
       const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(a.createdAt);
       const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(b.createdAt);
       return dateA.getTime() - dateB.getTime(); // Tri ascendant (moins récent au plus récent)

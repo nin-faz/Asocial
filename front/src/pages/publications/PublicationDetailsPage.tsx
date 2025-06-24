@@ -841,13 +841,19 @@ const PublicationDetailsPage = ({
         {/* Post Image */}
         {!isEditing && article?.imageUrl && (
           <div className="mb-6 rounded-lg overflow-hidden">
-            <img
-              src={article.imageUrl}
-              alt="Article"
-              className="w-full sm:h-[40rem] rounded-lg"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source
+                srcSet={article.imageUrl.replace(/\.(jpg|jpeg|png)$/i, ".webp")}
+                type="image/webp"
+              />
+              <img
+                src={article.imageUrl}
+                alt="Article"
+                className="w-full sm:h-[40rem] rounded-lg"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </div>
         )}
 

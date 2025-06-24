@@ -9,7 +9,7 @@ import { resolvers } from "./resolvers.js";
 import { typeDefs } from "./schema.js";
 import { getUser } from "./module/auth.js";
 import db from "./datasource/db.js";
-import "dotenv/config";
+import compression from "compression";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -21,6 +21,7 @@ const server = new ApolloServer({
 
 await server.start();
 
+app.use(compression());
 app.use(cors(), bodyParser.json());
 app.use(
   "/graphql",
@@ -143,8 +144,8 @@ app.get("/api/auth/verify", (req, res) => {
   return res.status(200).json({ valid: true, user });
 });
 
-const PORT = 4000;
-httpServer.listen(PORT, () => {
+const PORT = process.env.PORT ?? 4000;
+httpServer.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`🚀  Server ready at: http://localhost:${PORT}/graphql`);
   console.log(`🟣  Socket.IO ready at: http://localhost:${PORT}`);
 });

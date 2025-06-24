@@ -19,12 +19,12 @@ export const findArticleByMostDisliked: NonNullable<
     }
 
     const sortedArticles = articles
-      .map((article) => ({
+      .map((article: any) => ({
         ...article,
         TotalDislikes: article._count?.dislikes ?? 0,
         TotalComments: article._count?.comments ?? 0,
       }))
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const dislikeA = a.TotalDislikes;
         const dislikeB = b.TotalDislikes;
 

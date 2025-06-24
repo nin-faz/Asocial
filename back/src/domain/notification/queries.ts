@@ -16,7 +16,7 @@ export const getNotifications: QueryResolvers["getNotifications"] = async (
         comment: true,
       },
     });
-    return notifications.map((notif) => ({
+    return notifications.map((notif: any) => ({
       ...notif,
       createdAt: notif.createdAt.toISOString(),
       // Ne pas mapper notif.article ni notif.comment, laisse-les natifs

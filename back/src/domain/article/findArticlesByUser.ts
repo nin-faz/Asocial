@@ -17,7 +17,7 @@ export const findArticlesByUser: NonNullable<
       orderBy: { createdAt: "desc" },
     });
 
-    return articles.map((article) => ({
+    return articles.map((article: any) => ({
       ...article,
       TotalDislikes: article._count.dislikes,
       TotalComments: article._count.comments,

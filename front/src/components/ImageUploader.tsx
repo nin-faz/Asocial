@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { X, Upload } from "lucide-react";
 import { imageUpload } from "../utils/imageUpload";
+import imageCompression from "browser-image-compression";
 
 interface ImageUploaderProps {
   imageUrl: string | null;
@@ -34,7 +35,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       setLoading(true);
       try {
-        const uploadedUrl = await imageUpload(file); // Appel à imgbb
+        // Redimensionnement et compression côté client
+        const options = {
+          maxWidthOrHeight: 800, // Limite la taille à 800px (largeur ou hauteur max)
+          useWebWorker: true,
+          initialQuality: 0.6, // Baisse la qualité pour une compression plus forte
+          fileType: "image/webp", // Force le format WebP
+          maxSizeMB: 0.1, // Limite la taille à 100 Ko
+        };
+        const compressedFile = await imageCompression(file, options);
+
+        const webpFile = new File(
+          [compressedFile],
+          compressedFile.name.replace(/\.(jpe?g|png|gif)$/i, ".webp"),
+          { type: "image/webp" }
+        );
+        const uploadedUrl = await imageUpload(webpFile);
 
         if (uploadedUrl) {
           onImageChange(uploadedUrl); // Stocke l'URL hébergée

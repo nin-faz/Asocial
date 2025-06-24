@@ -20,12 +20,12 @@ export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
     }
 
     const sortedArticles = articles
-      .map((article) => ({
+      .map((article: any) => ({
         ...article,
         TotalDislikes: article._count?.dislikes,
         TotalComments: article._count?.comments,
       }))
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const dateA = a.updatedAt
           ? new Date(a.updatedAt)
           : new Date(a.createdAt);

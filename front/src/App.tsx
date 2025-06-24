@@ -1,24 +1,33 @@
+import React, { Suspense, useContext, useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { useContext, useEffect, useState } from "react";
 import Loader from "./components/Loader";
 import Header from "./components/fragments/Header";
 import Footer from "./components/fragments/Footer";
-import HomePage from "./pages/HomePage";
-import InstallTutoPage from "./pages/InstallTutoPage";
-import AuthPage from "./pages/AuthPage";
-import MyProfilePage from "./pages/MyProfilePage";
-import AboutPage from "./pages/AboutPage";
-import PublicationPage from "./pages/publications/PublicationPage";
-import PublicationDetailsPage from "./pages/publications/PublicationDetailsPage";
-import UserProfilePage from "./pages/UserProfilePage";
-import RequestPasswordResetPage from "./pages/RequestPasswordResetPage";
-import ResetPasswordWithTokenPage from "./pages/ResetPasswordWithTokenPage";
+// Lazy load pages
+const HomePage = React.lazy(() => import("./pages/HomePage"));
+const InstallTutoPage = React.lazy(() => import("./pages/InstallTutoPage"));
+const AuthPage = React.lazy(() => import("./pages/AuthPage"));
+const MyProfilePage = React.lazy(() => import("./pages/MyProfilePage"));
+const AboutPage = React.lazy(() => import("./pages/AboutPage"));
+const PublicationPage = React.lazy(
+  () => import("./pages/publications/PublicationPage")
+);
+const PublicationDetailsPage = React.lazy(
+  () => import("./pages/publications/PublicationDetailsPage")
+);
+const UserProfilePage = React.lazy(() => import("./pages/UserProfilePage"));
+const RequestPasswordResetPage = React.lazy(
+  () => import("./pages/RequestPasswordResetPage")
+);
+const ResetPasswordWithTokenPage = React.lazy(
+  () => import("./pages/ResetPasswordWithTokenPage")
+);
+const NotificationsPage = React.lazy(() => import("./pages/NotificationsPage"));
+const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
-import NotificationsPage from "./pages/NotificationsPage";
-import LeaderboardPage from "./pages/LeaderboardPage";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -91,33 +100,109 @@ function App() {
       <div className="min-h-screen bg-black">
         <Routes>
           {/* Routes publiques */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/install-tuto" element={<InstallTutoPage />} />
-          <Route path="/publications/*" element={<PublicationPage />} />
+          <Route
+            path="/"
+            element={
+              <Suspense fallback={<Loader />}>
+                <HomePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/install-tuto"
+            element={
+              <Suspense fallback={<Loader />}>
+                <InstallTutoPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/publications/*"
+            element={
+              <Suspense fallback={<Loader />}>
+                <PublicationPage />
+              </Suspense>
+            }
+          />
           <Route
             path="/reset-password"
-            element={<ResetPasswordWithTokenPage />}
+            element={
+              <Suspense fallback={<Loader />}>
+                <ResetPasswordWithTokenPage />
+              </Suspense>
+            }
           />
           <Route
             path="/request-password-reset"
-            element={<RequestPasswordResetPage />}
+            element={
+              <Suspense fallback={<Loader />}>
+                <RequestPasswordResetPage />
+              </Suspense>
+            }
           />
           <Route
             path="/publications/:id"
-            element={<PublicationDetailsPage />}
+            element={
+              <Suspense fallback={<Loader />}>
+                <PublicationDetailsPage />
+              </Suspense>
+            }
           />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/users/:userId" element={<UserProfilePage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route
+            path="/about"
+            element={
+              <Suspense fallback={<Loader />}>
+                <AboutPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/users/:userId"
+            element={
+              <Suspense fallback={<Loader />}>
+                <UserProfilePage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <Suspense fallback={<Loader />}>
+                <LeaderboardPage />
+              </Suspense>
+            }
+          />
 
           <Route element={<RedirectIfAuthenticated />}>
-            <Route path="/auth" element={<AuthPage />} />
+            <Route
+              path="/auth"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <AuthPage />
+                </Suspense>
+              }
+            />
           </Route>
 
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<MyProfilePage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route
+              path="/profile"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <MyProfilePage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <NotificationsPage />
+                </Suspense>
+              }
+            />
           </Route>
 
           <Route

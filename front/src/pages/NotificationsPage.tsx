@@ -1,12 +1,15 @@
 import { useQuery, useMutation } from "@apollo/client";
-import { useContext } from "react";
+import { useContext, Suspense, lazy } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { GetNotificationsDocument } from "../gql/graphql";
 import { MARK_NOTIFICATIONS_AS_READ } from "../mutations/notificationMutation";
-import NotificationsPanel from "../components/notifications/NotificationsPanel";
 import Loader from "../components/Loader";
 import { PushNotificationsProvider } from "../context/PushNotificationsContext";
 import { RefreshCw } from "lucide-react";
+
+const NotificationsPanel = lazy(
+  () => import("../components/notifications/NotificationsPanel")
+);
 
 export default function NotificationsPage() {
   const auth = useContext(AuthContext);
@@ -51,23 +54,25 @@ export default function NotificationsPage() {
           </div>
           <div className="w-full flex justify-center">
             <div className="w-full max-w-2xl px-0 sm:px-2">
-              <NotificationsPanel
-                notifications={notifications}
-                onMarkAsRead={async (id) => {
-                  await markAllAsRead({ variables: { ids: [id] } });
-                }}
-                onNavigate={(notif) => {
-                  let link = undefined;
-                  if (notif.articleId && notif.commentId) {
-                    link = `/publications/${notif.articleId}?commentId=${notif.commentId}`;
-                  } else if (notif.articleId) {
-                    link = `/publications/${notif.articleId}`;
-                  }
-                  if (link) {
-                    window.location.href = link;
-                  }
-                }}
-              />
+              <Suspense fallback={<Loader />}>
+                <NotificationsPanel
+                  notifications={notifications}
+                  onMarkAsRead={async (id) => {
+                    await markAllAsRead({ variables: { ids: [id] } });
+                  }}
+                  onNavigate={(notif) => {
+                    let link = undefined;
+                    if (notif.articleId && notif.commentId) {
+                      link = `/publications/${notif.articleId}?commentId=${notif.commentId}`;
+                    } else if (notif.articleId) {
+                      link = `/publications/${notif.articleId}`;
+                    }
+                    if (link) {
+                      window.location.href = link;
+                    }
+                  }}
+                />
+              </Suspense>
             </div>
           </div>
         </div>

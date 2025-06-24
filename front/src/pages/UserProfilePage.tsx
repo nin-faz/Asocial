@@ -270,13 +270,23 @@ const UserProfilePage = () => {
                   </p>
 
                   {article.imageUrl && (
-                    <div className="mb-2 rounded-lg overflow-hidden w-full h-[20em] aspect-[4/3] bg-gray-800 flex items-center justify-center min-h-[80px] max-h-[140px] sm:min-h-[25em]">
-                      <img
-                        src={article.imageUrl}
-                        alt={article.title ?? "Article"}
-                        className="w-full h-full object-cover object-center rounded-lg transition-transform duration-200 hover:scale-105"
-                        loading="lazy"
-                      />
+                    <div className="mb-2 rounded-lg overflow-hidden">
+                      <picture>
+                        <source
+                          srcSet={article.imageUrl.replace(
+                            /\.(jpg|jpeg|png)$/i,
+                            ".webp"
+                          )}
+                          type="image/webp"
+                        />
+                        <img
+                          src={article.imageUrl}
+                          alt="Article"
+                          className="w-full h-32 object-cover rounded-lg"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </picture>
                     </div>
                   )}
                   <div className="flex justify-between items-end mt-2 pt-3 border-t border-gray-800 text-gray-500 text-xs">

@@ -771,11 +771,24 @@ function PublicationPage() {
 
             {tempArticleData.imageUrl && (
               <div className="mb-4 rounded-lg overflow-hidden">
-                <img
-                  src={tempArticleData.imageUrl}
-                  alt="Article en cours de publication"
-                  className="w-full h-auto rounded-lg max-h-80 object-cover"
-                />
+                <picture>
+                  <source
+                    srcSet={tempArticleData.imageUrl.replace(
+                      /\.(jpg|jpeg|png)$/i,
+                      ".webp"
+                    )}
+                    type="image/webp"
+                  />
+                  <img
+                    src={tempArticleData.imageUrl}
+                    alt="Article en cours de publication"
+                    className="w-full h-auto rounded-lg max-h-80 object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    width={800}
+                    height={450}
+                  />
+                </picture>
               </div>
             )}
 
@@ -958,13 +971,22 @@ function PublicationPage() {
                   {/* Affichage de l'image si elle existe */}
                   {imageUrl && (
                     <div className="mb-4 rounded-lg overflow-hidden">
-                      <img
-                        src={imageUrl}
-                        alt="Article"
-                        className="w-full h-auto rounded-lg sm:max-h-dvh object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <picture>
+                        <source
+                          srcSet={imageUrl.replace(
+                            /\.(jpg|jpeg|png)$/i,
+                            ".webp"
+                          )}
+                          type="image/webp"
+                        />
+                        <img
+                          src={imageUrl}
+                          alt="Article"
+                          className="w-full max-w-[800px] h-auto rounded-lg max-h-[350px] sm:max-h-dvh object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </picture>
                     </div>
                   )}
 

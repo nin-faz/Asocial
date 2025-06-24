@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef, Suspense, lazy } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
@@ -34,10 +34,14 @@ import {
   showProfileUpdatedToast,
 } from "../utils/customToasts";
 import { Article } from "../gql/graphql";
-import PublicationDetailsPage from "./publications/PublicationDetailsPage";
-import IconSelector from "../components/icons/IconSelector";
 import { renderUserIcon } from "../utils/iconUtil";
 import UserIcon from "../components/icons/UserIcon";
+import Loader from "../components/Loader";
+
+const PublicationDetailsPage = lazy(
+  () => import("./publications/PublicationDetailsPage")
+);
+const IconSelector = lazy(() => import("../components/icons/IconSelector"));
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
@@ -431,7 +435,9 @@ const MyProfilePage = () => {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Avatar */}
           {isEditing ? (
-            <IconSelector currentIcon={iconName} onSelectIcon={setIconName} />
+            <Suspense fallback={<Loader />}>
+              <IconSelector currentIcon={iconName} onSelectIcon={setIconName} />
+            </Suspense>
           ) : (
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -741,12 +747,21 @@ const MyProfilePage = () => {
                     {/* Ajout de l'affichage de l'image si elle existe */}
                     {article.imageUrl && (
                       <div className="mb-6 rounded-lg overflow-hidden">
-                        <img
-                          src={article.imageUrl}
-                          alt="Article"
-                          className="w-full h-auto rounded-lg max-h-80 object-contain sm:object-cover"
-                          loading="lazy"
-                        />
+                        <picture>
+                          <source
+                            srcSet={article.imageUrl.replace(
+                              /\.(jpg|jpeg|png)$/i,
+                              ".webp"
+                            )}
+                            type="image/webp"
+                          />
+                          <img
+                            src={article.imageUrl}
+                            alt="Article"
+                            className="w-full h-auto rounded-lg max-h-80 object-contain sm:object-cover"
+                            loading="lazy"
+                          />
+                        </picture>
                       </div>
                     )}
                   </div>{" "}
@@ -807,11 +822,13 @@ const MyProfilePage = () => {
                 <X className="h-6 w-6" />
               </button>
               <div className="p-6">
-                <PublicationDetailsPage
-                  articleId={selectedArticle}
-                  isModal={true}
-                  onClose={() => setSelectedArticle(null)}
-                />
+                <Suspense fallback={<Loader />}>
+                  <PublicationDetailsPage
+                    articleId={selectedArticle}
+                    isModal={true}
+                    onClose={() => setSelectedArticle(null)}
+                  />
+                </Suspense>
               </div>
             </motion.div>
           </div>
@@ -887,12 +904,21 @@ const MyProfilePage = () => {
                       {/* Ajout de l'affichage de l'image si elle existe */}
                       {dislike?.article?.imageUrl && (
                         <div className="mb-4 rounded-lg overflow-hidden">
-                          <img
-                            src={dislike?.article?.imageUrl}
-                            alt="Article"
-                            className="w-full h-auto rounded-lg max-h-60 object-cover"
-                            loading="lazy"
-                          />
+                          <picture>
+                            <source
+                              srcSet={dislike.article.imageUrl.replace(
+                                /\.(jpg|jpeg|png)$/i,
+                                ".webp"
+                              )}
+                              type="image/webp"
+                            />
+                            <img
+                              src={dislike.article.imageUrl}
+                              alt="Article"
+                              className="w-full h-auto rounded-lg max-h-60 object-cover"
+                              loading="lazy"
+                            />
+                          </picture>
                         </div>
                       )}
                       <div className="flex justify-between items-end text-gray-500 mt-4">

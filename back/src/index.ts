@@ -9,6 +9,7 @@ import { resolvers } from "./resolvers.js";
 import { typeDefs } from "./schema.js";
 import { getUser } from "./module/auth.js";
 import db from "./datasource/db.js";
+import compression from "compression";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -20,6 +21,7 @@ const server = new ApolloServer({
 
 await server.start();
 
+app.use(compression());
 app.use(cors(), bodyParser.json());
 app.use(
   "/graphql",

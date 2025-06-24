@@ -38,6 +38,8 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
+import { GET_LEADERBOARD } from "../../queries/userQuery";
+import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -58,7 +60,7 @@ function PublicationPage() {
     }
   );
 
-  const userIconName = userData?.findUserById?.iconName || "Skull";
+  const userIconName = userData?.findUserById?.iconName ?? "Skull";
 
   const {
     data,
@@ -593,6 +595,14 @@ function PublicationPage() {
     }
   };
 
+  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
+  // Récupérer le top 1 du leaderboard
+  const top1User = leaderboardData?.findAllUsers?.length
+    ? [...leaderboardData.findAllUsers].sort(
+        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
+      )[0]
+    : null;
+
   // Vérifier si les données sont en cours de chargement
   const isLoading = articlesLoading || mostDislikedLoading;
 
@@ -834,7 +844,7 @@ function PublicationPage() {
                 id: articleId,
                 title,
                 content,
-                imageUrl, // Ajout de imageUrl
+                imageUrl,
                 author,
                 createdAt,
                 updatedAt,
@@ -871,8 +881,8 @@ function PublicationPage() {
                       >
                         <UserIcon iconName={author.iconName} size="small" />
                       </button>
-                      <div>
-                        <div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
                           <button
                             className="text-purple-400 font-semibold hover:underline focus:outline-none"
                             onClick={(e) => {
@@ -883,29 +893,39 @@ function PublicationPage() {
                           >
                             {author.username}
                           </button>
+                          {top1User && author.id === top1User.id && (
+                            <BadgeTop1
+                              message={top1User.top1BadgeMessage}
+                              color={top1User.top1BadgeColor}
+                              preset={top1User.top1BadgePreset as BadgePreset}
+                              className="ml-2"
+                            />
+                          )}
                         </div>
-                        <p className="text-gray-500 text-sm">
-                          Le{" "}
-                          {updatedAt
-                            ? new Date(parseInt(updatedAt, 10))
-                                .toLocaleString("fr-FR", {
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                                .replace(" ", " à ")
-                            : new Date(parseInt(createdAt ?? "0", 10))
-                                .toLocaleString("fr-FR", {
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                                .replace(" ", " à ")}
-                        </p>
+                        <div>
+                          <p className="text-gray-500 text-sm">
+                            Le{" "}
+                            {updatedAt
+                              ? new Date(parseInt(updatedAt, 10))
+                                  .toLocaleString("fr-FR", {
+                                    year: "numeric",
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                  .replace(" ", " à ")
+                              : new Date(parseInt(createdAt ?? "0", 10))
+                                  .toLocaleString("fr-FR", {
+                                    year: "numeric",
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                  .replace(" ", " à ")}
+                          </p>
+                        </div>
                       </div>
                     </div>
 

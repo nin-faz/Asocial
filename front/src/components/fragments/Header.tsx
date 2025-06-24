@@ -10,6 +10,7 @@ import {
   ThumbsDown,
   Info,
   Bell,
+  Trophy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -19,7 +20,7 @@ import { GET_USER_BY_ID } from "../../queries";
 import { useQuery } from "@apollo/client";
 import { GetNotificationsDocument } from "../../gql/graphql";
 import { PushNotificationsProvider } from "../../context/PushNotificationsContext";
-import Loader from "../Loader"; // Assurez-vous que le chemin d'importation est correct
+import Loader from "../Loader";
 
 const NotificationsBell = lazy(
   () => import("../notifications/NotificationsBell")
@@ -139,7 +140,7 @@ const Header = () => {
                       isPublicationsActive
                         ? "text-purple-400"
                         : "text-gray-400 hover:text-purple-400"
-                    } && ${!user ? "ml-[4em] px-" : "ml-[7em]"}`}
+                    } && ${!user ? "ml-[4em] px-" : "ml-[8.5em]"}`}
                     whileHover={{ scale: 1.1 }}
                     onClick={() => navigate("/publications")}
                   >
@@ -166,7 +167,7 @@ const Header = () => {
                 {pathname.startsWith("/publications") && (
                   <div
                     className={`w-full max-w-md ${
-                      !user ? "mr-32 px-8" : "mr-24 px-2"
+                      !user ? "mr-32 px-8" : "mr-20 px-2"
                     }`}
                   >
                     <div className="relative w-full">
@@ -192,6 +193,14 @@ const Header = () => {
                     <NotificationsBell />
                   </Suspense>
 
+                  <motion.button
+                    className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => navigate("/leaderboard")}
+                    title="Classement global"
+                  >
+                    <Trophy className="h-6 w-6" />
+                  </motion.button>
                   <motion.button
                     className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                     whileHover={{ scale: 1.1 }}

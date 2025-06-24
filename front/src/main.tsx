@@ -15,8 +15,8 @@ import "./index.css";
 
 const httpLink = createHttpLink({
   // uri: "https://back-asocial.onrender.com/graphql",
-  // uri: import.meta.env.VITE_GRAPHQL_URL ?? "http://localhost:4000/graphql",
-  uri: "https://asocial-back-dockerhub-252574921374.europe-west1.run.app/graphql",
+  uri: import.meta.env.VITE_GRAPHQL_URL ?? "http://localhost:4000/graphql",
+  // uri: "https://asocial-back-dockerhub-252574921374.europe-west1.run.app/graphql",
 });
 
 const authLink = setContext((_, { headers }) => {

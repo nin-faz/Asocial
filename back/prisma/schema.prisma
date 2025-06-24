@@ -21,6 +21,9 @@ model User {
   dislikes  Dislike[]
   notifications Notification[] // Ajout relation notifications reçues
   pushSubscriptions PushSubscription[]
+  top1BadgeMessage String?
+  top1BadgeColor   String?
+  top1BadgePreset  String?
 }
 
 model Dislike {

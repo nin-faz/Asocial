@@ -3,6 +3,7 @@ import gql from "graphql-tag";
 export const typeDefs = gql`
   type Query {
     findUserById(id: ID!): UserSummary
+    findAllUsers: [UserSummary!]!
     findArticles: [Article]
     findArticleById(id: ID!): Article
     findArticleByMostDisliked: [Article]
@@ -79,6 +80,10 @@ export const typeDefs = gql`
     createdAt: String!
     TotalDislikes: Int
     TotalComments: Int
+    scoreGlobal: Float
+    top1BadgeMessage: String
+    top1BadgeColor: String
+    top1BadgePreset: String
   }
 
   type CreateUserResponse {
@@ -106,6 +111,9 @@ export const typeDefs = gql`
     username: String
     password: String
     iconName: String
+    top1BadgeMessage: String
+    top1BadgeColor: String
+    top1BadgePreset: String
   }
 
   type CreateArticleResponse {
@@ -133,6 +141,9 @@ export const typeDefs = gql`
     bio: String
     iconName: String
     createdAt: String!
+    top1BadgeMessage: String
+    top1BadgeColor: String
+    top1BadgePreset: String
   }
 
   type UserToken {

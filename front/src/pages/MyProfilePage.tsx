@@ -13,6 +13,11 @@ import {
   MoreVertical,
   Trash2,
   Edit2,
+  BarChart2,
+  Trophy,
+  Crown,
+  Flame,
+  Star,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import { useQuery, useMutation } from "@apollo/client";
@@ -33,15 +38,16 @@ import {
   showArticleDeletedToast,
   showProfileUpdatedToast,
 } from "../utils/customToasts";
-import { Article } from "../gql/graphql";
 import { renderUserIcon } from "../utils/iconUtil";
 import UserIcon from "../components/icons/UserIcon";
+
 import Loader from "../components/Loader";
 
 const PublicationDetailsPage = lazy(
   () => import("./publications/PublicationDetailsPage")
 );
 const IconSelector = lazy(() => import("../components/icons/IconSelector"));
+import { GET_LEADERBOARD } from "../queries/userQuery";
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
@@ -83,6 +89,10 @@ const MyProfilePage = () => {
   const [showMenu, setShowMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  const [top1BadgeMessage, setTop1BadgeMessage] = useState("");
+  const [top1BadgeColor, setTop1BadgeColor] = useState("");
+  const [top1BadgePreset, setTop1BadgePreset] = useState("");
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -116,14 +126,52 @@ const MyProfilePage = () => {
 
   const userInfosData = userInfos?.findUserById;
 
+  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
+
+  const top1User = leaderboardData?.findAllUsers?.length
+    ? [...leaderboardData.findAllUsers].sort(
+        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
+      )[0]
+    : null;
+  const isTop1 = userInfosData?.id && top1User?.id === userInfosData.id;
+
   const { data: articleDisliked, refetch: refetchArticleDisliked } = useQuery(
     FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
     {
       variables: { userId: user?.id! },
+      skip: !user,
     }
   );
 
-  const dislikesByUser = articleDisliked?.getDislikesByUserIdForArticles;
+  const dislikesByUser = articleDisliked?.getDislikesByUserIdForArticles ?? [];
+
+  const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
+  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
+  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
+  const [deleteArticle] = useMutation(DELETE_ARTICLE);
+  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
+    FIND_ARTICLES_BY_USER,
+    {
+      variables: { userId: user?.id ?? "" },
+      skip: !user,
+    }
+  );
+
+  const articleByUserData = articleByUser?.findArticlesByUser ?? [];
+
+  const [articleDislikes, setArticleDislikes] = useState<{
+    [key: string]: number;
+  }>({});
+
+  useEffect(() => {
+    if (articleByUserData) {
+      const initialDislikes = articleByUserData.reduce((acc, article) => {
+        acc[article.id] = article.TotalDislikes ?? 0;
+        return acc;
+      }, {} as { [key: string]: number });
+      setArticleDislikes(initialDislikes);
+    }
+  }, [articleByUserData]);
 
   useEffect(() => {
     if (!user) {
@@ -143,21 +191,18 @@ const MyProfilePage = () => {
 
     setUserArticleDislikes(dislikesMap);
 
-    if (dislikesByUser && user) {
-      setNumberOfPostDisliked(dislikesByUser.length);
-      dislikesByUser
-        .map((dislike) => dislike?.article)
-        .filter((article): article is Article => article !== null);
-    }
+    setNumberOfPostDisliked(dislikesByUser.length);
   }, [dislikesByUser, user, articleDisliked]);
 
-  const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
-
+  // Populate badge fields from userInfosData
   useEffect(() => {
     if (userInfosData) {
-      setUsername(userInfosData.username);
-      setBio(userInfosData?.bio! || "");
-      setIconName(userInfosData.iconName || "Skull");
+      setUsername(userInfosData.username ?? "");
+      setBio(userInfosData.bio ?? "");
+      setIconName(userInfosData.iconName ?? "Skull");
+      setTop1BadgeMessage(userInfosData.top1BadgeMessage ?? "");
+      setTop1BadgeColor(userInfosData.top1BadgeColor ?? "");
+      setTop1BadgePreset(userInfosData.top1BadgePreset ?? "");
     }
   }, [userInfosData]);
 
@@ -168,6 +213,13 @@ const MyProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
+      const badgeFields = isTop1
+        ? {
+            top1BadgeMessage,
+            top1BadgeColor,
+            top1BadgePreset,
+          }
+        : {};
       const { data } = await updateUserMutation({
         variables: {
           id: user?.id!,
@@ -175,6 +227,7 @@ const MyProfilePage = () => {
             username,
             bio,
             iconName,
+            ...badgeFields,
           },
         },
         context: {
@@ -202,39 +255,14 @@ const MyProfilePage = () => {
     if (user) {
       setUsername(userInfosData?.username! ?? "");
       setBio(userInfosData?.bio! ?? "");
-      setIconName(userInfosData?.iconName || "Skull");
+      setIconName(userInfosData?.iconName ?? "Skull");
+      setTop1BadgeMessage(userInfosData?.top1BadgeMessage ?? "");
+      setTop1BadgeColor(userInfosData?.top1BadgeColor ?? "");
+      setTop1BadgePreset(userInfosData?.top1BadgePreset ?? "");
     }
     setIsEditing(false);
     setError("");
   };
-
-  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
-  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
-  const [deleteArticle] = useMutation(DELETE_ARTICLE);
-
-  const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
-    FIND_ARTICLES_BY_USER,
-    {
-      variables: { userId: user?.id! },
-      skip: !user,
-    }
-  );
-
-  const articleByUserData = articleByUser?.findArticlesByUser;
-
-  const [articleDislikes, setArticleDislikes] = useState<{
-    [key: string]: number;
-  }>({});
-
-  useEffect(() => {
-    if (articleByUserData) {
-      const initialDislikes = articleByUserData.reduce((acc, article) => {
-        acc[article.id] = article.TotalDislikes || 0;
-        return acc;
-      }, {} as { [key: string]: number });
-      setArticleDislikes(initialDislikes);
-    }
-  }, [articleByUserData]);
 
   const handleArticleDislike = async (
     e: React.MouseEvent,
@@ -424,8 +452,61 @@ const MyProfilePage = () => {
       toast.error("Impossible de partager cet article");
     }
   };
+
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      {/* Badge TOP 1 cumulé au-dessus du header profil, si l'utilisateur est top 1 */}
+      {isTop1 && (
+        <div className="flex justify-center mb-3">
+          <span
+            className="flex flex-col items-center gap-0.5 px-4 py-1 rounded-full shadow-lg border-2 font-bold text-xs sm:text-sm animate-pulse"
+            style={{
+              background: top1BadgeColor || "#FFD600",
+              color: top1BadgeColor ? "#222" : "#7c5700",
+              borderColor: top1BadgeColor || "#FFD600",
+              minWidth: 0,
+              maxWidth: "90vw",
+            }}
+            aria-label="Badge TOP 1 personnalisé"
+          >
+            <span className="flex items-center gap-1">
+              {/* Icône Lucide React selon le preset */}
+              {top1BadgePreset === "crown" ? (
+                <Crown
+                  className="h-4 w-4 text-yellow-700"
+                  aria-label="Couronne"
+                />
+              ) : top1BadgePreset === "flame" ? (
+                <Flame className="h-4 w-4 text-red-500" aria-label="Flamme" />
+              ) : top1BadgePreset === "star" ? (
+                <Star className="h-4 w-4 text-yellow-400" aria-label="Étoile" />
+              ) : top1BadgePreset === "trophy" ? (
+                <Trophy
+                  className="h-4 w-4 text-yellow-700"
+                  aria-label="Trophée"
+                />
+              ) : (
+                <Trophy
+                  className="h-4 w-4 text-yellow-700"
+                  aria-label="Trophée"
+                />
+              )}
+              <span className="truncate font-semibold text-base sm:text-lg">
+                {top1BadgeMessage?.trim() ? top1BadgeMessage : "TOP 1"}
+              </span>
+            </span>
+            {/* Affiche 'TOP 1' en petit sous le message custom si présent */}
+            {top1BadgeMessage?.trim() && (
+              <span
+                className="text-[10px] sm:text-xs font-bold tracking-wide mt-0.5 opacity-80"
+                style={{ letterSpacing: "0.04em" }}
+              >
+                TOP 1
+              </span>
+            )}
+          </span>
+        </div>
+      )}
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -486,7 +567,70 @@ const MyProfilePage = () => {
                     className="w-full bg-gray-800 text-gray-100 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
-                {error && <div className="text-red-400 text-sm">{error}</div>}{" "}
+                {error && <div className="text-red-400 text-sm">{error}</div>}
+                {/* Personnalisation badge TOP 1 : visible uniquement pour le top 1, sous le username */}
+                {isTop1 && (
+                  <div className="space-y-2 border-t border-purple-800 pt-4 mt-2">
+                    <div>
+                      <label className="block text-sm font-medium text-yellow-400 mb-1">
+                        Personnalisation du badge TOP 1
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">
+                        Message personnalisé
+                      </label>
+                      <input
+                        type="text"
+                        value={top1BadgeMessage}
+                        onChange={(e) => setTop1BadgeMessage(e.target.value)}
+                        maxLength={32}
+                        className="w-full bg-gray-800 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-900"
+                        placeholder="Ex: Roi du chaos"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">
+                        Couleur du badge
+                      </label>
+                      <input
+                        type="color"
+                        value={top1BadgeColor || "#FFD600"}
+                        onChange={(e) => setTop1BadgeColor(e.target.value)}
+                        className="w-12 h-8 p-0 border-0 bg-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">
+                        Badge prédéfini
+                      </label>
+                      <select
+                        value={top1BadgePreset}
+                        onChange={(e) => setTop1BadgePreset(e.target.value)}
+                        className="{w-full bg-gray-800 text-white p-2 rounded-lg"
+                      >
+                        <option value="">Aucun</option>
+                        <option value="crown">Couronne</option>
+                        <option value="trophy">Trophée</option>
+                        <option value="flame">Flamme</option>
+                        <option value="star">Étoile</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-500"
+                        onClick={() => {
+                          setTop1BadgeMessage("");
+                          setTop1BadgeColor("");
+                          setTop1BadgePreset("");
+                        }}
+                      >
+                        Réinitialiser
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-end space-x-2 sm:space-x-3">
                   <button
                     onClick={cancelEditing}
@@ -512,8 +656,9 @@ const MyProfilePage = () => {
               </div>
             ) : (
               <>
-                <h1 className="text-3xl font-bold text-purple-400 mb-2">
+                <h1 className="text-3xl font-bold text-purple-400 mb-2 flex items-center justify-center md:justify-start">
                   {username}
+                  {/* SUPPRESSION du badge ici pour éviter la redondance */}
                 </h1>
                 <p className="text-gray-500 mb-4">
                   Membre depuis{" "}
@@ -527,9 +672,7 @@ const MyProfilePage = () => {
                       )
                     : "?"}
                 </p>
-                <p className="text-gray-300 mb-6 max-w-2xl">
-                  {bio || "Cet utilisateur n'a pas encore de bio."}
-                </p>
+                <p className="text-gray-300 mb-6 max-w-2xl">{bio}</p>
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
                   <div className="flex items-center space-x-2 hover:text-purple-400">
@@ -629,7 +772,7 @@ const MyProfilePage = () => {
             onClick={() => handleTabChange("statistiques")}
           >
             <span className="flex items-center justify-center">
-              <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
+              <BarChart2 className="h-4 w-4 mr-1 sm:mr-2" />
               Statistiques
             </span>
           </button>

@@ -39,9 +39,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         const options = {
           maxWidthOrHeight: 800, // Limite la taille à 800px (largeur ou hauteur max)
           useWebWorker: true,
-          initialQuality: 0.6, // Baisse la qualité pour une compression plus forte
-          fileType: "image/webp", // Force le format WebP
-          maxSizeMB: 0.1, // Limite la taille à 100 Ko
+          initialQuality: 0.9, // Augmente encore la qualité pour une meilleure résolution
+          maxSizeMB: 1, // Permet des fichiers jusqu'à 1 Mo
+          fileType: undefined,
         };
         const compressedFile = await imageCompression(file, options);
 

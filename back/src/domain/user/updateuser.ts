@@ -36,13 +36,6 @@ export const updateUser: NonNullable<MutationResolvers["updateUser"]> = async (
       };
     }
 
-    // Format username if provided
-    // Ensure we always use the new username when it's provided, even if it's the same as before
-    // const formattedUsername =
-    //   body.username !== undefined && body.username?.trim() !== ""
-    //     ? formatUsername(body?.username!)
-    //     : existUser.username;
-
     const updatedData = {
       bio: body.bio?.trim() ? body.bio : existUser.bio,
       username: body.username?.trim()
@@ -51,7 +44,10 @@ export const updateUser: NonNullable<MutationResolvers["updateUser"]> = async (
       password: body.password?.trim()
         ? await hashPassword(body.password)
         : existUser.password,
-      iconName: body.iconName ? body.iconName : existUser.iconName,
+      iconName: body.iconName ?? existUser.iconName,
+      top1BadgeMessage: body.top1BadgeMessage ?? existUser.top1BadgeMessage,
+      top1BadgeColor: body.top1BadgeColor ?? existUser.top1BadgeColor,
+      top1BadgePreset: body.top1BadgePreset ?? existUser.top1BadgePreset,
     };
 
     if (Object.keys(updatedData).length === 0) {
@@ -78,6 +74,10 @@ export const updateUser: NonNullable<MutationResolvers["updateUser"]> = async (
         bio: updatedUser.bio,
         iconName: updatedUser.iconName,
         createdAt: updatedUser.createdAt.toISOString(),
+        // Champs badge top 1
+        top1BadgeMessage: updatedUser.top1BadgeMessage,
+        top1BadgeColor: updatedUser.top1BadgeColor,
+        top1BadgePreset: updatedUser.top1BadgePreset,
       },
     };
   } catch (error) {

@@ -1,8 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import { motion } from "framer-motion";
-import { Loader, MessageSquare, Share2, ThumbsDown } from "lucide-react";
-import { GET_USER_BY_ID } from "../queries/userQuery";
+import {
+  ArrowLeft,
+  Loader,
+  MessageSquare,
+  Share2,
+  ThumbsDown,
+} from "lucide-react";
+import { GET_USER_BY_ID, GET_LEADERBOARD } from "../queries/userQuery";
 import { FIND_ARTICLES_BY_USER } from "../queries/articleQuery";
 import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../queries/dislikeQuery";
 import UserIcon from "../components/icons/UserIcon";
@@ -14,6 +20,7 @@ import {
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { showLoginRequiredToast } from "../utils/customToasts";
+import { BadgeTop1, BadgePreset } from "../components/BadgeTop1";
 
 const UserProfilePage = () => {
   const { userId } = useParams();
@@ -97,6 +104,14 @@ const UserProfilePage = () => {
     }
   }, [auth?.user?.id, userIdString, navigate]);
 
+  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
+  const top1User = leaderboardData?.findAllUsers?.length
+    ? [...leaderboardData.findAllUsers].sort(
+        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
+      )[0]
+    : null;
+  const isTop1 = user?.id && top1User?.id === user.id;
+
   if (userLoading || articlesLoading) {
     return <Loader />;
   }
@@ -151,6 +166,17 @@ const UserProfilePage = () => {
 
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
+        onClick={() => {
+          navigate(-1);
+        }}
+      >
+        <ArrowLeft className="h-5 w-5 mr-2" />
+        Retour
+      </motion.button>
       {/* Header profil */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -164,8 +190,16 @@ const UserProfilePage = () => {
           </div>
           {/* Infos */}
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-purple-400 mb-2">
+            <h1 className="text-3xl font-bold text-purple-400 mb-2 flex items-center justify-center md:justify-start">
               {user?.username}
+              {isTop1 && (
+                <BadgeTop1
+                  message={user?.top1BadgeMessage}
+                  color={user?.top1BadgeColor}
+                  preset={user?.top1BadgePreset as BadgePreset}
+                  className="ml-3"
+                />
+              )}
             </h1>
             <p className="text-gray-500 mb-4">
               Membre depuis{" "}

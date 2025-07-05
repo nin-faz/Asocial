@@ -43,3 +43,12 @@ export const GET_LEADERBOARD = graphql(`
     }
   }
 `);
+
+export const GET_USERS = graphql(`
+  query FindUsers {
+    findAllUsers {
+      id
+      username
+    }
+  }
+`);

@@ -659,29 +659,6 @@ function PublicationPage() {
     }
   };
 
-  // // Ajout d'un gestionnaire d'événements keydown global pour gérer la validation de la touche Entrée
-  // useEffect(() => {
-  //   const listener = (event: KeyboardEvent) => {
-  //     // Appeler handleKeyDown seulement si un champ d'entrée est actif et que la liste de mentions est visible
-  //     if (
-  //       (activeField === "title" || activeField === "content") &&
-  //       showMentionList &&
-  //       event.key === "Enter" &&
-  //       mentionSuggestions.length > 0
-  //     ) {
-  //       event.preventDefault();
-  //       insertMention(
-  //         mentionSuggestions[0].username,
-  //         activeField === "title" ? setTitle : setContent
-  //       );
-  //     }
-  //   };
-  //   document.addEventListener("keydown", listener);
-  //   return () => {
-  //     document.removeEventListener("keydown", listener);
-  //   };
-  // }, [showMentionList, mentionSuggestions, activeField, setTitle, setContent]);
-
   // Ajout d'un effet pour fermer la liste des mentions si l'utilisateur clique à l'extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1153,13 +1130,19 @@ function PublicationPage() {
                       </div>
                     )}
                   </div>
-                  <h2 className="text-xl font-semibold text-purple-400 mb-2">
-                    {title}
-                  </h2>
+                  <h2
+                    className="text-xl font-semibold text-purple-400 mb-2"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightMentions(title ?? ""),
+                    }}
+                  ></h2>
 
-                  <p className="text-gray-300 mb-4 whitespace-pre-wrap">
-                    {content}
-                  </p>
+                  <p
+                    className="text-gray-300 mb-4 whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightMentions(content),
+                    }}
+                  ></p>
 
                   {/* Affichage de l'image si elle existe */}
                   {imageUrl && (

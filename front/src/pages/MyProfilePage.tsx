@@ -39,7 +39,6 @@ import {
   showProfileUpdatedToast,
 } from "../utils/customToasts";
 import { renderUserIcon } from "../utils/iconUtil";
-import UserIcon from "../components/icons/UserIcon";
 
 import Loader from "../components/Loader";
 
@@ -48,11 +47,49 @@ const PublicationDetailsPage = lazy(
 );
 const IconSelector = lazy(() => import("../components/icons/IconSelector"));
 import { GET_LEADERBOARD } from "../queries/userQuery";
+import { GET_USERS } from "../queries";
+import UserIcon from "../components/icons/UserIcon";
 
 const MyProfilePage = () => {
+  // Mention support setup
+  const { data: usersData } = useQuery(GET_USERS);
   const navigate = useNavigate();
-  const location = useLocation();
   const auth = useContext(AuthContext);
+
+  // Wrap @username in clickable spans
+  const highlightMentions = (text: string) => {
+    const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const withTags = escaped.replace(
+      /@([\w.-]+)/g,
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+    );
+    return withTags.replace(/\n/g, "<br>");
+  };
+
+  // Click handler for mention spans
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const elt = e.target as HTMLElement;
+      if (elt.classList.contains("mention")) {
+        const uname = elt.getAttribute("data-username");
+        if (uname) {
+          e.stopPropagation();
+          const userObj = usersData?.findAllUsers?.find(
+            (u) => u.username === uname
+          );
+          if (userObj) {
+            navigate(
+              userObj.id === auth?.user?.id
+                ? "/profile"
+                : `/users/${userObj.id}`
+            );
+          }
+        }
+      }
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [usersData, navigate, auth]);
 
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -521,7 +558,9 @@ const MyProfilePage = () => {
             </Suspense>
           ) : (
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{
+                scale: 1.05,
+              }}
               className="w-32 h-32 rounded-full bg-purple-900 flex items-center justify-center relative cursor-pointer group"
               onClick={() => setIsEditing(true)}
             >
@@ -807,26 +846,24 @@ const MyProfilePage = () => {
                         {renderUserIcon(userInfosData?.iconName, "small")}
                       </div>{" "}
                       <p className="text-gray-500 text-sm">
-                        Publié le{" "}
-                        {article.updatedAt
-                          ? new Date(parseInt(article.updatedAt, 10))
-                              .toLocaleString("fr-FR", {
-                                year: "numeric",
-                                month: "numeric",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                              .replace(" ", " à ")
-                          : new Date(parseInt(article.createdAt ?? "0", 10))
-                              .toLocaleString("fr-FR", {
-                                year: "numeric",
-                                month: "numeric",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                              .replace(" ", " à ")}
+                        {(() => {
+                          const date = article?.updatedAt || article?.createdAt;
+                          if (!date) return null;
+
+                          const formatted = new Date(parseInt(date, 10))
+                            .toLocaleString("fr-FR", {
+                              year: "numeric",
+                              month: "numeric",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            .replace(" ", " à ");
+
+                          return `Publié le ${formatted}${
+                            article?.updatedAt ? " (modifié)" : ""
+                          }`;
+                        })()}
                       </p>
                     </div>
 
@@ -881,12 +918,18 @@ const MyProfilePage = () => {
                     </div>
                   </div>
                   <div className="py-2">
-                    <h2 className="text-xl font-semibold text-purple-400 mb-2">
-                      {article.title}
-                    </h2>
-                    <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
-                      {article.content}
-                    </p>{" "}
+                    <h2
+                      className="text-xl font-semibold text-purple-400 mb-2"
+                      dangerouslySetInnerHTML={{
+                        __html: highlightMentions(article.title || ""),
+                      }}
+                    />
+                    <p
+                      className="text-gray-300 text-lg mb-6 whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{
+                        __html: highlightMentions(article.content || ""),
+                      }}
+                    />
                     {/* Ajout de l'affichage de l'image si elle existe */}
                     {article.imageUrl && (
                       <div className="mb-6 rounded-lg overflow-hidden">
@@ -1037,13 +1080,23 @@ const MyProfilePage = () => {
                     </div>
                     <div className="flex flex-col flex-grow justify-between">
                       {dislike?.article?.title && (
-                        <h1 className="sm:text-2xl font-semibold text-gray-100 pb-3">
-                          {dislike?.article?.title}
-                        </h1>
+                        <h2
+                          className="text-xl font-semibold text-purple-400 mb-2"
+                          dangerouslySetInnerHTML={{
+                            __html: highlightMentions(
+                              dislike?.article?.title || ""
+                            ),
+                          }}
+                        />
                       )}
-                      <p className="text-sm sm:text-base text-gray-300 mb-4 whitespace-pre-wrap flex-grow">
-                        {dislike?.article?.content}
-                      </p>
+                      <p
+                        className="text-gray-300 text-lg mb-6 whitespace-pre-wrap flex-grow"
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMentions(
+                            dislike?.article?.content || ""
+                          ),
+                        }}
+                      />
                       {/* Ajout de l'affichage de l'image si elle existe */}
                       {dislike?.article?.imageUrl && (
                         <div className="mb-4 rounded-lg overflow-hidden">

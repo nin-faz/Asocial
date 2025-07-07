@@ -8,6 +8,7 @@ import {
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS,
   GET_COMMENTS,
   GET_USER_BY_ID,
+  GET_USERS,
 } from "../../queries";
 import {
   ADD_ARTICLE_DISLIKE,
@@ -68,11 +69,164 @@ const PublicationDetailsPage = ({
   const { id } = useParams();
   const finalId = articleId || id;
 
-  const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const isEditMode = queryParams.get("edit") === "true";
   const targetCommentId = queryParams.get("commentId");
+  const navigate = useNavigate();
+
+  const { data: usersData } = useQuery(GET_USERS);
+  const [mentionSuggestions, setMentionSuggestions] = useState<
+    { id: string; username: string; __typename?: string }[]
+  >([]);
+  const [showMentionList, setShowMentionList] = useState(false);
+  const mentionListRef = useRef<HTMLDivElement | null>(null);
+  const [mentionListPosition, setMentionListPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+  const [activeField, setActiveField] = useState<
+    "title" | "content" | "comment" | "reply" | null
+  >(null);
+  const [selectedIndexUser, setSelectedIndexUser] = useState(0);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const commentRepliedInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const mentionItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleTextChange = (
+    text: string,
+    setText: React.Dispatch<React.SetStateAction<string>>,
+    inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+  ) => {
+    if (!inputRef?.current) return;
+
+    setText(text);
+
+    const { top, left, width } = inputRef.current.getBoundingClientRect();
+    setMentionListPosition({ top, left, width });
+
+    const mentionRegex = /@(\w*)$/;
+    const mentionMatch = mentionRegex.exec(text);
+    if (mentionMatch) {
+      const query = mentionMatch[1].toLowerCase();
+      const suggestions =
+        usersData?.findAllUsers?.filter((user: any) =>
+          user.username.toLowerCase().startsWith(query)
+        ) || [];
+      setMentionSuggestions(suggestions);
+      setSelectedIndexUser(0);
+      setShowMentionList(true);
+    } else {
+      setShowMentionList(false);
+    }
+  };
+
+  const insertMention = (
+    username: string,
+    setText: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    setText((prev) => {
+      const updatedText = prev.replace(/@[a-zA-Z0-9_.-]*$/, `@${username} `);
+      return updatedText;
+    });
+    setShowMentionList(false);
+  };
+
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    if (!showMentionList || mentionSuggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSelectedIndexUser((prev) => (prev + 1) % mentionSuggestions.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSelectedIndexUser(
+        (prev) =>
+          (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length
+      );
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      const mentionSetter = editingCommentId
+        ? setEditedCommentContent
+        : activeField === "title"
+        ? setEditedTitle
+        : activeField === "content"
+        ? setEditedContent
+        : activeField === "reply"
+        ? setReplyContent
+        : setNewComment;
+
+      insertMention(
+        mentionSuggestions[selectedIndexUser].username,
+        mentionSetter
+      );
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mentionListRef.current &&
+        !mentionListRef.current.contains(event.target as Node)
+      ) {
+        setShowMentionList(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (showMentionList && mentionItemRefs.current[selectedIndexUser]) {
+      mentionItemRefs.current[selectedIndexUser]?.scrollIntoView({
+        behavior: "auto",
+        block: "nearest",
+      });
+    }
+  }, [selectedIndexUser, showMentionList]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("mention")) {
+        const username = target.getAttribute("data-username");
+        if (username) {
+          e.stopPropagation();
+          // Find the mentioned user's id based on username
+          const mentionedUser = usersData?.findAllUsers?.find(
+            (u) => u.username === username
+          );
+          if (mentionedUser) {
+            const profilePath =
+              mentionedUser.id === user?.id
+                ? `/users/${user.id}`
+                : `/users/${mentionedUser.id}`;
+            navigate(profilePath);
+          }
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [usersData, navigate, user]);
+
+  const highlightMentions = (text: string) => {
+    const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const withMentions = escaped.replace(
+      /@([a-zA-Z0-9_.-]+)/g,
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+    );
+    return withMentions.replace(/\n/g, "<br>");
+  };
 
   useEffect(() => {
     if (isEditMode) {
@@ -446,7 +600,7 @@ const PublicationDetailsPage = ({
     setEditedCommentContent("");
   };
 
-  const handleUpdateComment = async (commentId: string) => {
+  const handleUpdateToSaveComment = async (commentId: string) => {
     if (editedCommentContent.trim() === "") return;
 
     try {
@@ -670,7 +824,8 @@ const PublicationDetailsPage = ({
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
           onClick={() => {
-            navigate(-1);
+            // Always navigate back to the publications list to avoid unexpected history behavior
+            navigate("/publications");
           }}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
@@ -801,20 +956,54 @@ const PublicationDetailsPage = ({
         {isEditing ? (
           <div className="flex flex-col space-y-4">
             {/* Champ d'édition du titre */}
-            <input
-              type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-              placeholder="Titre de l'article  (Optionnel)"
-            />
+            <div className="relative w-full">
+              <div
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 whitespace-pre-wrap min-h-[2.5rem]"
+                dangerouslySetInnerHTML={{
+                  __html: highlightMentions(editedTitle) + "<br>",
+                }}
+              />
+              <input
+                type="text"
+                value={editedTitle}
+                onChange={(e) =>
+                  handleTextChange(
+                    e.target.value,
+                    setEditedTitle,
+                    titleInputRef
+                  )
+                }
+                onFocus={() => setActiveField("title")}
+                onKeyDown={handleKeyDown}
+                ref={titleInputRef}
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 border-none"
+                placeholder="Titre de l'article  (Optionnel)"
+              />
+            </div>
 
             {/* Champ d'édition du contenu */}
-            <textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-            />
+            <div className="relative w-full">
+              <div
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: highlightMentions(editedContent) + "<br>",
+                }}
+              />
+              <textarea
+                value={editedContent}
+                onChange={(e) =>
+                  handleTextChange(
+                    e.target.value,
+                    setEditedContent,
+                    contentInputRef
+                  )
+                }
+                onFocus={() => setActiveField("content")}
+                onKeyDown={handleKeyDown}
+                ref={contentInputRef}
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+              />
+            </div>
 
             {/* Ajout du téléchargeur d'image */}
             <ImageUploader
@@ -855,12 +1044,18 @@ const PublicationDetailsPage = ({
           </div>
         ) : (
           <>
-            <h2 className="text-xl font-semibold text-purple-400 mb-2">
-              {article?.title}
-            </h2>
-            <p className="text-gray-300 text-lg mb-6 whitespace-pre-wrap">
-              {article?.content}
-            </p>
+            <h2
+              className="text-xl font-semibold text-purple-400 mb-2"
+              dangerouslySetInnerHTML={{
+                __html: highlightMentions(article?.title ?? ""),
+              }}
+            ></h2>
+            <p
+              className="text-gray-300 text-lg mb-6 whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: highlightMentions(article?.content ?? ""),
+              }}
+            ></p>
           </>
         )}
 
@@ -923,6 +1118,50 @@ const PublicationDetailsPage = ({
         </div>
       </motion.div>
 
+      {/* Mention suggestions list */}
+      {showMentionList && mentionSuggestions.length > 0 && (
+        <div
+          ref={mentionListRef}
+          className="absolute z-10 bg-gray-800 border border-purple-700 rounded-md shadow-lg max-h-48 overflow-y-auto"
+          style={{
+            top:
+              activeField === "reply"
+                ? mentionListPosition.top + 450
+                : mentionListPosition.top + 100,
+            left: mentionListPosition.left,
+            width: mentionListPosition.width,
+          }}
+        >
+          {mentionSuggestions.map((user, index) => (
+            <button
+              key={user.id}
+              ref={(el) => {
+                if (el) mentionItemRefs.current[index] = el;
+              }}
+              className={`w-full text-left px-4 py-2 ${
+                index === selectedIndexUser
+                  ? "bg-purple-700 text-white"
+                  : "text-gray-300"
+              } hover:bg-purple-600`}
+              onClick={() =>
+                insertMention(
+                  user.username,
+                  activeField === "title"
+                    ? setEditedTitle
+                    : activeField === "content"
+                    ? setEditedContent
+                    : activeField === "reply"
+                    ? setEditedCommentContent
+                    : setNewComment
+                )
+              }
+            >
+              {user.username}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Comment Form */}
       {!replyToCommentId && (
         <motion.div
@@ -941,12 +1180,34 @@ const PublicationDetailsPage = ({
               </div>
             </div>
             <div className="flex-grow relative">
-              <textarea
-                placeholder="Ajoutez votre commentaire..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-              />
+              <div className="relative w-full">
+                {/* Texte visible avec mentions colorées */}
+                <div
+                  className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
+                  aria-hidden="true"
+                  dangerouslySetInnerHTML={{
+                    __html: highlightMentions(newComment),
+                  }}
+                ></div>
+
+                {/* Champ invisible qui suit le texte */}
+                <textarea
+                  placeholder="Ajoutez votre commentaire..."
+                  value={newComment}
+                  onChange={(e) =>
+                    handleTextChange(
+                      e.target.value,
+                      setNewComment,
+                      commentInputRef
+                    )
+                  }
+                  onFocus={() => setActiveField("comment")}
+                  onKeyDown={handleKeyDown}
+                  ref={commentInputRef}
+                  className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                />
+              </div>
+
               <button
                 onClick={handleCreateComment}
                 className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
@@ -1011,36 +1272,24 @@ const PublicationDetailsPage = ({
                       {comment?.author.username}
                     </button>{" "}
                     <p className="text-gray-500 text-sm">
-                      Le{" "}
-                      {comment?.updatedAt
-                        ? `${new Date(parseInt(comment?.createdAt ?? "0", 10))
-                            .toLocaleString("fr-FR", {
-                              year: "numeric",
-                              month: "numeric",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                            .replace(",", " à")} (modifié le ${new Date(
-                            parseInt(comment?.updatedAt, 10)
-                          )
-                            .toLocaleString("fr-FR", {
-                              year: "numeric",
-                              month: "numeric",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                            .replace("", " à ")})`
-                        : new Date(parseInt(comment?.createdAt ?? "0", 10))
-                            .toLocaleString("fr-FR", {
-                              year: "numeric",
-                              month: "numeric",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                            .replace(" ", " à ")}
+                      {(() => {
+                        const date = comment?.updatedAt || comment?.createdAt;
+                        if (!date) return null;
+
+                        const formatted = new Date(parseInt(date, 10))
+                          .toLocaleString("fr-FR", {
+                            year: "numeric",
+                            month: "numeric",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                          .replace(" ", " à ");
+
+                        return `Le ${formatted}${
+                          comment?.updatedAt ? " (modifié)" : ""
+                        }`;
+                      })()}
                     </p>
                   </div>
                   {comment?.author.id === user?.id && (
@@ -1056,7 +1305,7 @@ const PublicationDetailsPage = ({
                           );
                         }}
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-5 w-5" />
                       </button>
 
                       {showMenu === comment?.id && (
@@ -1098,11 +1347,30 @@ const PublicationDetailsPage = ({
                 </div>
                 {editingCommentId === comment?.id ? (
                   <div className="mt-2 mb-4">
-                    <textarea
-                      value={editedCommentContent}
-                      onChange={(e) => setEditedCommentContent(e.target.value)}
-                      className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-                    />
+                    <div className="relative w-full">
+                      <div
+                        key={editedCommentContent} // ← ça force le render quand le texte change
+                        className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] whitespace-pre-wrap break-words"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            highlightMentions(editedCommentContent) + "<br>",
+                        }}
+                      />
+                      <textarea
+                        value={editedCommentContent}
+                        onChange={(e) =>
+                          handleTextChange(
+                            e.target.value,
+                            setEditedCommentContent,
+                            commentInputRef
+                          )
+                        }
+                        onFocus={() => setActiveField("comment")}
+                        onKeyDown={handleKeyDown}
+                        ref={commentInputRef}
+                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                      />
+                    </div>
                     <div className="flex justify-end space-x-2 mt-2">
                       <button
                         onClick={handleCancelEditComment}
@@ -1112,7 +1380,7 @@ const PublicationDetailsPage = ({
                         Annuler
                       </button>
                       <button
-                        onClick={() => handleUpdateComment(comment?.id!)}
+                        onClick={() => handleUpdateToSaveComment(comment?.id!)}
                         className="flex items-center px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                       >
                         <Save className="h-4 w-4 mr-1" />
@@ -1122,7 +1390,12 @@ const PublicationDetailsPage = ({
                   </div>
                 ) : (
                   <>
-                    <p className="text-gray-300 mb-2">{comment?.content}</p>
+                    <p
+                      className="text-gray-300 mb-2"
+                      dangerouslySetInnerHTML={{
+                        __html: highlightMentions(comment?.content ?? ""),
+                      }}
+                    ></p>
                     {/* Replies */}
                     {comment &&
                       comment.replies &&
@@ -1152,7 +1425,15 @@ const PublicationDetailsPage = ({
                               }}
                               whileTap={{ scale: 0.98 }}
                               className="bg-gray-800 rounded-lg p-4 border border-purple-700 relative hover:border-purple-500 transition-colors"
-                              onClick={(e) => e.stopPropagation()}
+                              // On bloque *sauf* si c'est une mention
+                              onClick={(e) => {
+                                const isMention = (
+                                  e.target as HTMLElement
+                                ).classList.contains("mention");
+                                if (!isMention) {
+                                  e.stopPropagation();
+                                }
+                              }}
                             >
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 rounded-l-lg"></div>
                               <div className="flex items-start space-x-3">
@@ -1189,68 +1470,67 @@ const PublicationDetailsPage = ({
                                       </button>
                                     </div>
                                     <p className="text-gray-500 text-xs mt-1">
-                                      {reply?.updatedAt
-                                        ? `Modifié le ${new Date(
-                                            parseInt(reply?.updatedAt, 10)
-                                          )
-                                            .toLocaleString("fr-FR", {
-                                              year: "numeric",
-                                              month: "numeric",
-                                              day: "numeric",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })
-                                            .replace(" ", " à ")}`
-                                        : `Le ${new Date(
-                                            parseInt(
-                                              reply?.createdAt ?? "0",
-                                              10
-                                            )
-                                          )
-                                            .toLocaleString("fr-FR", {
-                                              year: "numeric",
-                                              month: "numeric",
-                                              day: "numeric",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })
-                                            .replace(" ", " à ")}`}
+                                      {(() => {
+                                        const date =
+                                          reply?.updatedAt || reply?.createdAt;
+                                        if (!date) return null;
+
+                                        const formatted = new Date(
+                                          parseInt(date, 10)
+                                        )
+                                          .toLocaleString("fr-FR", {
+                                            year: "numeric",
+                                            month: "numeric",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })
+                                          .replace(" ", " à ");
+
+                                        return `Le ${formatted}${
+                                          reply?.updatedAt ? " (modifié)" : ""
+                                        }`;
+                                      })()}
                                     </p>
                                   </div>
                                   {editingCommentId === reply?.id ? (
-                                    <div className="mt-2 mb-2">
+                                    <div className="mt-2 mb-2 relative w-full">
+                                      {/* Texte affiché avec mentions stylées */}
+                                      <div
+                                        className="w-full bg-gray-700 text-gray-100 rounded-lg p-2 min-h-[60px] whitespace-pre-wrap break-words text-sm"
+                                        dangerouslySetInnerHTML={{
+                                          __html:
+                                            highlightMentions(
+                                              editedCommentContent
+                                            ) + "<br>",
+                                        }}
+                                      />
+
+                                      {/* Textarea transparent par-dessus */}
                                       <textarea
                                         value={editedCommentContent}
                                         onChange={(e) =>
-                                          setEditedCommentContent(
-                                            e.target.value
+                                          handleTextChange(
+                                            e.target.value,
+                                            setEditedCommentContent,
+                                            commentRepliedInputRef
                                           )
                                         }
-                                        className="w-full bg-gray-700 text-gray-100 rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
+                                        onFocus={() => setActiveField("reply")}
+                                        onKeyDown={handleKeyDown}
+                                        ref={commentRepliedInputRef}
+                                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
                                       />
-                                      <div className="flex justify-end space-x-2 mt-1">
-                                        <button
-                                          onClick={handleCancelEditComment}
-                                          className="flex items-center px-2 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors text-xs"
-                                        >
-                                          <X className="h-3 w-3 mr-1" />
-                                          Annuler
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleUpdateComment(reply?.id!)
-                                          }
-                                          className="flex items-center px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-xs"
-                                        >
-                                          <Save className="h-3 w-3 mr-1" />
-                                          Sauvegarder
-                                        </button>
-                                      </div>
                                     </div>
                                   ) : (
-                                    <p className="text-gray-400 text-sm mt-1">
-                                      {reply?.content}
-                                    </p>
+                                    <p
+                                      className="text-gray-300 text-sm mt-1"
+                                      dangerouslySetInnerHTML={{
+                                        __html: highlightMentions(
+                                          reply?.content ?? ""
+                                        ),
+                                      }}
+                                    ></p>
                                   )}
                                   {/* Actions de réponse */}{" "}
                                   {/* Bouton de dislike pour les réponses (temporairement désactivé)
@@ -1389,7 +1669,7 @@ const PublicationDetailsPage = ({
                 </div>
 
                 {/* Reply Form inside comment */}
-                {replyToCommentId === comment?.id && (
+                {/* {replyToCommentId === comment?.id && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1421,12 +1701,30 @@ const PublicationDetailsPage = ({
                         </div>
                       </div>
                       <div className="flex-grow relative">
-                        <textarea
-                          placeholder="Écrivez votre réponse..."
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-10 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
-                        />
+                        <div className="relative w-full">
+                          <div
+                            className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
+                            aria-hidden="true"
+                            dangerouslySetInnerHTML={{
+                              __html: highlightMentions(replyContent),
+                            }}
+                          ></div>
+                          <textarea
+                            placeholder="Écrivez votre réponse..."
+                            value={replyContent}
+                            onChange={(e) =>
+                              handleTextChange(
+                                e.target.value,
+                                setReplyContent,
+                                commentRepliedInputRef
+                              )
+                            }
+                            onFocus={() => setActiveField("reply")}
+                            onKeyDown={handleKeyDown}
+                            ref={commentRepliedInputRef}
+                            className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                          />
+                        </div>
                         <button
                           onClick={handleCreateComment}
                           className="absolute right-2 bottom-2 text-purple-400 hover:text-purple-300"
@@ -1437,7 +1735,7 @@ const PublicationDetailsPage = ({
                       </div>
                     </div>
                   </motion.div>
-                )}
+                )}*/}
               </div>
             </div>
           </motion.div>

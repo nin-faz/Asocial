@@ -239,7 +239,7 @@ function PublicationPage() {
       return;
     }
 
-    if (content.trim() === "") {
+    if (title.trim() === "" && content.trim() === "") {
       showEmptyContentToast();
       return;
     }
@@ -630,7 +630,7 @@ function PublicationPage() {
     setText: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setText((prev) => {
-      const updatedText = prev.replace(/@\w*$/, `@${username} `);
+      const updatedText = prev.replace(/@[a-zA-Z0-9_.-]*$/, `@${username} `);
       return updatedText;
     });
     setShowMentionList(false);
@@ -652,9 +652,11 @@ function PublicationPage() {
       );
     } else if (event.key === "Enter") {
       event.preventDefault();
+
+      const mentionSetter = activeField === "title" ? setTitle : setContent;
       insertMention(
         mentionSuggestions[selectedIndexUser].username,
-        activeField === "title" ? setTitle : setContent
+        mentionSetter
       );
     }
   };
@@ -685,12 +687,38 @@ function PublicationPage() {
     }
   }, [selectedIndexUser, showMentionList]);
 
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("mention")) {
+        const username = target.getAttribute("data-username");
+        if (username) {
+          e.stopPropagation();
+          // Find the mentioned user's id based on username
+          const mentionedUser = usersData?.findAllUsers?.find(
+            (u) => u.username === username
+          );
+          if (mentionedUser) {
+            const profilePath =
+              mentionedUser.id === user?.id
+                ? `/users/${user.id}`
+                : `/users/${mentionedUser.id}`;
+            navigate(profilePath, { replace: true });
+          }
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [usersData, navigate, user]);
+
   // Ajout de la logique pour surligner les mentions dans le texte
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@(\w+)/g,
-      `<span class="text-purple-500">@$1</span>`
+      /@([a-zA-Z0-9_.-]+)/g,
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
   };
@@ -813,7 +841,7 @@ function PublicationPage() {
                 className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: highlightMentions(title) }}
-              ></div>
+              />
               <input
                 type="text"
                 value={title}
@@ -833,7 +861,7 @@ function PublicationPage() {
                 className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: highlightMentions(content) }}
-              ></div>
+              />
               <textarea
                 placeholder="Partagez vos pensées les plus sombres..."
                 className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
@@ -1054,26 +1082,24 @@ function PublicationPage() {
                         </div>
                         <div>
                           <p className="text-gray-500 text-sm">
-                            Le{" "}
-                            {updatedAt
-                              ? new Date(parseInt(updatedAt, 10))
-                                  .toLocaleString("fr-FR", {
-                                    year: "numeric",
-                                    month: "numeric",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                  .replace(" ", " à ")
-                              : new Date(parseInt(createdAt ?? "0", 10))
-                                  .toLocaleString("fr-FR", {
-                                    year: "numeric",
-                                    month: "numeric",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                  .replace(" ", " à ")}
+                            {(() => {
+                              const date = updatedAt || createdAt;
+                              if (!date) return null;
+
+                              const formatted = new Date(parseInt(date, 10))
+                                .toLocaleString("fr-FR", {
+                                  year: "numeric",
+                                  month: "numeric",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                                .replace(" ", " à ");
+
+                              return `Le ${formatted}${
+                                updatedAt ? " (modifié)" : ""
+                              }`;
+                            })()}
                           </p>
                         </div>
                       </div>

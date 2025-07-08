@@ -163,6 +163,34 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
       });
     }
 
+    const mentionRegex = /@([\w.-]+)/g;
+    let mentionMatch;
+    const mentionSet = new Set<string>();
+    while ((mentionMatch = mentionRegex.exec(content))) {
+      mentionSet.add(mentionMatch[1]);
+    }
+    for (const username of mentionSet) {
+      if (username === newComment.author.username) continue;
+      const mentionedUser = await db.user.findUnique({ where: { username } });
+      if (mentionedUser) {
+        const mentionNotif = await db.notification.create({
+          data: {
+            type: "mention",
+            message: `${newComment.author.username} vous a mentionné dans un commentaire`,
+            user: { connect: { id: mentionedUser.id } },
+            article: articleId ? { connect: { id: articleId } } : undefined,
+            comment: { connect: { id: newComment.id } },
+          },
+        });
+        io.to(mentionedUser.id).emit("notification", mentionNotif);
+        await sendPushNotificationToUser(mentionedUser.id, {
+          title: "Nouvelle mention",
+          body: mentionNotif.message,
+          url: `/publications/${articleId}?commentId=${newComment.id}`,
+        });
+      }
+    }
+
     return newComment;
   } catch {
     throw new Error("Comment has not been added");
@@ -355,6 +383,36 @@ export const updateComment: NonNullable<
         updatedAt: new Date(),
       },
     });
+
+    const mentionRegex = /@([\w.-]+)/g;
+    let mentionMatch;
+    const mentionSet = new Set<string>();
+    while ((mentionMatch = mentionRegex.exec(content))) {
+      mentionSet.add(mentionMatch[1]);
+    }
+    for (const username of mentionSet) {
+      if (username === user.username) continue;
+      const mentionedUser = await db.user.findUnique({ where: { username } });
+      if (mentionedUser) {
+        const mentionNotif = await db.notification.create({
+          data: {
+            type: "mention",
+            message: `${user.username} vous a mentionné dans un commentaire`,
+            user: { connect: { id: mentionedUser.id } },
+            comment: { connect: { id: commentId } },
+            article: existComment?.articleId
+              ? { connect: { id: existComment.articleId } }
+              : undefined,
+          },
+        });
+        io.to(mentionedUser.id).emit("notification", mentionNotif);
+        await sendPushNotificationToUser(mentionedUser.id, {
+          title: "Nouvelle mention",
+          body: mentionNotif.message,
+          url: `/publications/${existComment?.articleId}?commentId=${commentId}`,
+        });
+      }
+    }
 
     return {
       code: 214,

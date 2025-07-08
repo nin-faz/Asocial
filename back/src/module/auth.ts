@@ -9,7 +9,7 @@ export const createJWT = (user: { id: string; username: string }) => {
     },
     process.env.JWT_SECRET as string,
     {
-      expiresIn: "5d",
+      expiresIn: "4w",
     }
   );
 

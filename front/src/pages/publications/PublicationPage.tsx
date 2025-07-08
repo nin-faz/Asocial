@@ -39,6 +39,7 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
+import getCaretCoordinates from "textarea-caret-position";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
@@ -239,7 +240,7 @@ function PublicationPage() {
       return;
     }
 
-    if (title.trim() === "" && content.trim() === "") {
+    if (content.trim() === "") {
       showEmptyContentToast();
       return;
     }
@@ -606,12 +607,33 @@ function PublicationPage() {
 
     setText(text);
 
-    const { top, left, width } = inputRef.current.getBoundingClientRect();
-    setMentionListPosition({ top, left, width });
-
+    // Detect mention trigger and position list under caret
     const mentionRegex = /@(\w*)$/;
-    const mentionMatch = mentionRegex.exec(text); // Utilisation de RegExp.exec()
-    if (mentionMatch) {
+    const mentionMatch = mentionRegex.exec(text);
+    if (mentionMatch && inputRef.current) {
+      const el = inputRef.current as any;
+      let topPos: number;
+      let leftPos: number;
+      const width = el.getBoundingClientRect().width;
+      if (el.tagName === "TEXTAREA") {
+        const pos = el.selectionStart || 0;
+        let coords;
+        try {
+          coords = getCaretCoordinates(el, pos);
+        } catch {
+          const rectFallback = el.getBoundingClientRect();
+          coords = { top: 0, left: 0, height: rectFallback.height };
+        }
+        const rect = el.getBoundingClientRect();
+        topPos = rect.top + coords.top + coords.height + window.scrollY;
+        leftPos = rect.left + coords.left + window.scrollX;
+      } else {
+        // fallback for input fields
+        const rect = el.getBoundingClientRect();
+        topPos = rect.top + rect.height + window.scrollY;
+        leftPos = rect.left + window.scrollX + 4;
+      }
+      setMentionListPosition({ top: topPos, left: leftPos, width });
       const query = mentionMatch[1].toLowerCase();
       const suggestions = usersData?.findAllUsers?.filter((user: any) =>
         user.username.toLowerCase().startsWith(query)
@@ -630,7 +652,7 @@ function PublicationPage() {
     setText: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setText((prev) => {
-      const updatedText = prev.replace(/@[a-zA-Z0-9_.-]*$/, `@${username} `);
+      const updatedText = prev.replace(/@\w*$/, `@${username} `);
       return updatedText;
     });
     setShowMentionList(false);
@@ -652,11 +674,9 @@ function PublicationPage() {
       );
     } else if (event.key === "Enter") {
       event.preventDefault();
-
-      const mentionSetter = activeField === "title" ? setTitle : setContent;
       insertMention(
         mentionSuggestions[selectedIndexUser].username,
-        mentionSetter
+        activeField === "title" ? setTitle : setContent
       );
     }
   };
@@ -694,30 +714,22 @@ function PublicationPage() {
         const username = target.getAttribute("data-username");
         if (username) {
           e.stopPropagation();
-          // Find the mentioned user's id based on username
-          const mentionedUser = usersData?.findAllUsers?.find(
-            (u) => u.username === username
-          );
-          if (mentionedUser) {
-            const profilePath =
-              mentionedUser.id === user?.id
-                ? `/users/${user.id}`
-                : `/users/${mentionedUser.id}`;
-            navigate(profilePath, { replace: true });
-          }
+          navigate(`/users/${userData?.findUserById?.id}`);
         }
       }
     };
 
     document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, [usersData, navigate, user]);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
 
   // Ajout de la logique pour surligner les mentions dans le texte
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.-]+)/g,
+      /@(\w+)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -841,7 +853,7 @@ function PublicationPage() {
                 className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: highlightMentions(title) }}
-              />
+              ></div>
               <input
                 type="text"
                 value={title}
@@ -861,7 +873,7 @@ function PublicationPage() {
                 className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: highlightMentions(content) }}
-              />
+              ></div>
               <textarea
                 placeholder="Partagez vos pensées les plus sombres..."
                 className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
@@ -1082,24 +1094,26 @@ function PublicationPage() {
                         </div>
                         <div>
                           <p className="text-gray-500 text-sm">
-                            {(() => {
-                              const date = updatedAt || createdAt;
-                              if (!date) return null;
-
-                              const formatted = new Date(parseInt(date, 10))
-                                .toLocaleString("fr-FR", {
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                                .replace(" ", " à ");
-
-                              return `Le ${formatted}${
-                                updatedAt ? " (modifié)" : ""
-                              }`;
-                            })()}
+                            Le{" "}
+                            {updatedAt
+                              ? new Date(parseInt(updatedAt, 10))
+                                  .toLocaleString("fr-FR", {
+                                    year: "numeric",
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                  .replace(" ", " à ")
+                              : new Date(parseInt(createdAt ?? "0", 10))
+                                  .toLocaleString("fr-FR", {
+                                    year: "numeric",
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                  .replace(" ", " à ")}
                           </p>
                         </div>
                       </div>

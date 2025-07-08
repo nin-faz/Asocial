@@ -3,10 +3,12 @@ import react from "@vitejs/plugin-react";
 import compression from "vite-plugin-compression";
 
 // https://vite.dev/config/
+// Dans fazer>ngrok2>ngrok.exe, lancer : .\ngrok.exe start --all --config ngrok.yml
+
 export default defineConfig({
   // Si je veux tester en local sur mon téléphone
   // server: {
-  //   allowedHosts: ["f554-89-2-117-106.ngrok-free.app", "all"],
+  //   allowedHosts: ["6d3a1e50a870.ngrok-free.app", "all"],
   // },
   plugins: [react(), compression()],
   define: {
@@ -15,6 +17,6 @@ export default defineConfig({
   build: {
     minify: "esbuild",
     sourcemap: false,
-    cssMinify: true, // Active la minification CSS (Vite >=5)
+    cssMinify: true,
   },
 });

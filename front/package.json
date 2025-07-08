@@ -27,6 +27,7 @@
     "react-toastify": "^11.0.5",
     "react-window": "^1.8.11",
     "socket.io-client": "^4.8.1",
+    "textarea-caret-position": "^0.1.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

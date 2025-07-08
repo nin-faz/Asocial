@@ -158,7 +158,7 @@ export const resolvers: Resolvers = {
         where: { articleId: { in: articleIds } },
       });
       // Score global (sans dislikes donnés)
-      return publications * 2 + totalComments * 1.5 + totalDislikes * 1;
+      return publications * 3 + totalComments * 1.5 + totalDislikes * 1;
     },
   },
   Notification: {

@@ -48,6 +48,7 @@ import UserIcon from "../../components/icons/UserIcon";
 import ImageUploader from "../../components/ImageUploader";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
+import getCaretCoordinates from "textarea-caret-position";
 
 interface PublicationDetailsPageProps {
   articleId?: string;
@@ -101,22 +102,36 @@ const PublicationDetailsPage = ({
     setText: React.Dispatch<React.SetStateAction<string>>,
     inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
   ) => {
-    if (!inputRef?.current) return;
-
     setText(text);
-
-    const { top, left, width } = inputRef.current.getBoundingClientRect();
-    setMentionListPosition({ top, left, width });
-
     const mentionRegex = /@(\w*)$/;
     const mentionMatch = mentionRegex.exec(text);
-    if (mentionMatch) {
+    if (mentionMatch && inputRef.current) {
+      const el = inputRef.current as any;
+      let topPos: number;
+      let leftPos: number;
+      const rect = el.getBoundingClientRect();
+      const width = rect.width;
+      if (el.tagName === "TEXTAREA") {
+        const pos = el.selectionStart || 0;
+        let coords;
+        try {
+          coords = getCaretCoordinates(el, pos);
+        } catch {
+          coords = { top: 0, left: 0, height: rect.height };
+        }
+        topPos = rect.top + coords.top + coords.height + window.scrollY;
+        leftPos = rect.left + coords.left + window.scrollX;
+      } else {
+        // fallback for input fields
+        topPos = rect.top + rect.height + window.scrollY;
+        leftPos = rect.left + window.scrollX;
+      }
+      setMentionListPosition({ top: topPos, left: leftPos, width });
       const query = mentionMatch[1].toLowerCase();
-      const suggestions =
-        usersData?.findAllUsers?.filter((user: any) =>
-          user.username.toLowerCase().startsWith(query)
-        ) || [];
-      setMentionSuggestions(suggestions);
+      const suggestions = usersData?.findAllUsers?.filter((u: any) =>
+        u.username.toLowerCase().startsWith(query)
+      );
+      setMentionSuggestions(suggestions || []);
       setSelectedIndexUser(0);
       setShowMentionList(true);
     } else {
@@ -1124,12 +1139,9 @@ const PublicationDetailsPage = ({
           ref={mentionListRef}
           className="absolute z-10 bg-gray-800 border border-purple-700 rounded-md shadow-lg max-h-48 overflow-y-auto"
           style={{
-            top:
-              activeField === "reply"
-                ? mentionListPosition.top + 450
-                : mentionListPosition.top + 100,
-            left: mentionListPosition.left,
-            width: mentionListPosition.width,
+            top: `${mentionListPosition.top}px`,
+            left: `${mentionListPosition.left}px`,
+            width: `${mentionListPosition.width}px`,
           }}
         >
           {mentionSuggestions.map((user, index) => (
@@ -1506,7 +1518,6 @@ const PublicationDetailsPage = ({
                                         }}
                                       />
 
-                                      {/* Textarea transparent par-dessus */}
                                       <textarea
                                         value={editedCommentContent}
                                         onChange={(e) =>
@@ -1669,7 +1680,7 @@ const PublicationDetailsPage = ({
                 </div>
 
                 {/* Reply Form inside comment */}
-                {/* {replyToCommentId === comment?.id && (
+                {replyToCommentId === comment?.id && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1703,12 +1714,12 @@ const PublicationDetailsPage = ({
                       <div className="flex-grow relative">
                         <div className="relative w-full">
                           <div
-                            className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
+                            className="w-full bg-gray-700 text-gray-100 rounded-lg p-2 min-h-[60px] whitespace-pre-wrap break-words text-sm"
                             aria-hidden="true"
                             dangerouslySetInnerHTML={{
-                              __html: highlightMentions(replyContent),
+                              __html: highlightMentions(replyContent) + "<br>",
                             }}
-                          ></div>
+                          />
                           <textarea
                             placeholder="Écrivez votre réponse..."
                             value={replyContent}
@@ -1722,7 +1733,8 @@ const PublicationDetailsPage = ({
                             onFocus={() => setActiveField("reply")}
                             onKeyDown={handleKeyDown}
                             ref={commentRepliedInputRef}
-                            className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                            // className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                            className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
                           />
                         </div>
                         <button
@@ -1735,7 +1747,7 @@ const PublicationDetailsPage = ({
                       </div>
                     </div>
                   </motion.div>
-                )}*/}
+                )}
               </div>
             </div>
           </motion.div>

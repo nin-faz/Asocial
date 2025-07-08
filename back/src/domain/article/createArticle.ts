@@ -1,5 +1,7 @@
 import { MutationResolvers } from "../../types";
 import { notifyTelegram } from "../../utils/notifyTelegram.js";
+import { io } from "../../index.js";
+import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
 export const createArticle: NonNullable<
   MutationResolvers["createArticle"]
@@ -49,6 +51,35 @@ export const createArticle: NonNullable<
       .join("\n");
 
     await notifyTelegram(message);
+
+    const mentionText = `${title || ""}\n${content}`;
+    const mentionRegex = /@([\w.-]+)/g;
+    let match;
+    const mentioned = new Set<string>();
+    while ((match = mentionRegex.exec(mentionText))) {
+      mentioned.add(match[1]);
+    }
+    for (const username of mentioned) {
+      if (username === user.username) continue;
+      const mentionedUser = await db.user.findUnique({ where: { username } });
+      if (mentionedUser) {
+        const notif = await db.notification.create({
+          data: {
+            type: "mention",
+            message: `${user.username} vous a mentionné dans un article`,
+            user: { connect: { id: mentionedUser.id } },
+            article: { connect: { id: createdArticle.id } },
+          },
+        });
+        io.to(mentionedUser.id).emit("notification", notif);
+        // Send push notification
+        await sendPushNotificationToUser(mentionedUser.id, {
+          title: "Nouvelle mention",
+          body: notif.message,
+          url: `/publications/${createdArticle.id}`,
+        });
+      }
+    }
 
     return {
       code: 201,

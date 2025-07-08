@@ -1,4 +1,6 @@
 import { MutationResolvers } from "../../types";
+import { io } from "../../index.js";
+import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
 export const updateArticle: NonNullable<
   MutationResolvers["updateArticle"]
@@ -56,11 +58,40 @@ export const updateArticle: NonNullable<
     console.log("Mise à jour de l'article avec les données:", updateData);
 
     await db.article.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: updateData,
     });
+    // Handle mentions in updated article
+    const mentionText = `${title !== null ? title : existArticle.title}\n${
+      content !== null ? content : existArticle.content
+    }`;
+    const mentionRegex = /@([\w.-]+)/g;
+    let match;
+    const mentioned = new Set<string>();
+    while ((match = mentionRegex.exec(mentionText))) {
+      mentioned.add(match[1]);
+    }
+    for (const username of mentioned) {
+      if (username === user.username) continue;
+      const mentionedUser = await db.user.findUnique({ where: { username } });
+      if (mentionedUser) {
+        const notif = await db.notification.create({
+          data: {
+            type: "mention",
+            message: `${user.username} vous a mentionné dans un article`,
+            user: { connect: { id: mentionedUser.id } },
+            article: { connect: { id } },
+          },
+        });
+        io.to(mentionedUser.id).emit("notification", notif);
+        // Send push notification
+        await sendPushNotificationToUser(mentionedUser.id, {
+          title: "Nouvelle mention",
+          body: notif.message,
+          url: `/publications/${id}`,
+        });
+      }
+    }
 
     return {
       code: 200,

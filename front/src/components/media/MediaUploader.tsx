@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { X, Upload, Video, Image } from "lucide-react";
+import { X, Video, Image } from "lucide-react";
 import { imageUpload } from "../../utils/imageUpload";
 import { videoUpload } from "../../utils/videoUpload";
 import imageCompression from "browser-image-compression";

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useMutation } from "@apollo/client";
-import { REQUEST_PASSWORD_RESET } from "../mutations/resetPasswordMutation";
+import { REQUEST_PASSWORD_RESET } from "../../mutations/resetPasswordMutation";
 import { motion } from "framer-motion";
 import { User, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   showResetPasswordErrorToast,
   showResetPasswordEmailSentToast,
-} from "../utils/customToasts";
+} from "../../utils/customToasts";
 
 export default function RequestPasswordResetPage() {
   const [username, setUsername] = useState("");

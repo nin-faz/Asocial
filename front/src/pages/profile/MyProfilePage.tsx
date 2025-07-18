@@ -60,7 +60,7 @@ const MyProfilePage = () => {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withTags = escaped.replace(
-      /@([a-zA-Z0-9_.\- ]+)/g,
+      /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withTags.replace(/\n/g, "<br>");

@@ -91,7 +91,7 @@ const PublicationDetailsPage = ({
     "title" | "content" | "comment" | "reply" | null
   >(null);
   const [selectedIndexUser, setSelectedIndexUser] = useState(0);
-  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const commentRepliedInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -103,7 +103,7 @@ const PublicationDetailsPage = ({
     inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
   ) => {
     setText(text);
-    const mentionRegex = /@([a-zA-Z0-9_.\- ]*)$/;
+    const mentionRegex = /@([a-zA-Z0-9_.\-' ]*)$/;
     const mentionMatch = mentionRegex.exec(text);
     if (mentionMatch && inputRef.current) {
       const el = inputRef.current as any;
@@ -144,7 +144,10 @@ const PublicationDetailsPage = ({
     setText: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setText((prev) => {
-      const updatedText = prev.replace(/@[a-zA-Z0-9_.\- ]*$/, `@${username} `);
+      const updatedText = prev.replace(
+        /@([a-zA-Z0-9_.\-' ]*)$/,
+        `@${username}`
+      );
       return updatedText;
     });
     setShowMentionList(false);
@@ -237,7 +240,7 @@ const PublicationDetailsPage = ({
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.\- ]+)/g,
+      /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -853,7 +856,6 @@ const PublicationDetailsPage = ({
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Retour
-          Retour
         </motion.button>
       )}
 
@@ -866,7 +868,7 @@ const PublicationDetailsPage = ({
         {/* Post Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <button            
+            <button
               className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
@@ -975,7 +977,7 @@ const PublicationDetailsPage = ({
             </div>
           )}
         </div>
-        
+
         {/* Post Content */}
         {isEditing ? (
           <div className="flex flex-col space-y-4">
@@ -987,8 +989,7 @@ const PublicationDetailsPage = ({
                   __html: highlightMentions(editedTitle) + "<br>",
                 }}
               />
-              <input
-                type="text"
+              <textarea
                 value={editedTitle}
                 onChange={(e) =>
                   handleTextChange(
@@ -1000,8 +1001,9 @@ const PublicationDetailsPage = ({
                 onFocus={() => setActiveField("title")}
                 onKeyDown={handleKeyDown}
                 ref={titleInputRef}
-                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 border-none"
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
                 placeholder="Titre de l'article  (Optionnel)"
+                style={{ caretColor: "white" }}
               />
             </div>
 
@@ -1025,7 +1027,8 @@ const PublicationDetailsPage = ({
                 onFocus={() => setActiveField("content")}
                 onKeyDown={handleKeyDown}
                 ref={contentInputRef}
-                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                style={{ caretColor: "white" }}
               />
             </div>
 
@@ -1224,12 +1227,11 @@ const PublicationDetailsPage = ({
               <div className="relative w-full">
                 {/* Texte visible avec mentions colorées */}
                 <div
-                  className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
-                  aria-hidden="true"
+                  className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{
-                    __html: highlightMentions(newComment),
+                    __html: highlightMentions(newComment) + "<br>",
                   }}
-                ></div>
+                />
 
                 {/* Champ invisible qui suit le texte */}
                 <textarea
@@ -1245,7 +1247,8 @@ const PublicationDetailsPage = ({
                   onFocus={() => setActiveField("comment")}
                   onKeyDown={handleKeyDown}
                   ref={commentInputRef}
-                  className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                  className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                  style={{ caretColor: "white" }}
                 />
               </div>
 
@@ -1253,6 +1256,7 @@ const PublicationDetailsPage = ({
                 onClick={handleCreateComment}
                 className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
                 disabled={isSubmitting}
+                style={{ zIndex: 10 }}
               >
                 <Send className="h-5 w-5" />
               </button>
@@ -1409,7 +1413,8 @@ const PublicationDetailsPage = ({
                         onFocus={() => setActiveField("comment")}
                         onKeyDown={handleKeyDown}
                         ref={commentInputRef}
-                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                        style={{ caretColor: "white" }}
                       />
                     </div>
                     <div className="flex justify-end space-x-2 mt-2">
@@ -1559,7 +1564,8 @@ const PublicationDetailsPage = ({
                                         onFocus={() => setActiveField("reply")}
                                         onKeyDown={handleKeyDown}
                                         ref={commentRepliedInputRef}
-                                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
+                                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm resize-none"
+                                        style={{ caretColor: "white" }}
                                       />
                                     </div>
                                   ) : (
@@ -1762,8 +1768,8 @@ const PublicationDetailsPage = ({
                             onFocus={() => setActiveField("reply")}
                             onKeyDown={handleKeyDown}
                             ref={commentRepliedInputRef}
-                            // className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-                            className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
+                            className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm resize-none"
+                            style={{ caretColor: "white" }}
                           />
                         </div>
                         <button

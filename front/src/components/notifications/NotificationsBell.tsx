@@ -188,22 +188,89 @@ const NotificationsBell = () => {
                   } else if (notif.articleId) {
                     link = `/publications/${notif.articleId}`;
                   }
+
+                  const handleMarkAsRead = async () => {
+                    if (!notif.isRead && !marking) {
+                      await markAllAsRead({
+                        variables: { ids: [notif.id] },
+                      });
+                    }
+                  };
+
                   return (
-                    <div
+                    <motion.div
                       key={notif.id}
-                      className={`px-4 py-3 cursor-pointer hover:bg-gray-800 flex flex-col gap-1 transition-colors bg-purple-950/60 border-l-4 border-purple-500`}
+                      className={`px-4 py-3 cursor-pointer hover:bg-gray-800 flex flex-col gap-1 transition-colors bg-purple-950/60 border-l-4 border-purple-500 overflow-hidden relative`}
                       onClick={async () => {
                         setOpen(false);
-                        if (!notif.isRead && !marking) {
-                          await markAllAsRead({
-                            variables: { ids: [notif.id] },
-                          });
-                        }
+                        await handleMarkAsRead();
                         if (link) {
                           navigate(link);
                         }
                       }}
+                      drag="x"
+                      dragConstraints={{ left: -100, right: 100 }}
+                      dragElastic={0.1}
+                      onDragEnd={(_, info) => {
+                        if (info.offset.x > 80) {
+                          // Si glissé suffisamment vers la droite
+                          handleMarkAsRead();
+                        }
+                        if (info.offset.x < -80) {
+                          // Si glissé suffisamment vers la gauche
+                          handleMarkAsRead();
+                        }
+                      }}
+                      whileDrag={{
+                        backgroundColor: "rgba(139, 92, 246, 0.2)",
+                      }}
                     >
+                      {/* Indicateur de swipe */}
+                      <motion.div
+                        className="absolute inset-y-0 right-0 flex items-center text-green-400 pr-2 opacity-0 text-xs"
+                        style={{
+                          opacity: 0,
+                          x: -20,
+                        }}
+                        animate={{
+                          opacity: 0,
+                          x: -20,
+                        }}
+                        variants={{
+                          swiping: {
+                            opacity: 1,
+                            x: 0,
+                            transition: { duration: 0.2 },
+                          },
+                        }}
+                        custom={{ direction: "right", dragging: false }}
+                      >
+                        ✓ Marquer lu
+                      </motion.div>
+
+                      {/* Indicateur de swipe à gauche */}
+                      <motion.div
+                        className="absolute inset-y-0 left-0 flex items-center text-green-400 pl-2 opacity-0 text-xs"
+                        style={{
+                          opacity: 0,
+                          x: 20,
+                        }}
+                        animate={{
+                          opacity: 0,
+                          x: 20,
+                        }}
+                        variants={{
+                          swiping: {
+                            opacity: 1,
+                            x: 0,
+                            transition: { duration: 0.2 },
+                          },
+                        }}
+                        custom={{ direction: "left", dragging: false }}
+                      >
+                        Marquer lu ✓
+                      </motion.div>
+
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
                         <span className="text-sm text-gray-100 font-semibold">
@@ -219,7 +286,7 @@ const NotificationsBell = () => {
                           timeStyle: "short",
                         })}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })
               )}

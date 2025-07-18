@@ -91,7 +91,7 @@ const PublicationDetailsPage = ({
     "title" | "content" | "comment" | "reply" | null
   >(null);
   const [selectedIndexUser, setSelectedIndexUser] = useState(0);
-  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const commentRepliedInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -103,7 +103,7 @@ const PublicationDetailsPage = ({
     inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
   ) => {
     setText(text);
-    const mentionRegex = /@([a-zA-Z0-9_.\- ]*)$/;
+    const mentionRegex = /@([a-zA-Z0-9_.\-' ]*)$/;
     const mentionMatch = mentionRegex.exec(text);
     if (mentionMatch && inputRef.current) {
       const el = inputRef.current as any;
@@ -144,7 +144,10 @@ const PublicationDetailsPage = ({
     setText: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setText((prev) => {
-      const updatedText = prev.replace(/@[a-zA-Z0-9_.\- ]*$/, `@${username} `);
+      const updatedText = prev.replace(
+        /@([a-zA-Z0-9_.\-' ]*)$/,
+        `@${username}`
+      );
       return updatedText;
     });
     setShowMentionList(false);
@@ -237,7 +240,7 @@ const PublicationDetailsPage = ({
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.\- ]+)/g,
+      /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -853,7 +856,6 @@ const PublicationDetailsPage = ({
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Retour
-          Retour
         </motion.button>
       )}
 
@@ -866,7 +868,7 @@ const PublicationDetailsPage = ({
         {/* Post Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <button            
+            <button
               className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
@@ -975,7 +977,7 @@ const PublicationDetailsPage = ({
             </div>
           )}
         </div>
-        
+
         {/* Post Content */}
         {isEditing ? (
           <div className="flex flex-col space-y-4">
@@ -987,8 +989,7 @@ const PublicationDetailsPage = ({
                   __html: highlightMentions(editedTitle) + "<br>",
                 }}
               />
-              <input
-                type="text"
+              <textarea
                 value={editedTitle}
                 onChange={(e) =>
                   handleTextChange(
@@ -1000,8 +1001,9 @@ const PublicationDetailsPage = ({
                 onFocus={() => setActiveField("title")}
                 onKeyDown={handleKeyDown}
                 ref={titleInputRef}
-                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 border-none"
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
                 placeholder="Titre de l'article  (Optionnel)"
+                style={{ caretColor: "white" }}
               />
             </div>
 
@@ -1025,7 +1027,8 @@ const PublicationDetailsPage = ({
                 onFocus={() => setActiveField("content")}
                 onKeyDown={handleKeyDown}
                 ref={contentInputRef}
-                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                style={{ caretColor: "white" }}
               />
             </div>
 
@@ -1224,12 +1227,11 @@ const PublicationDetailsPage = ({
               <div className="relative w-full">
                 {/* Texte visible avec mentions colorées */}
                 <div
-                  className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
-                  aria-hidden="true"
+                  className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{
-                    __html: highlightMentions(newComment),
+                    __html: highlightMentions(newComment) + "<br>",
                   }}
-                ></div>
+                />
 
                 {/* Champ invisible qui suit le texte */}
                 <textarea
@@ -1245,7 +1247,8 @@ const PublicationDetailsPage = ({
                   onFocus={() => setActiveField("comment")}
                   onKeyDown={handleKeyDown}
                   ref={commentInputRef}
-                  className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                  className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                  style={{ caretColor: "white" }}
                 />
               </div>
 
@@ -1253,6 +1256,7 @@ const PublicationDetailsPage = ({
                 onClick={handleCreateComment}
                 className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
                 disabled={isSubmitting}
+                style={{ zIndex: 10 }}
               >
                 <Send className="h-5 w-5" />
               </button>
@@ -1409,7 +1413,8 @@ const PublicationDetailsPage = ({
                         onFocus={() => setActiveField("comment")}
                         onKeyDown={handleKeyDown}
                         ref={commentInputRef}
-                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                        style={{ caretColor: "white" }}
                       />
                     </div>
                     <div className="flex justify-end space-x-2 mt-2">
@@ -1448,132 +1453,146 @@ const PublicationDetailsPage = ({
                               ? "réponse"
                               : "réponses"}
                           </h4>
-                          {comment.replies.map((reply) => (
-                            <motion.div
-                              key={reply?.id}
-                              data-comment-id={reply?.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                              whileHover={{
-                                scale: 1.03,
-                                boxShadow:
-                                  "0px 0px 10px rgba(128, 0, 128, 0.6)",
-                                transition: {
-                                  duration: 0.2,
-                                  ease: "easeOut",
-                                },
-                              }}
-                              whileTap={{ scale: 0.98 }}
-                              className="bg-gray-800 rounded-lg p-4 border border-purple-700 relative hover:border-purple-500 transition-colors"
-                              // On bloque *sauf* si c'est une mention
-                              onClick={(e) => {
-                                const isMention = (
-                                  e.target as HTMLElement
-                                ).classList.contains("mention");
-                                if (!isMention) {
-                                  e.stopPropagation();
-                                }
-                              }}
-                            >
-                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 rounded-l-lg"></div>
-                              <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0">
-                                  <div
-                                    className="w-8 h-8 rounded-full bg-purple-800 flex items-center justify-center cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/users/${reply?.author.id}`);
-                                    }}
-                                    title={`Voir le profil de ${reply?.author.username}`}
-                                  >
-                                    <UserIcon
-                                      iconName={reply?.author?.iconName}
-                                      size="small"
-                                    />
-                                  </div>
-                                </div>{" "}
-                                <div className="flex-grow">
-                                  {" "}
-                                  <div className="flex flex-col">
-                                    <div className="flex items-center">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(
-                                            `/users/${reply?.author.id}`
-                                          );
-                                        }}
-                                        title={`Voir le profil de ${reply?.author.username}`}
-                                        className="text-purple-300 font-medium hover:underline"
-                                      >
-                                        {reply?.author.username}
-                                      </button>
-                                    </div>
-                                    <p className="text-gray-500 text-xs mt-1">
-                                      {(() => {
-                                        const date =
-                                          reply?.updatedAt || reply?.createdAt;
-                                        if (!date) return null;
-
-                                        const formatted = new Date(
-                                          parseInt(date, 10)
-                                        )
-                                          .toLocaleString("fr-FR", {
-                                            year: "numeric",
-                                            month: "numeric",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })
-                                          .replace(" ", " à ");
-
-                                        return `Le ${formatted}${
-                                          reply?.updatedAt ? " (modifié)" : ""
-                                        }`;
-                                      })()}
-                                    </p>
-                                  </div>
-                                  {editingCommentId === reply?.id ? (
-                                    <div className="mt-2 mb-2 relative w-full">
-                                      {/* Texte affiché avec mentions stylées */}
-                                      <div
-                                        className="w-full bg-gray-700 text-gray-100 rounded-lg p-2 min-h-[60px] whitespace-pre-wrap break-words text-sm"
-                                        dangerouslySetInnerHTML={{
-                                          __html:
-                                            highlightMentions(
-                                              editedCommentContent
-                                            ) + "<br>",
-                                        }}
-                                      />
-
-                                      <textarea
-                                        value={editedCommentContent}
-                                        onChange={(e) =>
-                                          handleTextChange(
-                                            e.target.value,
-                                            setEditedCommentContent,
-                                            commentRepliedInputRef
-                                          )
-                                        }
-                                        onFocus={() => setActiveField("reply")}
-                                        onKeyDown={handleKeyDown}
-                                        ref={commentRepliedInputRef}
-                                        className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <p
-                                      className="text-gray-300 text-sm mt-1"
-                                      dangerouslySetInnerHTML={{
-                                        __html: highlightMentions(
-                                          reply?.content ?? ""
-                                        ),
+                          {[...comment.replies]
+                            .sort((a, b) => {
+                              const dateA = a?.updatedAt
+                                ? new Date(parseInt(a?.updatedAt))
+                                : new Date(parseInt(a?.createdAt || "0"));
+                              const dateB = b?.updatedAt
+                                ? new Date(parseInt(b?.updatedAt))
+                                : new Date(parseInt(b?.createdAt || "0"));
+                              return dateA.getTime() - dateB.getTime(); // Du moins récent au plus récent
+                            })
+                            .map((reply) => (
+                              <motion.div
+                                key={reply?.id}
+                                data-comment-id={reply?.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                whileHover={{
+                                  scale: 1.03,
+                                  boxShadow:
+                                    "0px 0px 10px rgba(128, 0, 128, 0.6)",
+                                  transition: {
+                                    duration: 0.2,
+                                    ease: "easeOut",
+                                  },
+                                }}
+                                whileTap={{ scale: 0.98 }}
+                                className="bg-gray-800 rounded-lg p-4 border border-purple-700 relative hover:border-purple-500 transition-colors"
+                                // On bloque *sauf* si c'est une mention
+                                onClick={(e) => {
+                                  const isMention = (
+                                    e.target as HTMLElement
+                                  ).classList.contains("mention");
+                                  if (!isMention) {
+                                    e.stopPropagation();
+                                  }
+                                }}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600 rounded-l-lg"></div>
+                                <div className="flex items-start space-x-3">
+                                  <div className="flex-shrink-0">
+                                    <div
+                                      className="w-8 h-8 rounded-full bg-purple-800 flex items-center justify-center cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/users/${reply?.author.id}`);
                                       }}
-                                    ></p>
-                                  )}
-                                  {/* Actions de réponse */}{" "}
-                                  {/* Bouton de dislike pour les réponses (temporairement désactivé)
+                                      title={`Voir le profil de ${reply?.author.username}`}
+                                    >
+                                      <UserIcon
+                                        iconName={reply?.author?.iconName}
+                                        size="small"
+                                      />
+                                    </div>
+                                  </div>{" "}
+                                  <div className="flex-grow">
+                                    {" "}
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(
+                                              `/users/${reply?.author.id}`
+                                            );
+                                          }}
+                                          title={`Voir le profil de ${reply?.author.username}`}
+                                          className="text-purple-300 font-medium hover:underline"
+                                        >
+                                          {reply?.author.username}
+                                        </button>
+                                      </div>
+                                      <p className="text-gray-500 text-xs mt-1">
+                                        {(() => {
+                                          const date =
+                                            reply?.updatedAt ||
+                                            reply?.createdAt;
+                                          if (!date) return null;
+
+                                          const formatted = new Date(
+                                            parseInt(date, 10)
+                                          )
+                                            .toLocaleString("fr-FR", {
+                                              year: "numeric",
+                                              month: "numeric",
+                                              day: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })
+                                            .replace(" ", " à ");
+
+                                          return `Le ${formatted}${
+                                            reply?.updatedAt ? " (modifié)" : ""
+                                          }`;
+                                        })()}
+                                      </p>
+                                    </div>
+                                    {editingCommentId === reply?.id ? (
+                                      <div className="mt-2 mb-2 relative w-full">
+                                        {/* Texte affiché avec mentions stylées */}
+                                        <div
+                                          className="w-full bg-gray-700 text-gray-100 rounded-lg p-2 min-h-[60px] whitespace-pre-wrap break-words text-sm"
+                                          dangerouslySetInnerHTML={{
+                                            __html:
+                                              highlightMentions(
+                                                editedCommentContent
+                                              ) + "<br>",
+                                          }}
+                                        />
+
+                                        <textarea
+                                          value={editedCommentContent}
+                                          onChange={(e) =>
+                                            handleTextChange(
+                                              e.target.value,
+                                              setEditedCommentContent,
+                                              commentRepliedInputRef
+                                            )
+                                          }
+                                          onFocus={() =>
+                                            setActiveField("reply")
+                                          }
+                                          onKeyDown={handleKeyDown}
+                                          ref={commentRepliedInputRef}
+                                          className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm resize-none"
+                                          style={{ caretColor: "white" }}
+                                        />
+                                      </div>
+                                    ) : (
+                                      <p
+                                        className="text-gray-300 text-sm mt-1"
+                                        dangerouslySetInnerHTML={{
+                                          __html: highlightMentions(
+                                            reply?.content ?? ""
+                                          ),
+                                        }}
+                                      ></p>
+                                    )}
+                                    {/* Actions de réponse */}{" "}
+                                    {/* Bouton de dislike pour les réponses (temporairement désactivé)
                                   <div className="flex justify-end mt-2 text-gray-500">
                                     <motion.button
                                       whileHover={{ scale: 1.1 }}
@@ -1598,76 +1617,80 @@ const PublicationDetailsPage = ({
                                     </motion.button>
                                   </div>
                                   */}
-                                </div>
-                                {/* Menu pour les réponses (si l'utilisateur est l'auteur) */}
-                                {reply?.author.id === user?.id && (
-                                  <div className="relative">
-                                    <button
-                                      className="text-gray-500 hover:text-purple-400 p-1"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(
-                                          reply?.id === showMenu
-                                            ? null
-                                            : reply?.id ?? null
-                                        );
-                                      }}
-                                    >
-                                      <MoreVertical className="h-3 w-3" />
-                                    </button>
-
-                                    {showMenu === reply?.id && (
-                                      <motion.div
-                                        ref={menuRef}
-                                        initial={{
-                                          opacity: 0,
-                                          scale: 0.95,
-                                          x: 20,
-                                        }}
-                                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                                        exit={{
-                                          opacity: 0,
-                                          scale: 0.95,
-                                          x: 20,
-                                        }}
-                                        transition={{
-                                          duration: 0.2,
-                                          ease: "easeOut",
-                                        }}
-                                        className="absolute top-0 right-0 w-32 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-1 z-10 text-xs"
-                                      >
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteComment(reply?.id!);
-                                            setShowMenu(null);
-                                          }}
-                                          className="flex items-center space-x-2 text-red-500 hover:text-red-400 w-full"
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                          <span>Supprimer</span>
-                                        </button>
-                                        <hr className="border-gray-700" />
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEditComment({
-                                              ...reply,
-                                            });
-                                            setShowMenu(null);
-                                          }}
-                                          className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
-                                        >
-                                          <Edit2 className="h-3 w-3" />
-                                          <span>Modifier</span>
-                                        </button>
-                                      </motion.div>
-                                    )}
                                   </div>
-                                )}
-                              </div>
-                            </motion.div>
-                          ))}
+                                  {/* Menu pour les réponses (si l'utilisateur est l'auteur) */}
+                                  {reply?.author.id === user?.id && (
+                                    <div className="relative">
+                                      <button
+                                        className="text-gray-500 hover:text-purple-400 p-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowMenu(
+                                            reply?.id === showMenu
+                                              ? null
+                                              : reply?.id ?? null
+                                          );
+                                        }}
+                                      >
+                                        <MoreVertical className="h-3 w-3" />
+                                      </button>
+
+                                      {showMenu === reply?.id && (
+                                        <motion.div
+                                          ref={menuRef}
+                                          initial={{
+                                            opacity: 0,
+                                            scale: 0.95,
+                                            x: 20,
+                                          }}
+                                          animate={{
+                                            opacity: 1,
+                                            scale: 1,
+                                            x: 0,
+                                          }}
+                                          exit={{
+                                            opacity: 0,
+                                            scale: 0.95,
+                                            x: 20,
+                                          }}
+                                          transition={{
+                                            duration: 0.2,
+                                            ease: "easeOut",
+                                          }}
+                                          className="absolute top-0 right-0 w-32 bg-gray-800 text-white rounded-md shadow-lg p-2 space-y-1 z-10 text-xs"
+                                        >
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteComment(reply?.id!);
+                                              setShowMenu(null);
+                                            }}
+                                            className="flex items-center space-x-2 text-red-500 hover:text-red-400 w-full"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                            <span>Supprimer</span>
+                                          </button>
+                                          <hr className="border-gray-700" />
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleEditComment({
+                                                ...reply,
+                                              });
+                                              setShowMenu(null);
+                                            }}
+                                            className="flex items-center space-x-2 text-purple-500 hover:text-purple-400 w-full"
+                                          >
+                                            <Edit2 className="h-3 w-3" />
+                                            <span>Modifier</span>
+                                          </button>
+                                        </motion.div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            ))}
                         </div>
                       )}
                   </>
@@ -1762,8 +1785,8 @@ const PublicationDetailsPage = ({
                             onFocus={() => setActiveField("reply")}
                             onKeyDown={handleKeyDown}
                             ref={commentRepliedInputRef}
-                            // className="w-full bg-gray-700 text-gray-100 rounded-lg p-3 pr-12 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-                            className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm"
+                            className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-2 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-sm resize-none"
+                            style={{ caretColor: "white" }}
                           />
                         </div>
                         <button

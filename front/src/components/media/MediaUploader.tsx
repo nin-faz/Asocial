@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { X, Upload, Video, Image } from "lucide-react";
+import { X, Video, Image } from "lucide-react";
 import { imageUpload } from "../../utils/imageUpload";
 import { videoUpload } from "../../utils/videoUpload";
 import imageCompression from "browser-image-compression";
@@ -31,10 +31,10 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         return;
       }
 
-      // Vérifiez la taille du fichier (limite à 5 MB)
-      if (file.size > 5 * 1024 * 1024) {
+      // Vérifiez la taille du fichier (limite à 8 MB)
+      if (file.size > 8 * 1024 * 1024) {
         alert(
-          "L'image est trop grande. Veuillez sélectionner une image de moins de 5 MB."
+          "L'image est trop grande. Veuillez sélectionner une image de moins de 8 MB."
         );
         return;
       }
@@ -330,7 +330,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
                   )}
                   <p className="text-gray-500 text-xs mt-1">
                     {activeTab === "image"
-                      ? "JPG, PNG, GIF jusqu'à 5MB"
+                      ? "JPG, PNG, GIF jusqu'à 8MB"
                       : "MP4, WebM jusqu'à 50MB"}
                   </p>
                 </>

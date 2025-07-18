@@ -2,12 +2,14 @@ import jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 
 export const createJWT = (user: { id: string; username: string }) => {
+  // Définir une expiration très longue (1 an) pour une connexion persistante
   const token = jwt.sign(
     {
       id: user.id,
       username: user.username,
     },
-    process.env.JWT_SECRET as string
+    process.env.JWT_SECRET as string,
+    { expiresIn: "365d" }
   );
 
   return token;

@@ -27,6 +27,9 @@ export const commentQueries: CommentQueries = {
             author: true,
             dislikes: true,
           },
+          orderBy: {
+            createdAt: "asc",
+          },
         },
         _count: { select: { dislikes: true } },
       },

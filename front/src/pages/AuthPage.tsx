@@ -68,6 +68,15 @@ function AuthPage() {
         return;
       }
 
+      // Validation du nom d'utilisateur (uniquement caractères pour mention)
+      const usernameRegex = /^[a-zA-Z0-9_.\-']+$/;
+      if (!usernameRegex.test(username)) {
+        toast.error(
+          "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, underscores (_), points (.), tirets (-) et apostrophes (')"
+        );
+        return;
+      }
+
       const response = await createUser({
         variables: { username, password },
       });

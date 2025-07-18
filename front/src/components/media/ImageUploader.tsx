@@ -25,10 +25,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         return;
       }
 
-      // Vérifiez la taille du fichier (limite à 5 MB)
-      if (file.size > 5 * 1024 * 1024) {
+      // Vérifiez la taille du fichier (limite à 8 MB)
+      if (file.size > 8 * 1024 * 1024) {
         alert(
-          "L'image est trop grande. Veuillez sélectionner une image de moins de 5 MB."
+          "L'image est trop grande. Veuillez sélectionner une image de moins de 8 MB."
         );
         return;
       }
@@ -206,7 +206,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     Ctrl+V ici
                   </p>
                   <p className="text-gray-500 text-xs mt-1">
-                    JPG, PNG, GIF jusqu'à 5MB
+                    JPG, PNG, GIF jusqu'à 8MB
                   </p>
                 </>
               )}

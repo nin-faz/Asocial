@@ -53,7 +53,7 @@ const UserProfilePage = () => {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.\- ]+)/g,
+      /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-400 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -199,17 +199,6 @@ const UserProfilePage = () => {
 
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
-        onClick={() => {
-          navigate(-1);
-        }}
-      >
-        <ArrowLeft className="h-5 w-5 mr-2" />
-        Retour
-      </motion.button>
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}

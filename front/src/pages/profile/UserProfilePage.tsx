@@ -210,6 +210,17 @@ const UserProfilePage = () => {
         <ArrowLeft className="h-5 w-5 mr-2" />
         Retour
       </motion.button>
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
+        onClick={() => {
+          navigate(-1);
+        }}
+      >
+        <ArrowLeft className="h-5 w-5 mr-2" />
+        Retour
+      </motion.button>
       {/* Header profil */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

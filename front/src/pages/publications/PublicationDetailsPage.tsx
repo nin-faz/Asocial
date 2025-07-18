@@ -853,6 +853,7 @@ const PublicationDetailsPage = ({
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Retour
+          Retour
         </motion.button>
       )}
 
@@ -865,7 +866,7 @@ const PublicationDetailsPage = ({
         {/* Post Header */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <button
+            <button            
               className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
@@ -974,6 +975,7 @@ const PublicationDetailsPage = ({
             </div>
           )}
         </div>
+        
         {/* Post Content */}
         {isEditing ? (
           <div className="flex flex-col space-y-4">

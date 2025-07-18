@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { videoUpload } from "../utils/videoUpload";
+import { videoUpload } from "../../utils/videoUpload";
 import { X } from "lucide-react";
 
 interface VideoUploaderProps {

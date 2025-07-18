@@ -266,7 +266,7 @@ function PublicationPage() {
       return;
     }
 
-    if (content.trim() === "") {
+    if (title.trim() === "" && content.trim() === "") {
       showEmptyContentToast();
       return;
     }
@@ -646,7 +646,7 @@ function PublicationPage() {
     setText(text);
 
     // Detect mention trigger and position list under caret
-    const mentionRegex = /@([a-zA-Z0-9_.\- ]*)$/;
+    const mentionRegex = /@([a-zA-Z0-9_.\-' ]*)$/;
     const mentionMatch = mentionRegex.exec(text);
     if (mentionMatch && inputRef.current) {
       const el = inputRef.current as any;
@@ -690,7 +690,10 @@ function PublicationPage() {
     setText: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setText((prev) => {
-      const updatedText = prev.replace(/@\w*$/, `@${username} `);
+      const updatedText = prev.replace(
+        /@([a-zA-Z0-9_.\-' ]*)$/,
+        `@${username}`
+      );
       return updatedText;
     });
     setShowMentionList(false);
@@ -767,7 +770,7 @@ function PublicationPage() {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.\- ]+)/g,
+      /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -888,10 +891,11 @@ function PublicationPage() {
           <div className="flex flex-col space-y-4 w-full">
             <div className="relative">
               <div
-                className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: highlightMentions(title) }}
-              ></div>
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: highlightMentions(title) + "<br>",
+                }}
+              />
               <textarea
                 value={title}
                 onChange={(e) =>
@@ -899,21 +903,21 @@ function PublicationPage() {
                 }
                 onFocus={() => setActiveField("title")}
                 ref={titleInputRef}
-                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 min-h-[60px] resize-y"
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 min-h-[60px] resize-none"
                 placeholder="Titre de l'article (Optionnel)"
                 onKeyDown={handleKeyDown}
-              ></textarea>
+                style={{ caretColor: "white" }}
+              />
             </div>
             <div className="relative">
-              {/* Ajout d'un div superposé pour surligner les mentions */}
               <div
-                className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: highlightMentions(content) }}
-              ></div>
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: highlightMentions(content) + "<br>",
+                }}
+              />
               <textarea
                 placeholder="Partagez vos pensées les plus sombres..."
-                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-y"
                 value={content}
                 onChange={(e) =>
                   handleTextChange(e.target.value, setContent, contentInputRef)
@@ -921,7 +925,9 @@ function PublicationPage() {
                 onFocus={() => setActiveField("content")}
                 ref={contentInputRef}
                 onKeyDown={handleKeyDown}
-              ></textarea>
+                className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-none"
+                style={{ caretColor: "white" }}
+              />
             </div>
             {/* Ajout du téléchargeur d'image */}
             <MediaUploader

@@ -11,6 +11,7 @@ import {
   Edit2,
   Share2,
   RefreshCw,
+  ChevronUp,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import Loader from "../../components/Loader";
@@ -25,6 +26,7 @@ import {
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLE_BY_MOST_DISLIKED,
   GET_USER_BY_ID,
+  GET_USERS,
 } from "../../queries";
 import { FindArticlesQuery } from "../../gql/graphql";
 import { toast } from "react-toastify";
@@ -37,7 +39,8 @@ import {
   showLoginRequiredToast,
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
-import ImageUploader from "../../components/ImageUploader";
+import MediaUploader from "../../components/media/MediaUploader";
+import getCaretCoordinates from "textarea-caret-position";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
@@ -50,6 +53,28 @@ function PublicationPage() {
   const { token, user } = authContext;
   const navigate = useNavigate();
   const location = useLocation();
+
+  // État pour afficher/masquer le bouton de retour en haut
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Fonction pour remonter en haut de la page
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // Vérifier si on doit afficher le bouton de retour en haut
+  useEffect(() => {
+    const handleScroll = () => {
+      // Afficher le bouton quand on descend de plus de 500px
+      setShowScrollTop(window.scrollY > 500);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Obtenir les informations utilisateur, y compris l'icône
   const { data: userData, refetch: refetchUserData } = useQuery(
@@ -113,6 +138,7 @@ function PublicationPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   // Infinite scroll : combien d'articles afficher ?
   const [articlesToShow, setArticlesToShow] = useState(10);
@@ -226,10 +252,12 @@ function PublicationPage() {
     title: string;
     content: string;
     imageUrl: string | null;
+    videoUrl: string | null;
   }>({
     title: "",
     content: "",
     imageUrl: null,
+    videoUrl: null,
   });
 
   const handleCreateArticle = async () => {
@@ -246,13 +274,14 @@ function PublicationPage() {
     try {
       // Générer des datas temporaires pour l'article en cours de création
       setTempArticleId(`temp-${Date.now()}`);
-      setTempArticleData({ title: title.trim(), content, imageUrl });
+      setTempArticleData({ title: title.trim(), content, imageUrl, videoUrl });
 
       const response = await createArticle({
         variables: {
           title: title.trim() || null,
           content,
           imageUrl,
+          videoUrl,
         },
         context: {
           headers: {
@@ -265,6 +294,7 @@ function PublicationPage() {
         setTitle("");
         setContent("");
         setImageUrl(null);
+        setVideoUrl(null);
 
         // Indique que le rafraîchissement est en cours
         setIsRefreshing(true);
@@ -282,13 +312,18 @@ function PublicationPage() {
         // Indiquer que le rafraîchissement est terminé
         setIsRefreshing(false);
         setTempArticleId(null);
-        setTempArticleData({ title: "", content: "", imageUrl: null });
+        setTempArticleData({
+          title: "",
+          content: "",
+          imageUrl: null,
+          videoUrl: null,
+        });
 
         showArticleCreatedToast();
         console.log("Article créé avec succès !");
       } else {
         console.error(
-          response?.data?.createArticle?.message ||
+          response?.data?.createArticle?.message ??
             "Echec de la création de l'article:"
         );
         setTempArticleId(null); // Supprimer l'article temporaire en cas d'échec
@@ -302,7 +337,12 @@ function PublicationPage() {
       }
       setIsRefreshing(false);
       setTempArticleId(null);
-      setTempArticleData({ title: "", content: "", imageUrl: null });
+      setTempArticleData({
+        title: "",
+        content: "",
+        imageUrl: null,
+        videoUrl: null,
+      });
     }
   };
 
@@ -352,7 +392,7 @@ function PublicationPage() {
         console.log("Article supprimé avec succès !");
       } else {
         console.error(
-          response?.data?.deleteArticle?.message ||
+          response?.data?.deleteArticle?.message ??
             "Echec de la suppression de l'article."
         );
         setDeletedArticleIds((prev) => prev.filter((id) => id !== articleId));
@@ -528,7 +568,7 @@ function PublicationPage() {
           articleElement.querySelector(".dislike-count");
         if (dislikeCountElement) {
           const currentCount = parseInt(
-            dislikeCountElement.textContent || "0",
+            dislikeCountElement.textContent ?? "0",
             10
           );
           dislikeCountElement.textContent = String(
@@ -566,6 +606,171 @@ function PublicationPage() {
       }));
       console.error("Erreur lors de l'ajout/suppression du dislike :", error);
     }
+  };
+
+  // État pour les suggestions de mentions
+  const [mentionSuggestions, setMentionSuggestions] = useState<
+    { id: string; username: string; __typename?: string }[]
+  >([]);
+  const [showMentionList, setShowMentionList] = useState(false); // État pour afficher ou masquer la liste des mentions
+  const mentionListRef = useRef<HTMLDivElement | null>(null); // Référence pour la liste déroulante
+
+  const { data: usersData } = useQuery(GET_USERS); // Requête pour récupérer les utilisateurs
+
+  // Ajout des états manquants
+  const [mentionListPosition, setMentionListPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+  const [activeField, setActiveField] = useState<"title" | "content" | null>(
+    null
+  );
+
+  const [selectedIndexUser, setSelectedIndexUser] = useState(0);
+
+  // Ajout des références manquantes
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const mentionItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Fonction pour détecter les mentions dans le texte
+  const handleTextChange = (
+    text: string,
+    setText: React.Dispatch<React.SetStateAction<string>>,
+    inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+  ) => {
+    if (!inputRef?.current) return;
+
+    setText(text);
+
+    // Detect mention trigger and position list under caret
+    const mentionRegex = /@([a-zA-Z0-9_.\- ]*)$/;
+    const mentionMatch = mentionRegex.exec(text);
+    if (mentionMatch && inputRef.current) {
+      const el = inputRef.current as any;
+      let topPos: number;
+      let leftPos: number;
+      const width = el.getBoundingClientRect().width;
+      if (el.tagName === "TEXTAREA") {
+        const pos = el.selectionStart || 0;
+        let coords;
+        try {
+          coords = getCaretCoordinates(el, pos);
+        } catch {
+          const rectFallback = el.getBoundingClientRect();
+          coords = { top: 0, left: 0, height: rectFallback.height };
+        }
+        const rect = el.getBoundingClientRect();
+        topPos = rect.top + coords.top + coords.height + window.scrollY;
+        leftPos = rect.left + coords.left + window.scrollX;
+      } else {
+        // fallback for input fields
+        const rect = el.getBoundingClientRect();
+        topPos = rect.top + rect.height + window.scrollY;
+        leftPos = rect.left + window.scrollX + 4;
+      }
+      setMentionListPosition({ top: topPos, left: leftPos, width });
+      const query = mentionMatch[1].toLowerCase();
+      const suggestions = usersData?.findAllUsers?.filter((user: any) =>
+        user.username.toLowerCase().startsWith(query)
+      );
+      setMentionSuggestions(suggestions || []);
+      setSelectedIndexUser(0);
+      setShowMentionList(true);
+    } else {
+      setShowMentionList(false);
+    }
+  };
+
+  // Update the insertMention function to dynamically determine the active field
+  const insertMention = (
+    username: string,
+    setText: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    setText((prev) => {
+      const updatedText = prev.replace(/@\w*$/, `@${username} `);
+      return updatedText;
+    });
+    setShowMentionList(false);
+  };
+
+  // Définition correcte de handleKeyDown comme fonction React
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    if (!showMentionList || mentionSuggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSelectedIndexUser((prev) => (prev + 1) % mentionSuggestions.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSelectedIndexUser((prev) =>
+        prev === 0 ? mentionSuggestions.length - 1 : prev - 1
+      );
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      insertMention(
+        mentionSuggestions[selectedIndexUser].username,
+        activeField === "title" ? setTitle : setContent
+      );
+    }
+  };
+
+  // Ajout d'un effet pour fermer la liste des mentions si l'utilisateur clique à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mentionListRef.current &&
+        !mentionListRef.current.contains(event.target as Node)
+      ) {
+        setShowMentionList(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (showMentionList && mentionItemRefs.current[selectedIndexUser]) {
+      mentionItemRefs.current[selectedIndexUser]?.scrollIntoView({
+        behavior: "auto",
+        block: "nearest",
+      });
+    }
+  }, [selectedIndexUser, showMentionList]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("mention")) {
+        const username = target.getAttribute("data-username");
+        if (username) {
+          e.stopPropagation();
+          navigate(`/users/${userData?.findUserById?.id}`);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  // Ajout de la logique pour surligner les mentions dans le texte
+  const highlightMentions = (text: string) => {
+    const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const withMentions = escaped.replace(
+      /@([a-zA-Z0-9_.\- ]+)/g,
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+    );
+    return withMentions.replace(/\n/g, "<br>");
   };
 
   // Fonction pour partager un article
@@ -681,23 +886,50 @@ function PublicationPage() {
             </div>
           </div>
           <div className="flex flex-col space-y-4 w-full">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-              placeholder="Titre de l'article (Optionnel)"
-            />
-            <textarea
-              placeholder="Partagez vos pensées les plus sombres..."
-              className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-
+            <div className="relative">
+              <div
+                className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: highlightMentions(title) }}
+              ></div>
+              <textarea
+                value={title}
+                onChange={(e) =>
+                  handleTextChange(e.target.value, setTitle, titleInputRef)
+                }
+                onFocus={() => setActiveField("title")}
+                ref={titleInputRef}
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 min-h-[60px] resize-y"
+                placeholder="Titre de l'article (Optionnel)"
+                onKeyDown={handleKeyDown}
+              ></textarea>
+            </div>
+            <div className="relative">
+              {/* Ajout d'un div superposé pour surligner les mentions */}
+              <div
+                className="absolute inset-0 p-3 text-gray-100 whitespace-pre-wrap pointer-events-none break-words"
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: highlightMentions(content) }}
+              ></div>
+              <textarea
+                placeholder="Partagez vos pensées les plus sombres..."
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-y"
+                value={content}
+                onChange={(e) =>
+                  handleTextChange(e.target.value, setContent, contentInputRef)
+                }
+                onFocus={() => setActiveField("content")}
+                ref={contentInputRef}
+                onKeyDown={handleKeyDown}
+              ></textarea>
+            </div>
             {/* Ajout du téléchargeur d'image */}
-            <ImageUploader imageUrl={imageUrl} onImageChange={setImageUrl} />
-
+            <MediaUploader
+              imageUrl={imageUrl}
+              onImageChange={setImageUrl}
+              videoUrl={videoUrl}
+              onVideoChange={setVideoUrl}
+            />
             <div className="flex flex-col w-full">
               <div className="flex justify-end mt-3">
                 <button
@@ -802,6 +1034,25 @@ function PublicationPage() {
               </div>
             )}
 
+            {tempArticleData.videoUrl && (
+              <div className="mb-4 rounded-lg overflow-hidden">
+                <video
+                  src={tempArticleData.videoUrl}
+                  controls
+                  preload="metadata"
+                  playsInline
+                  webkit-playsinline="true"
+                  controlsList="nodownload"
+                  className="w-full h-auto rounded-lg max-h-80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  Votre navigateur ne prend pas en charge la lecture vidéo.
+                </video>
+              </div>
+            )}
+
             {/* Overlay de chargement */}
             <div className="absolute inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center">
               <div className="text-center">
@@ -845,6 +1096,7 @@ function PublicationPage() {
                 title,
                 content,
                 imageUrl,
+                videoUrl,
                 author,
                 createdAt,
                 updatedAt,
@@ -980,13 +1232,19 @@ function PublicationPage() {
                       </div>
                     )}
                   </div>
-                  <h2 className="text-xl font-semibold text-purple-400 mb-2">
-                    {title}
-                  </h2>
+                  <h2
+                    className="text-xl font-semibold text-purple-400 mb-2"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightMentions(title ?? ""),
+                    }}
+                  ></h2>
 
-                  <p className="text-gray-300 mb-4 whitespace-pre-wrap">
-                    {content}
-                  </p>
+                  <p
+                    className="text-gray-300 mb-4 whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightMentions(content),
+                    }}
+                  ></p>
 
                   {/* Affichage de l'image si elle existe */}
                   {imageUrl && (
@@ -1007,6 +1265,29 @@ function PublicationPage() {
                           decoding="async"
                         />
                       </picture>
+                    </div>
+                  )}
+
+                  {/* Affichage de la vidéo si elle existe */}
+                  {videoUrl && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <video
+                        src={videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        controls
+                        preload="metadata"
+                        controlsList="nodownload"
+                        className="w-full max-w-[800px] h-auto rounded-lg max-h-[350px] sm:max-h-dvh"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        Votre navigateur ne prend pas en charge la lecture
+                        vidéo.
+                      </video>
                     </div>
                   )}
 
@@ -1063,6 +1344,57 @@ function PublicationPage() {
             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
           />
         </div>
+      )}
+      {/* Ajout de la liste déroulante pour les mentions */}
+      {showMentionList && mentionSuggestions.length > 0 && (
+        <div
+          ref={mentionListRef}
+          className="absolute bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto"
+          style={{
+            top: `${mentionListPosition.top}px`,
+            left: `${mentionListPosition.left}px`,
+            width: `${mentionListPosition.width}px`,
+            position: "absolute",
+          }}
+        >
+          {mentionSuggestions.map((user, index) => (
+            <button
+              key={user.id}
+              ref={(el) => {
+                if (mentionItemRefs.current) {
+                  mentionItemRefs.current[index] = el;
+                }
+              }}
+              className={`px-4 py-2 hover:bg-purple-500 cursor-pointer text-gray-300 w-full text-left
+              ${
+                index === selectedIndexUser
+                  ? "bg-purple-900"
+                  : "hover:bg-purple-500"
+              }`}
+              onClick={() =>
+                insertMention(
+                  user.username,
+                  activeField === "title" ? setTitle : setContent
+                )
+              }
+            >
+              @{user.username}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Bouton pour remonter en haut de la page */}
+      {showScrollTop && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          className="fixed bottom-6 right-6 p-3 bg-purple-700 text-white rounded-full shadow-lg hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 z-50"
+          onClick={scrollToTop}
+          title="Remonter en haut"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </motion.button>
       )}
     </main>
   );

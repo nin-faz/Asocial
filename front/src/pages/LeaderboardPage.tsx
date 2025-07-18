@@ -37,15 +37,42 @@ export default function LeaderboardPage() {
           influents (ou détestés) de la plateforme !
         </p>
       </div>
+      <div className="mb-4 p-4 bg-gray-900 rounded-lg border border-purple-700">
+        <h2 className="text-xl font-bold text-purple-300 mb-2">
+          Comment le score est calculé :
+        </h2>
+        <ul className="list-disc pl-5 text-gray-300">
+          <li>Publications : 3 points par article</li>
+          <li>Commentaires reçus : 1.5 points par commentaire</li>
+          <li>Dislikes reçus : 1 point par dislike</li>
+          <li>Commentaires écrits : 1 point par commentaire</li>
+          <li>Dislikes donnés : 0.5 point par dislike</li>
+        </ul>
+        <p className="mt-2 text-yellow-300 italic">
+          Note : Le tableau affiche uniquement les commentaires et dislikes
+          reçus. Les autres facteurs contribuent au score mais ne sont pas
+          affichés ici.
+        </p>
+      </div>
       <div className="overflow-x-auto rounded-xl shadow-xl bg-gradient-to-br from-black via-gray-900 to-purple-950 p-2">
         <table className="w-full text-left min-w-[600px]">
           <thead>
             <tr className="border-b border-purple-800 text-purple-300">
               <th className="py-3 px-2 text-center">Rang</th>
               <th className="py-3 px-2">Utilisateur</th>
-              <th className="py-3 px-2 text-center">Score</th>
-              <th className="py-3 px-2 text-center">Commentaires</th>
-              <th className="py-3 px-2 text-center">Dislikes</th>
+              <th className="py-3 px-2 text-center">Score total</th>
+              <th
+                className="py-3 px-2 text-center"
+                title="Commentaires reçus sur vos articles"
+              >
+                Com. reçus
+              </th>
+              <th
+                className="py-3 px-2 text-center"
+                title="Dislikes reçus sur vos articles"
+              >
+                Dis. reçus
+              </th>
             </tr>
           </thead>
           <tbody>

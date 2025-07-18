@@ -32,6 +32,7 @@ export type Article = {
   imageUrl?: Maybe<Scalars['String']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['String']['output']>;
+  videoUrl?: Maybe<Scalars['String']['output']>;
 };
 
 export type Comment = {
@@ -153,6 +154,7 @@ export type MutationCreateArticleArgs = {
   content: Scalars['String']['input'];
   imageUrl?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+  videoUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -213,6 +215,7 @@ export type MutationUpdateArticleArgs = {
   id: Scalars['ID']['input'];
   imageUrl?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+  videoUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -358,7 +361,9 @@ export type UserSummary = {
   TotalComments?: Maybe<Scalars['Int']['output']>;
   TotalDislikes?: Maybe<Scalars['Int']['output']>;
   bio?: Maybe<Scalars['String']['output']>;
+  commentsWritten?: Maybe<Scalars['Int']['output']>;
   createdAt: Scalars['String']['output'];
+  dislikesGiven?: Maybe<Scalars['Int']['output']>;
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   scoreGlobal?: Maybe<Scalars['Float']['output']>;
@@ -535,6 +540,7 @@ export type ArticleResolvers<ContextType = Context, ParentType extends Resolvers
   imageUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  videoUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -708,7 +714,9 @@ export type UserSummaryResolvers<ContextType = Context, ParentType extends Resol
   TotalComments?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   TotalDislikes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  commentsWritten?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dislikesGiven?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   scoreGlobal?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;

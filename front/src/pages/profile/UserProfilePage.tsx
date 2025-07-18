@@ -1,31 +1,63 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Loader,
-  MessageSquare,
-  Share2,
-  ThumbsDown,
-} from "lucide-react";
-import { GET_USER_BY_ID, GET_LEADERBOARD } from "../queries/userQuery";
-import { FIND_ARTICLES_BY_USER } from "../queries/articleQuery";
-import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../queries/dislikeQuery";
-import UserIcon from "../components/icons/UserIcon";
+import { ArrowLeft, MessageSquare, Share2, ThumbsDown } from "lucide-react";
+import { GET_USER_BY_ID, GET_LEADERBOARD } from "../../queries/userQuery";
+import { FIND_ARTICLES_BY_USER } from "../../queries/articleQuery";
+import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../../queries/dislikeQuery";
+import UserIcon from "../../components/icons/UserIcon";
 import { toast } from "react-toastify";
 import {
   ADD_ARTICLE_DISLIKE,
   DELETE_ARTICLE_DISLIKE,
-} from "../mutations/dislikeMutation";
+} from "../../mutations/dislikeMutation";
 import { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { showLoginRequiredToast } from "../utils/customToasts";
-import { BadgeTop1, BadgePreset } from "../components/BadgeTop1";
+import { AuthContext } from "../../context/AuthContext";
+import { showLoginRequiredToast } from "../../utils/customToasts";
+import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
+import Loader from "../../components/Loader";
+import { GET_USERS } from "../../queries";
 
 const UserProfilePage = () => {
+  const { data: usersData } = useQuery(GET_USERS);
   const { userId } = useParams();
   const userIdString = userId ?? "";
   const navigate = useNavigate();
+  const auth = useContext(AuthContext);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("mention")) {
+        const username = target.getAttribute("data-username");
+        if (username) {
+          e.stopPropagation();
+          const mentioned = usersData?.findAllUsers?.find(
+            (u) => u.username === username
+          );
+          if (mentioned) {
+            navigate(
+              mentioned.id === auth?.user?.id
+                ? "/profile"
+                : `/users/${mentioned.id}`
+            );
+          }
+        }
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [usersData, navigate, auth]);
+
+  // Highlight mentions in text
+  const highlightMentions = (text: string) => {
+    const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const withMentions = escaped.replace(
+      /@([a-zA-Z0-9_.\- ]+)/g,
+      `<span class="mention text-purple-400 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+    );
+    return withMentions.replace(/\n/g, "<br>");
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -35,6 +67,7 @@ const UserProfilePage = () => {
     variables: { id: userIdString },
     skip: !userIdString,
   });
+  const user = userData?.findUserById;
 
   const { data: articlesData, loading: articlesLoading } = useQuery(
     FIND_ARTICLES_BY_USER,
@@ -43,10 +76,8 @@ const UserProfilePage = () => {
       skip: !userIdString,
     }
   );
-
-  const auth = useContext(AuthContext);
-  const user = userData?.findUserById;
   const articles = articlesData?.findArticlesByUser || [];
+
   const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
     {}
   );
@@ -112,10 +143,6 @@ const UserProfilePage = () => {
     : null;
   const isTop1 = user?.id && top1User?.id === user.id;
 
-  if (userLoading || articlesLoading) {
-    return <Loader />;
-  }
-
   const handleShareArticle = async (e: React.MouseEvent, articleId: string) => {
     e.stopPropagation();
 
@@ -164,8 +191,25 @@ const UserProfilePage = () => {
     }
   };
 
+  const isLoading = userLoading || articlesLoading;
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex items-center text-purple-400 hover:text-purple-300 mb-6"
+        onClick={() => {
+          navigate(-1);
+        }}
+      >
+        <ArrowLeft className="h-5 w-5 mr-2" />
+        Retour
+      </motion.button>
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -265,14 +309,14 @@ const UserProfilePage = () => {
                   onClick={() => navigate(`/publications/${article.id}`)}
                 >
                   <div className="flex items-center space-x-2 mb-1 pb-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-purple-900 flex-shrink-0 flex items-center justify-center">
                       <UserIcon
                         iconName={article.author?.iconName ?? user?.iconName}
                         size="small"
                       />
                     </div>
-                    <div>
-                      <h3 className="text-purple-400 font-semibold text-xs leading-tight">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-purple-400 font-semibold text-xs leading-tight truncate">
                         {article.author?.username || user?.username}
                       </h3>
                       <p className="text-gray-500 text-[10px] leading-tight">
@@ -295,13 +339,19 @@ const UserProfilePage = () => {
                     </div>
                   </div>
                   {article.title && (
-                    <h2 className="text-[0.95rem] font-semibold text-purple-400 line-clamp-2 min-h-[2.1rem]">
-                      {article.title}
-                    </h2>
+                    <h2
+                      className="text-[0.95rem] font-semibold text-purple-400 line-clamp-2 min-h-[2.1rem]"
+                      dangerouslySetInnerHTML={{
+                        __html: highlightMentions(article.title || ""),
+                      }}
+                    />
                   )}
-                  <p className="text-gray-300 text-xs mb-2 whitespace-pre-wrap line-clamp-3 flex-grow">
-                    {article.content}
-                  </p>
+                  <p
+                    className="text-gray-300 text-xs mb-2 whitespace-pre-wrap line-clamp-3 flex-grow"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightMentions(article.content || ""),
+                    }}
+                  />
 
                   {article.imageUrl && (
                     <div className="mb-2 rounded-lg overflow-hidden">
@@ -321,6 +371,28 @@ const UserProfilePage = () => {
                           decoding="async"
                         />
                       </picture>
+                    </div>
+                  )}
+
+                  {article.videoUrl && (
+                    <div className="mb-2 rounded-lg overflow-hidden">
+                      <video
+                        src={article.videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        controls
+                        className="w-full h-32 object-cover rounded-lg"
+                        controlsList="nodownload"
+                        preload="metadata"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        Votre navigateur ne prend pas en charge la lecture
+                        vidéo.
+                      </video>
                     </div>
                   )}
                   <div className="flex justify-between items-end mt-2 pt-3 border-t border-gray-800 text-gray-500 text-xs">

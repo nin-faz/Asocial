@@ -26,12 +26,14 @@ export const typeDefs = gql`
       title: String
       content: String!
       imageUrl: String
+      videoUrl: String
     ): CreateArticleResponse!
     updateArticle(
       id: ID!
       title: String
       content: String
       imageUrl: String
+      videoUrl: String
     ): UpdateArticleResponse!
     deleteArticle(id: ID!): DeleteArticleResponse!
 
@@ -80,6 +82,8 @@ export const typeDefs = gql`
     createdAt: String!
     TotalDislikes: Int
     TotalComments: Int
+    commentsWritten: Int
+    dislikesGiven: Int
     scoreGlobal: Float
     top1BadgeMessage: String
     top1BadgeColor: String
@@ -163,6 +167,7 @@ export const typeDefs = gql`
     title: String
     content: String!
     imageUrl: String
+    videoUrl: String
     author: User!
     dislikes: [Dislike]
     TotalDislikes: Int

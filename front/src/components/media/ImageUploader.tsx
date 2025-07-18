@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { X, Upload } from "lucide-react";
-import { imageUpload } from "../utils/imageUpload";
+import { imageUpload } from "../../utils/imageUpload";
 import imageCompression from "browser-image-compression";
 
 interface ImageUploaderProps {

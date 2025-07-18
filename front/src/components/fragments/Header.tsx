@@ -326,6 +326,11 @@ const Header = () => {
                       className="w-full bg-gray-800 text-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          setShowMobileMenu(false);
+                        }
+                      }}
                     />
                     <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
                   </div>

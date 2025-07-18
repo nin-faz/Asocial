@@ -2,8 +2,18 @@ import { graphql } from "../gql";
 import { gql } from "@apollo/client";
 
 export const CREATE_ARTICLE = graphql(`
-  mutation CreateArticle($title: String, $content: String!, $imageUrl: String) {
-    createArticle(title: $title, content: $content, imageUrl: $imageUrl) {
+  mutation CreateArticle(
+    $title: String
+    $content: String!
+    $imageUrl: String
+    $videoUrl: String
+  ) {
+    createArticle(
+      title: $title
+      content: $content
+      imageUrl: $imageUrl
+      videoUrl: $videoUrl
+    ) {
       code
       success
       message
@@ -12,6 +22,7 @@ export const CREATE_ARTICLE = graphql(`
         title
         content
         createdAt
+        videoUrl
         updatedAt
         author {
           id
@@ -28,12 +39,14 @@ export const UPDATE_ARTICLE = gql`
     $title: String
     $content: String
     $imageUrl: String
+    $videoUrl: String
   ) {
     updateArticle(
       id: $id
       title: $title
       content: $content
       imageUrl: $imageUrl
+      videoUrl: $videoUrl
     ) {
       code
       success

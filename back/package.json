@@ -19,6 +19,7 @@
     "@apollo/datasource-rest": "^6.4.1",
     "@apollo/server": "^4.11.3",
     "@prisma/client": "^6.4.1",
+    "@supabase/supabase-js": "^2.51.0",
     "@types/web-push": "^3.6.4",
     "axios": "^1.10.0",
     "back": "file:",
@@ -43,7 +44,6 @@
     "@types/nodemailer": "^6.4.17",
     "cross-env": "^7.0.3",
     "prisma": "^6.4.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "ts-node": "^10.9.2"
   }
 }

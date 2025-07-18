@@ -51,7 +51,7 @@ model Article {
   comments  Comment[]
   dislikes  Dislike[]
   notifications Notification[] // Ajout relation notifications liées à l'article
-
+  videoUrl      String?
   @@index([authorId])
   @@index([createdAt])
   @@index([authorId, createdAt])
@@ -70,7 +70,7 @@ model Comment {
   parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentToComment")
   dislikes  Dislike[]
-  notifications Notification[] // Ajout relation notifications liées au commentaire
+  notifications Notification[]
 
   @@index([articleId])
   @@index([authorId])

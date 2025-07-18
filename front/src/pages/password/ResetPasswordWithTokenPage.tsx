@@ -3,12 +3,12 @@ import { useMutation } from "@apollo/client";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, User } from "lucide-react";
-import { RESET_PASSWORD_WITH_TOKEN } from "../mutations/resetPasswordMutation";
+import { RESET_PASSWORD_WITH_TOKEN } from "../../mutations/resetPasswordMutation";
 import {
   showResetPasswordSuccessToast,
   showResetPasswordErrorToast,
   showInvalidOrExpiredLinkToast,
-} from "../utils/customToasts";
+} from "../../utils/customToasts";
 
 export default function ResetPasswordWithTokenPage() {
   const [searchParams] = useSearchParams();

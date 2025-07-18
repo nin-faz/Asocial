@@ -150,15 +150,29 @@ export const resolvers: Resolvers = {
         select: { id: true },
       });
       const articleIds = userArticles.map((article) => article.id);
-      const totalComments = await db.comment.count({
+      const totalCommentsReceived = await db.comment.count({
         where: { articleId: { in: articleIds } },
       });
       // Total des dislikes reçus
-      const totalDislikes = await db.dislike.count({
+      const totalDislikesReceived = await db.dislike.count({
         where: { articleId: { in: articleIds } },
       });
-      // Score global (sans dislikes donnés)
-      return publications * 3 + totalComments * 1.5 + totalDislikes * 1;
+      // Total des commentaires écrits par l'utilisateur
+      const totalCommentsWritten = await db.comment.count({
+        where: { authorId: parent.id },
+      });
+      // Total des dislikes donnés par l'utilisateur
+      const totalDislikesGiven = await db.dislike.count({
+        where: { userId: parent.id },
+      });
+      // Score global
+      return (
+        publications * 3 +
+        totalCommentsReceived * 1.5 +
+        totalDislikesReceived * 1 +
+        totalCommentsWritten * 1 +
+        totalDislikesGiven * 0.5
+      );
     },
   },
   Notification: {

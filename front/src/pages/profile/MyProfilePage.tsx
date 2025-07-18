@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef, Suspense, lazy } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
@@ -19,36 +19,36 @@ import {
   Flame,
   Star,
 } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext";
 import { useQuery, useMutation } from "@apollo/client";
 import {
   UPDATE_USER,
   ADD_ARTICLE_DISLIKE,
   DELETE_ARTICLE_DISLIKE,
   DELETE_ARTICLE,
-} from "../mutations";
+} from "../../mutations";
 import {
   GET_USER_BY_ID,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLES_BY_USER,
-} from "../queries";
+} from "../../queries";
 import { toast } from "react-toastify";
 import {
   showLoginRequiredToast,
   showArticleDeletedToast,
   showProfileUpdatedToast,
-} from "../utils/customToasts";
-import { renderUserIcon } from "../utils/iconUtil";
+} from "../../utils/customToasts";
+import { renderUserIcon } from "../../utils/iconUtil";
 
-import Loader from "../components/Loader";
+import Loader from "../../components/Loader";
 
 const PublicationDetailsPage = lazy(
-  () => import("./publications/PublicationDetailsPage")
+  () => import("../publications/PublicationDetailsPage")
 );
-const IconSelector = lazy(() => import("../components/icons/IconSelector"));
-import { GET_LEADERBOARD } from "../queries/userQuery";
-import { GET_USERS } from "../queries";
-import UserIcon from "../components/icons/UserIcon";
+const IconSelector = lazy(() => import("../../components/icons/IconSelector"));
+import { GET_LEADERBOARD } from "../../queries/userQuery";
+import { GET_USERS } from "../../queries";
+import UserIcon from "../../components/icons/UserIcon";
 
 const MyProfilePage = () => {
   // Mention support setup
@@ -60,7 +60,7 @@ const MyProfilePage = () => {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withTags = escaped.replace(
-      /@([\w.-]+)/g,
+      /@([a-zA-Z0-9_.\- ]+)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withTags.replace(/\n/g, "<br>");
@@ -948,6 +948,41 @@ const MyProfilePage = () => {
                             loading="lazy"
                           />
                         </picture>
+                      </div>
+                    )}
+                    {/* Ajout de l'affichage de la vidéo si elle existe */}
+                    {article.videoUrl && (
+                      <div className="mb-6 rounded-lg overflow-hidden">
+                        <video
+                          src={article.videoUrl}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          controls
+                          className="w-full h-auto rounded-lg max-h-80"
+                          controlsList="nodownload"
+                          preload="metadata"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Lire/pauser la vidéo quand on clique dessus
+                            const target = e.target as HTMLVideoElement;
+                            if (target.tagName === "VIDEO") {
+                              if (!target.paused) {
+                                target.pause();
+                              } else {
+                                target
+                                  .play()
+                                  .catch((err) =>
+                                    console.error("Erreur de lecture:", err)
+                                  );
+                              }
+                            }
+                          }}
+                        >
+                          Votre navigateur ne prend pas en charge la lecture
+                          vidéo.
+                        </video>
                       </div>
                     )}
                   </div>{" "}

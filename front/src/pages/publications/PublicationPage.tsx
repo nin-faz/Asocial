@@ -11,6 +11,7 @@ import {
   Edit2,
   Share2,
   RefreshCw,
+  ChevronUp,
 } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client";
 import Loader from "../../components/Loader";
@@ -38,7 +39,7 @@ import {
   showLoginRequiredToast,
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
-import ImageUploader from "../../components/ImageUploader";
+import MediaUploader from "../../components/media/MediaUploader";
 import getCaretCoordinates from "textarea-caret-position";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
@@ -52,6 +53,28 @@ function PublicationPage() {
   const { token, user } = authContext;
   const navigate = useNavigate();
   const location = useLocation();
+
+  // État pour afficher/masquer le bouton de retour en haut
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Fonction pour remonter en haut de la page
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // Vérifier si on doit afficher le bouton de retour en haut
+  useEffect(() => {
+    const handleScroll = () => {
+      // Afficher le bouton quand on descend de plus de 500px
+      setShowScrollTop(window.scrollY > 500);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Obtenir les informations utilisateur, y compris l'icône
   const { data: userData, refetch: refetchUserData } = useQuery(
@@ -115,6 +138,7 @@ function PublicationPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   // Infinite scroll : combien d'articles afficher ?
   const [articlesToShow, setArticlesToShow] = useState(10);
@@ -228,10 +252,12 @@ function PublicationPage() {
     title: string;
     content: string;
     imageUrl: string | null;
+    videoUrl: string | null;
   }>({
     title: "",
     content: "",
     imageUrl: null,
+    videoUrl: null,
   });
 
   const handleCreateArticle = async () => {
@@ -248,13 +274,14 @@ function PublicationPage() {
     try {
       // Générer des datas temporaires pour l'article en cours de création
       setTempArticleId(`temp-${Date.now()}`);
-      setTempArticleData({ title: title.trim(), content, imageUrl });
+      setTempArticleData({ title: title.trim(), content, imageUrl, videoUrl });
 
       const response = await createArticle({
         variables: {
           title: title.trim() || null,
           content,
           imageUrl,
+          videoUrl,
         },
         context: {
           headers: {
@@ -267,6 +294,7 @@ function PublicationPage() {
         setTitle("");
         setContent("");
         setImageUrl(null);
+        setVideoUrl(null);
 
         // Indique que le rafraîchissement est en cours
         setIsRefreshing(true);
@@ -284,7 +312,12 @@ function PublicationPage() {
         // Indiquer que le rafraîchissement est terminé
         setIsRefreshing(false);
         setTempArticleId(null);
-        setTempArticleData({ title: "", content: "", imageUrl: null });
+        setTempArticleData({
+          title: "",
+          content: "",
+          imageUrl: null,
+          videoUrl: null,
+        });
 
         showArticleCreatedToast();
         console.log("Article créé avec succès !");
@@ -304,7 +337,12 @@ function PublicationPage() {
       }
       setIsRefreshing(false);
       setTempArticleId(null);
-      setTempArticleData({ title: "", content: "", imageUrl: null });
+      setTempArticleData({
+        title: "",
+        content: "",
+        imageUrl: null,
+        videoUrl: null,
+      });
     }
   };
 
@@ -592,7 +630,7 @@ function PublicationPage() {
   const [selectedIndexUser, setSelectedIndexUser] = useState(0);
 
   // Ajout des références manquantes
-  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const mentionItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -608,7 +646,7 @@ function PublicationPage() {
     setText(text);
 
     // Detect mention trigger and position list under caret
-    const mentionRegex = /@(\w*)$/;
+    const mentionRegex = /@([a-zA-Z0-9_.\- ]*)$/;
     const mentionMatch = mentionRegex.exec(text);
     if (mentionMatch && inputRef.current) {
       const el = inputRef.current as any;
@@ -729,7 +767,7 @@ function PublicationPage() {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@(\w+)/g,
+      /@([a-zA-Z0-9_.\- ]+)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -854,18 +892,17 @@ function PublicationPage() {
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: highlightMentions(title) }}
               ></div>
-              <input
-                type="text"
+              <textarea
                 value={title}
                 onChange={(e) =>
                   handleTextChange(e.target.value, setTitle, titleInputRef)
                 }
                 onFocus={() => setActiveField("title")}
                 ref={titleInputRef}
-                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 min-h-[60px] resize-y"
                 placeholder="Titre de l'article (Optionnel)"
                 onKeyDown={handleKeyDown}
-              />
+              ></textarea>
             </div>
             <div className="relative">
               {/* Ajout d'un div superposé pour surligner les mentions */}
@@ -876,7 +913,7 @@ function PublicationPage() {
               ></div>
               <textarea
                 placeholder="Partagez vos pensées les plus sombres..."
-                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500"
+                className="w-full bg-gray-800 text-gray-100 rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 resize-y"
                 value={content}
                 onChange={(e) =>
                   handleTextChange(e.target.value, setContent, contentInputRef)
@@ -887,7 +924,12 @@ function PublicationPage() {
               ></textarea>
             </div>
             {/* Ajout du téléchargeur d'image */}
-            <ImageUploader imageUrl={imageUrl} onImageChange={setImageUrl} />
+            <MediaUploader
+              imageUrl={imageUrl}
+              onImageChange={setImageUrl}
+              videoUrl={videoUrl}
+              onVideoChange={setVideoUrl}
+            />
             <div className="flex flex-col w-full">
               <div className="flex justify-end mt-3">
                 <button
@@ -992,6 +1034,25 @@ function PublicationPage() {
               </div>
             )}
 
+            {tempArticleData.videoUrl && (
+              <div className="mb-4 rounded-lg overflow-hidden">
+                <video
+                  src={tempArticleData.videoUrl}
+                  controls
+                  preload="metadata"
+                  playsInline
+                  webkit-playsinline="true"
+                  controlsList="nodownload"
+                  className="w-full h-auto rounded-lg max-h-80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  Votre navigateur ne prend pas en charge la lecture vidéo.
+                </video>
+              </div>
+            )}
+
             {/* Overlay de chargement */}
             <div className="absolute inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center">
               <div className="text-center">
@@ -1035,6 +1096,7 @@ function PublicationPage() {
                 title,
                 content,
                 imageUrl,
+                videoUrl,
                 author,
                 createdAt,
                 updatedAt,
@@ -1206,6 +1268,29 @@ function PublicationPage() {
                     </div>
                   )}
 
+                  {/* Affichage de la vidéo si elle existe */}
+                  {videoUrl && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <video
+                        src={videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        controls
+                        preload="metadata"
+                        controlsList="nodownload"
+                        className="w-full max-w-[800px] h-auto rounded-lg max-h-[350px] sm:max-h-dvh"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        Votre navigateur ne prend pas en charge la lecture
+                        vidéo.
+                      </video>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-gray-500">
                     <div className="flex items-center space-x-6">
                       <motion.button
@@ -1276,7 +1361,9 @@ function PublicationPage() {
             <button
               key={user.id}
               ref={(el) => {
-                mentionItemRefs.current[index] = el;
+                if (mentionItemRefs.current) {
+                  mentionItemRefs.current[index] = el;
+                }
               }}
               className={`px-4 py-2 hover:bg-purple-500 cursor-pointer text-gray-300 w-full text-left
               ${
@@ -1295,6 +1382,19 @@ function PublicationPage() {
             </button>
           ))}
         </div>
+      )}
+      {/* Bouton pour remonter en haut de la page */}
+      {showScrollTop && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          className="fixed bottom-6 right-6 p-3 bg-purple-700 text-white rounded-full shadow-lg hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 z-50"
+          onClick={scrollToTop}
+          title="Remonter en haut"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </motion.button>
       )}
     </main>
   );

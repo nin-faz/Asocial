@@ -8,7 +8,7 @@ import Footer from "./components/fragments/Footer";
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const InstallTutoPage = React.lazy(() => import("./pages/InstallTutoPage"));
 const AuthPage = React.lazy(() => import("./pages/AuthPage"));
-const MyProfilePage = React.lazy(() => import("./pages/MyProfilePage"));
+const MyProfilePage = React.lazy(() => import("./pages/profile/MyProfilePage"));
 const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const PublicationPage = React.lazy(
   () => import("./pages/publications/PublicationPage")
@@ -16,12 +16,14 @@ const PublicationPage = React.lazy(
 const PublicationDetailsPage = React.lazy(
   () => import("./pages/publications/PublicationDetailsPage")
 );
-const UserProfilePage = React.lazy(() => import("./pages/UserProfilePage"));
+const UserProfilePage = React.lazy(
+  () => import("./pages/profile/UserProfilePage")
+);
 const RequestPasswordResetPage = React.lazy(
-  () => import("./pages/RequestPasswordResetPage")
+  () => import("./pages/password/RequestPasswordResetPage")
 );
 const ResetPasswordWithTokenPage = React.lazy(
-  () => import("./pages/ResetPasswordWithTokenPage")
+  () => import("./pages/password/ResetPasswordWithTokenPage")
 );
 const NotificationsPage = React.lazy(() => import("./pages/NotificationsPage"));
 const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));

@@ -7,6 +7,7 @@ export const FIND_ARTICLES = graphql(`
       title
       content
       imageUrl
+      videoUrl
       author {
         id
         username
@@ -33,6 +34,7 @@ export const FIND_ARTICLE_BY_ID = graphql(`
       title
       content
       imageUrl
+      videoUrl
       author {
         id
         username
@@ -59,6 +61,7 @@ export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
       title
       content
       imageUrl
+      videoUrl
       author {
         id
         username
@@ -82,6 +85,7 @@ export const FIND_ARTICLES_BY_USER = graphql(`
       title
       content
       imageUrl
+      videoUrl
       author {
         id
         username

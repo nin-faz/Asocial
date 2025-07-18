@@ -2,21 +2,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import { motion } from "framer-motion";
 import { ArrowLeft, MessageSquare, Share2, ThumbsDown } from "lucide-react";
-import { GET_USER_BY_ID, GET_LEADERBOARD } from "../queries/userQuery";
-import { FIND_ARTICLES_BY_USER } from "../queries/articleQuery";
-import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../queries/dislikeQuery";
-import UserIcon from "../components/icons/UserIcon";
+import { GET_USER_BY_ID, GET_LEADERBOARD } from "../../queries/userQuery";
+import { FIND_ARTICLES_BY_USER } from "../../queries/articleQuery";
+import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../../queries/dislikeQuery";
+import UserIcon from "../../components/icons/UserIcon";
 import { toast } from "react-toastify";
 import {
   ADD_ARTICLE_DISLIKE,
   DELETE_ARTICLE_DISLIKE,
-} from "../mutations/dislikeMutation";
+} from "../../mutations/dislikeMutation";
 import { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { showLoginRequiredToast } from "../utils/customToasts";
-import { BadgeTop1, BadgePreset } from "../components/BadgeTop1";
-import Loader from "../components/Loader";
-import { GET_USERS } from "../queries";
+import { AuthContext } from "../../context/AuthContext";
+import { showLoginRequiredToast } from "../../utils/customToasts";
+import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
+import Loader from "../../components/Loader";
+import { GET_USERS } from "../../queries";
 
 const UserProfilePage = () => {
   const { data: usersData } = useQuery(GET_USERS);
@@ -53,7 +53,7 @@ const UserProfilePage = () => {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.-]+)/g,
+      /@([a-zA-Z0-9_.\- ]+)/g,
       `<span class="mention text-purple-400 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -360,6 +360,28 @@ const UserProfilePage = () => {
                           decoding="async"
                         />
                       </picture>
+                    </div>
+                  )}
+
+                  {article.videoUrl && (
+                    <div className="mb-2 rounded-lg overflow-hidden">
+                      <video
+                        src={article.videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        controls
+                        className="w-full h-32 object-cover rounded-lg"
+                        controlsList="nodownload"
+                        preload="metadata"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        Votre navigateur ne prend pas en charge la lecture
+                        vidéo.
+                      </video>
                     </div>
                   )}
                   <div className="flex justify-between items-end mt-2 pt-3 border-t border-gray-800 text-gray-500 text-xs">

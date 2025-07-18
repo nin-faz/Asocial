@@ -45,7 +45,7 @@ import {
   showLoginRequiredToast,
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
-import ImageUploader from "../../components/ImageUploader";
+import MediaUploader from "../../components/media/MediaUploader";
 import { GET_LEADERBOARD } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 import getCaretCoordinates from "textarea-caret-position";
@@ -103,7 +103,7 @@ const PublicationDetailsPage = ({
     inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
   ) => {
     setText(text);
-    const mentionRegex = /@(\w*)$/;
+    const mentionRegex = /@([a-zA-Z0-9_.\- ]*)$/;
     const mentionMatch = mentionRegex.exec(text);
     if (mentionMatch && inputRef.current) {
       const el = inputRef.current as any;
@@ -144,7 +144,7 @@ const PublicationDetailsPage = ({
     setText: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setText((prev) => {
-      const updatedText = prev.replace(/@[a-zA-Z0-9_.-]*$/, `@${username} `);
+      const updatedText = prev.replace(/@[a-zA-Z0-9_.\- ]*$/, `@${username} `);
       return updatedText;
     });
     setShowMentionList(false);
@@ -237,7 +237,7 @@ const PublicationDetailsPage = ({
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
-      /@([a-zA-Z0-9_.-]+)/g,
+      /@([a-zA-Z0-9_.\- ]+)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
     );
     return withMentions.replace(/\n/g, "<br>");
@@ -731,21 +731,28 @@ const PublicationDetailsPage = ({
   const [editedImageUrl, setEditedImageUrl] = useState<string | null>(
     article?.imageUrl || null
   );
+  const [editedVideoUrl, setEditedVideoUrl] = useState<string | null>(
+    article?.videoUrl || null
+  );
 
   useEffect(() => {
     if (article) {
       setEditedTitle(article.title || "");
       setEditedContent(article.content || "");
       setEditedImageUrl(article.imageUrl || null);
+      setEditedVideoUrl(article.videoUrl || null);
     }
   }, [article]);
 
   const handleUpdateArticle = async () => {
     // Ajoutons des logs pour voir ce qui est envoyé
-    console.log("État de l'image avant envoi:", {
+    console.log("État des médias avant envoi:", {
       editedImageUrl,
-      type: typeof editedImageUrl,
-      isNull: editedImageUrl === null,
+      editedVideoUrl,
+      typeImage: typeof editedImageUrl,
+      typeVideo: typeof editedVideoUrl,
+      isNullImage: editedImageUrl === null,
+      isNullVideo: editedVideoUrl === null,
     });
 
     try {
@@ -754,6 +761,7 @@ const PublicationDetailsPage = ({
         title: editedTitle,
         content: editedContent,
         imageUrl: editedImageUrl,
+        videoUrl: editedVideoUrl,
       };
 
       console.log("Variables envoyées à la mutation:", variables);
@@ -966,7 +974,6 @@ const PublicationDetailsPage = ({
             </div>
           )}
         </div>
-
         {/* Post Content */}
         {isEditing ? (
           <div className="flex flex-col space-y-4">
@@ -1020,10 +1027,12 @@ const PublicationDetailsPage = ({
               />
             </div>
 
-            {/* Ajout du téléchargeur d'image */}
-            <ImageUploader
+            {/* Ajout du téléchargeur de média */}
+            <MediaUploader
               imageUrl={editedImageUrl}
               onImageChange={setEditedImageUrl}
+              videoUrl={editedVideoUrl}
+              onVideoChange={setEditedVideoUrl}
             />
 
             <div className="flex justify-end space-x-4 pb-4">
@@ -1036,6 +1045,7 @@ const PublicationDetailsPage = ({
                     setEditedTitle("");
                   }
                   setEditedImageUrl(article?.imageUrl || null);
+                  setEditedVideoUrl(article?.videoUrl || null);
                   setIsEditing(false);
                 }}
                 className="flex items-center px-3 py-1 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
@@ -1073,7 +1083,6 @@ const PublicationDetailsPage = ({
             ></p>
           </>
         )}
-
         {/* Post Image */}
         {!isEditing && article?.imageUrl && (
           <div className="mb-6 rounded-lg overflow-hidden">
@@ -1090,6 +1099,24 @@ const PublicationDetailsPage = ({
                 decoding="async"
               />
             </picture>
+          </div>
+        )}
+        {/* Post Video */}
+        {!isEditing && article?.videoUrl && (
+          <div className="mb-6 rounded-lg overflow-hidden">
+            <video
+              src={article.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              className="w-full h-auto rounded-lg max-h-[40rem]"
+              controlsList="nodownload"
+              preload="metadata"
+            >
+              Votre navigateur ne prend pas en charge la lecture vidéo.
+            </video>
           </div>
         )}
 

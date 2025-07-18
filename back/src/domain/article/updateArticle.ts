@@ -6,7 +6,7 @@ export const updateArticle: NonNullable<
   MutationResolvers["updateArticle"]
 > = async (
   _,
-  { id, title, content, imageUrl },
+  { id, title, content, imageUrl, videoUrl },
   { dataSources: { db }, user }
 ) => {
   try {
@@ -39,6 +39,7 @@ export const updateArticle: NonNullable<
       title?: string;
       content?: string;
       imageUrl?: string | null;
+      videoUrl?: string | null;
       updatedAt: Date;
     } = {
       updatedAt: new Date(),
@@ -50,9 +51,11 @@ export const updateArticle: NonNullable<
     if (content !== null) {
       updateData.content = content;
     }
-
     if (imageUrl !== undefined) {
       updateData.imageUrl = imageUrl;
+    }
+    if (videoUrl !== undefined) {
+      updateData.videoUrl = videoUrl;
     }
 
     console.log("Mise à jour de l'article avec les données:", updateData);

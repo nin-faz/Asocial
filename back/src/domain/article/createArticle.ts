@@ -5,7 +5,11 @@ import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js"
 
 export const createArticle: NonNullable<
   MutationResolvers["createArticle"]
-> = async (_, { title, content, imageUrl }, { dataSources: { db }, user }) => {
+> = async (
+  _,
+  { title, content, imageUrl, videoUrl },
+  { dataSources: { db }, user }
+) => {
   try {
     if (!user) {
       return {
@@ -21,12 +25,9 @@ export const createArticle: NonNullable<
         title: title || "",
         content,
         imageUrl,
+        videoUrl,
         createdAt: new Date(),
-        author: {
-          connect: {
-            id: user.id,
-          },
-        },
+        author: { connect: { id: user.id } },
       },
     });
 
@@ -90,6 +91,7 @@ export const createArticle: NonNullable<
         title: createdArticle.title,
         content: createdArticle.content,
         imageUrl: createdArticle.imageUrl,
+        videoUrl: createdArticle.videoUrl,
         createdAt: createdArticle.createdAt,
         authorId: user.id,
         updatedAt: createdArticle.updatedAt,

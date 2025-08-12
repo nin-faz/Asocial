@@ -46,7 +46,6 @@ export default function LeaderboardPage() {
           <li>Commentaires reçus : 1.5 points par commentaire</li>
           <li>Dislikes reçus : 1 point par dislike</li>
           <li>Commentaires écrits : 1 point par commentaire</li>
-          <li>Dislikes donnés : 0.5 point par dislike</li>
         </ul>
         <p className="mt-2 text-yellow-300 italic">
           Note : Le tableau affiche uniquement les commentaires et dislikes

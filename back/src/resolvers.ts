@@ -161,17 +161,13 @@ export const resolvers: Resolvers = {
       const totalCommentsWritten = await db.comment.count({
         where: { authorId: parent.id },
       });
-      // Total des dislikes donnés par l'utilisateur
-      const totalDislikesGiven = await db.dislike.count({
-        where: { userId: parent.id },
-      });
+
       // Score global
       return (
         publications * 3 +
         totalCommentsReceived * 1.5 +
         totalDislikesReceived * 1 +
-        totalCommentsWritten * 1 +
-        totalDislikesGiven * 0.5
+        totalCommentsWritten * 1
       );
     },
   },

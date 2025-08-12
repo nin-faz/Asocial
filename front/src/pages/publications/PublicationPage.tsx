@@ -92,27 +92,23 @@ function PublicationPage() {
     loading: articlesLoading,
     refetch: refetchArticles,
   } = useQuery(FIND_ARTICLES, {
-    fetchPolicy: "cache-and-network", // Utilise le cache et met à jour en arrière-plan
-    nextFetchPolicy: "cache-first", // Utilise le cache pour les requêtes suivantes
+    fetchPolicy: "network-only", // Force une nouvelle requête réseau pour contourner les problèmes de cache
+    nextFetchPolicy: "cache-and-network", // Met à jour en arrière-plan après le premier affichage
   });
   const articles = data?.findArticles || [];
 
   // État pour suivre si un rafraîchissement est nécessaire
   const [needsRefresh, setNeedsRefresh] = useState(true);
 
-  // Effet au chargement pour rafraîchir les données seulement si nécessaire
+  // Effet au chargement pour rafraîchir les données immédiatement
   useEffect(() => {
     if (needsRefresh) {
-      // Utiliser un délai pour éviter de bloquer le rendu initial
-      const timer = setTimeout(() => {
-        refetchArticles();
-        if (user?.id) {
-          refetchUserData();
-        }
-        setNeedsRefresh(false);
-      }, 100);
-
-      return () => clearTimeout(timer);
+      // Exécution immédiate pour éviter le délai initial
+      refetchArticles();
+      if (user?.id) {
+        refetchUserData();
+      }
+      setNeedsRefresh(false);
     }
   }, [refetchArticles, refetchUserData, user?.id, needsRefresh]);
 
@@ -121,8 +117,8 @@ function PublicationPage() {
     loading: mostDislikedLoading,
     refetch: refetechMostDislikedArticles,
   } = useQuery(FIND_ARTICLE_BY_MOST_DISLIKED, {
-    fetchPolicy: "cache-and-network", // Utilise le cache et met à jour en arrière-plan
-    nextFetchPolicy: "cache-first", // Utilise le cache pour les requêtes suivantes
+    fetchPolicy: "cache-first", // Priorise le cache pour un affichage ultra-rapide
+    nextFetchPolicy: "cache-and-network", // Met à jour en arrière-plan après le premier affichage
   });
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
@@ -174,9 +170,17 @@ function PublicationPage() {
     return filteredArticles.slice(0, articlesToShow);
   }, [filteredArticles, articlesToShow]);
 
+  // Vérifie que nous avons des articles soit dans les données brutes ou dans les données filtrées
   const hasArticles = useMemo(
-    () => filteredArticles.length > 0,
-    [filteredArticles]
+    () =>
+      filteredArticles.length > 0 ||
+      (data?.findArticles?.length ?? 0) > 0 ||
+      (mostDislikedArticles?.findArticleByMostDisliked?.length ?? 0) > 0,
+    [
+      filteredArticles,
+      data?.findArticles,
+      mostDislikedArticles?.findArticleByMostDisliked,
+    ]
   );
   const hasMore = articlesToShow < filteredArticles.length;
 
@@ -814,12 +818,8 @@ function PublicationPage() {
   // Vérifier si les données sont en cours de chargement
   const isLoading = articlesLoading || mostDislikedLoading;
 
-  // Afficher le loader pendant le chargement des données
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (isRestoringScroll) {
+  // Afficher le loader pendant le chargement des articles
+  if (isRestoringScroll || isLoading) {
     return <Loader />;
   }
 

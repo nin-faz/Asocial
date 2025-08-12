@@ -525,6 +525,9 @@ const PublicationDetailsPage = ({
 
   const [createComment] = useMutation(ADD_COMMENT);
 
+  // Variable pour empêcher les clics multiples rapides (debounce)
+  const [lastSubmitTime, setLastSubmitTime] = useState(0);
+  
   const handleCreateComment = async () => {
     // Vérifier si c'est un commentaire principal ou une réponse
     const content = replyToCommentId ? replyContent : newComment;
@@ -534,7 +537,14 @@ const PublicationDetailsPage = ({
       showLoginRequiredToast("comment");
       return;
     }
-
+    
+    // Protection anti-double clic/spam
+    const now = Date.now();
+    if (now - lastSubmitTime < 2000) { // 2 secondes de délai minimum entre les envois
+      return;
+    }
+    setLastSubmitTime(now);
+    
     setIsSubmitting(true);
 
     try {
@@ -1254,11 +1264,19 @@ const PublicationDetailsPage = ({
 
               <button
                 onClick={handleCreateComment}
-                className="absolute right-3 bottom-3 text-purple-400 hover:text-purple-300"
-                disabled={isSubmitting}
+                className={`absolute right-3 bottom-3 ${
+                  isSubmitting || newComment.trim() === "" 
+                    ? "text-gray-500 cursor-not-allowed" 
+                    : "text-purple-400 hover:text-purple-300"
+                }`}
+                disabled={isSubmitting || newComment.trim() === ""}
                 style={{ zIndex: 10 }}
               >
-                <Send className="h-5 w-5" />
+                {isSubmitting ? (
+                  <div className="h-5 w-5 animate-spin border-2 border-gray-500 border-t-purple-400 rounded-full"></div>
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -1791,10 +1809,18 @@ const PublicationDetailsPage = ({
                         </div>
                         <button
                           onClick={handleCreateComment}
-                          className="absolute right-2 bottom-2 text-purple-400 hover:text-purple-300"
-                          disabled={isSubmitting}
+                          className={`absolute right-2 bottom-2 ${
+                            isSubmitting || replyContent.trim() === "" 
+                              ? "text-gray-500 cursor-not-allowed" 
+                              : "text-purple-400 hover:text-purple-300"
+                          }`}
+                          disabled={isSubmitting || replyContent.trim() === ""}
                         >
-                          <Send className="h-4 w-4" />
+                          {isSubmitting ? (
+                            <div className="h-4 w-4 animate-spin border-2 border-gray-500 border-t-purple-400 rounded-full"></div>
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>

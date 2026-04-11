@@ -1,8 +1,8 @@
 import { graphql } from "../gql";
 
 export const FIND_ARTICLES = graphql(`
-  query FindArticles {
-    findArticles {
+  query FindArticles($limit: Int, $offset: Int) {
+    findArticles(limit: $limit, offset: $offset) {
       id
       title
       content
@@ -55,8 +55,8 @@ export const FIND_ARTICLE_BY_ID = graphql(`
 `);
 
 export const FIND_ARTICLE_BY_MOST_DISLIKED = graphql(`
-  query FindArticleByMostDisliked {
-    findArticleByMostDisliked {
+  query FindArticleByMostDisliked($limit: Int, $offset: Int) {
+    findArticleByMostDisliked(limit: $limit, offset: $offset) {
       id
       title
       content

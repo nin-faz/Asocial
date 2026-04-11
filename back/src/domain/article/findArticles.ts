@@ -1,41 +1,34 @@
 import { QueryResolvers } from "../../types";
 
+const DEFAULT_LIMIT = 20;
+
 export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
   _,
-  __,
+  { limit = DEFAULT_LIMIT, offset = 0 },
   { dataSources: { db } }
 ) => {
   try {
     const articles = await db.article.findMany({
+      take: limit ?? DEFAULT_LIMIT,
+      skip: offset ?? 0,
+      orderBy: [
+        { updatedAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ],
       include: {
         author: true,
-        dislikes: true,
-        comments: true,
+        dislikes: { include: { user: { select: { id: true } } } },
         _count: { select: { dislikes: true, comments: true } },
       },
     });
 
-    if (!articles) {
-      return [];
-    }
+    if (!articles) return [];
 
-    const sortedArticles = articles
-      .map((article: any) => ({
-        ...article,
-        TotalDislikes: article._count?.dislikes,
-        TotalComments: article._count?.comments,
-      }))
-      .sort((a: any, b: any) => {
-        const dateA = a.updatedAt
-          ? new Date(a.updatedAt)
-          : new Date(a.createdAt);
-        const dateB = b.updatedAt
-          ? new Date(b.updatedAt)
-          : new Date(b.createdAt);
-        return dateB.getTime() - dateA.getTime(); // Tri décroissant
-      });
-
-    return sortedArticles;
+    return articles.map((article: any) => ({
+      ...article,
+      TotalDislikes: article._count?.dislikes,
+      TotalComments: article._count?.comments,
+    }));
   } catch (error) {
     throw new Error(`Failed to fetch articles : ${error}`);
   }

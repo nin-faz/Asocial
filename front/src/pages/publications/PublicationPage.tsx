@@ -13,7 +13,9 @@ import {
   RefreshCw,
   ChevronUp,
 } from "lucide-react";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
+
+const ARTICLES_PER_PAGE = 20;
 import Loader from "../../components/Loader";
 import {
   CREATE_ARTICLE,
@@ -26,8 +28,8 @@ import {
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_ARTICLE_BY_MOST_DISLIKED,
   GET_USER_BY_ID,
-  GET_USERS,
 } from "../../queries";
+import { SEARCH_USERS } from "../../queries/userQuery";
 import { FindArticlesQuery } from "../../gql/graphql";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
@@ -41,7 +43,7 @@ import {
 import UserIcon from "../../components/icons/UserIcon";
 import MediaUploader from "../../components/media/MediaUploader";
 import getCaretCoordinates from "textarea-caret-position";
-import { GET_LEADERBOARD } from "../../queries/userQuery";
+import { GET_TOP1_USER } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
 function PublicationPage() {
@@ -87,38 +89,30 @@ function PublicationPage() {
 
   const userIconName = userData?.findUserById?.iconName ?? "Skull";
 
+  const [offsetRecent, setOffsetRecent] = useState(0);
+  const [offsetDisliked, setOffsetDisliked] = useState(0);
+  const [hasMoreRecent, setHasMoreRecent] = useState(true);
+  const [hasMoreDisliked, setHasMoreDisliked] = useState(true);
+
   const {
     data,
     loading: articlesLoading,
+    fetchMore: fetchMoreRecent,
     refetch: refetchArticles,
   } = useQuery(FIND_ARTICLES, {
-    fetchPolicy: "network-only", // Force une nouvelle requête réseau pour contourner les problèmes de cache
-    nextFetchPolicy: "cache-and-network", // Met à jour en arrière-plan après le premier affichage
+    variables: { limit: ARTICLES_PER_PAGE, offset: 0 },
+    fetchPolicy: "cache-and-network",
   });
   const articles = data?.findArticles || [];
-
-  // État pour suivre si un rafraîchissement est nécessaire
-  const [needsRefresh, setNeedsRefresh] = useState(true);
-
-  // Effet au chargement pour rafraîchir les données immédiatement
-  useEffect(() => {
-    if (needsRefresh) {
-      // Exécution immédiate pour éviter le délai initial
-      refetchArticles();
-      if (user?.id) {
-        refetchUserData();
-      }
-      setNeedsRefresh(false);
-    }
-  }, [refetchArticles, refetchUserData, user?.id, needsRefresh]);
 
   const {
     data: mostDislikedArticles,
     loading: mostDislikedLoading,
+    fetchMore: fetchMoreDisliked,
     refetch: refetechMostDislikedArticles,
   } = useQuery(FIND_ARTICLE_BY_MOST_DISLIKED, {
-    fetchPolicy: "cache-first", // Priorise le cache pour un affichage ultra-rapide
-    nextFetchPolicy: "cache-and-network", // Met à jour en arrière-plan après le premier affichage
+    variables: { limit: ARTICLES_PER_PAGE, offset: 0 },
+    fetchPolicy: "cache-and-network",
   });
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
 
@@ -136,69 +130,59 @@ function PublicationPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-  // Infinite scroll : combien d'articles afficher ?
-  const [articlesToShow, setArticlesToShow] = useState(10);
-  const articlesPerScroll = 10;
-
   const { searchTerm } = useSearch();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Utiliser useMemo pour mémoriser les articles filtrés
+  // Articles filtrés par recherche
   const filteredArticles = useMemo(() => {
-    return searchTerm.trim()
-      ? displayedArticles.filter((article) => {
-          const lowerSearchTerm = searchTerm.toLowerCase();
-          const titleMatch = article?.title
-            ? article.title.toLowerCase().includes(lowerSearchTerm)
-            : false;
-          const contentMatch = article.content
-            ? article.content.toLowerCase().includes(lowerSearchTerm)
-            : false;
-          const authorMatch = article.author.username
-            .toLowerCase()
-            .includes(lowerSearchTerm);
-          return titleMatch || contentMatch || authorMatch;
-        })
-      : displayedArticles;
+    if (!searchTerm.trim()) return displayedArticles;
+    const lower = searchTerm.toLowerCase();
+    return displayedArticles.filter((article) => {
+      return (
+        article?.title?.toLowerCase().includes(lower) ||
+        article.content?.toLowerCase().includes(lower) ||
+        article.author.username.toLowerCase().includes(lower)
+      );
+    });
   }, [displayedArticles, searchTerm]);
 
-  // Infinite scroll : articles à afficher
-  const visibleArticles = useMemo(() => {
-    return filteredArticles.slice(0, articlesToShow);
-  }, [filteredArticles, articlesToShow]);
+  const visibleArticles = filteredArticles;
 
-  // Vérifie que nous avons des articles soit dans les données brutes ou dans les données filtrées
-  const hasArticles = useMemo(
-    () =>
-      filteredArticles.length > 0 ||
-      (data?.findArticles?.length ?? 0) > 0 ||
-      (mostDislikedArticles?.findArticleByMostDisliked?.length ?? 0) > 0,
-    [
-      filteredArticles,
-      data?.findArticles,
-      mostDislikedArticles?.findArticleByMostDisliked,
-    ]
-  );
-  const hasMore = articlesToShow < filteredArticles.length;
+  const hasArticles = filteredArticles.length > 0;
+  const hasMore = sortOption === "recent" ? hasMoreRecent : hasMoreDisliked;
 
-  // Gestion du scroll infini
+  // Scroll infini réel : fetchMore au scroll
   useEffect(() => {
     const handleScroll = () => {
-      if (!hasMore) return;
+      if (!hasMore || articlesLoading || mostDislikedLoading) return;
       const scrollPosition = window.innerHeight + window.scrollY;
-      const threshold = document.body.offsetHeight - 800; // Déclenche 800px avant le bas
-      if (scrollPosition >= threshold) {
-        setArticlesToShow((prev) =>
-          Math.min(prev + articlesPerScroll, filteredArticles.length)
-        );
+      const threshold = document.body.offsetHeight - 800;
+      if (scrollPosition < threshold) return;
+
+      if (sortOption === "recent") {
+        const newOffset = offsetRecent + ARTICLES_PER_PAGE;
+        setOffsetRecent(newOffset);
+        fetchMoreRecent({ variables: { limit: ARTICLES_PER_PAGE, offset: newOffset } })
+          .then(({ data: newData }) => {
+            const count = newData?.findArticles?.length ?? 0;
+            if (count < ARTICLES_PER_PAGE) setHasMoreRecent(false);
+          });
+      } else {
+        const newOffset = offsetDisliked + ARTICLES_PER_PAGE;
+        setOffsetDisliked(newOffset);
+        fetchMoreDisliked({ variables: { limit: ARTICLES_PER_PAGE, offset: newOffset } })
+          .then(({ data: newData }) => {
+            const count = newData?.findArticleByMostDisliked?.length ?? 0;
+            if (count < ARTICLES_PER_PAGE) setHasMoreDisliked(false);
+          });
       }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, filteredArticles.length]);
+  }, [hasMore, sortOption, offsetRecent, offsetDisliked, articlesLoading, mostDislikedLoading, fetchMoreRecent, fetchMoreDisliked]);
 
   // Rafraîchir les articles au chargement
   useEffect(() => {
@@ -218,11 +202,15 @@ function PublicationPage() {
     sessionStorage.setItem("forceRefetchComments", "1");
 
     try {
-      // Rafraîchir selon l'option de tri sélectionnée
+      // Rafraîchir selon l'option de tri sélectionnée (reset offset → page 1)
       if (sortOption === "unpopular") {
-        await refetechMostDislikedArticles();
+        setOffsetDisliked(0);
+        setHasMoreDisliked(true);
+        await refetechMostDislikedArticles({ limit: ARTICLES_PER_PAGE, offset: 0 });
       } else {
-        await refetchArticles();
+        setOffsetRecent(0);
+        setHasMoreRecent(true);
+        await refetchArticles({ limit: ARTICLES_PER_PAGE, offset: 0 });
       }
 
       // Rafraîchir les données utilisateur si connecté
@@ -439,9 +427,6 @@ function PublicationPage() {
             navigate("/publications", { replace: true, state: {} });
           }, 0);
         } else {
-          setArticlesToShow((prev) =>
-            Math.min(prev + articlesPerScroll, filteredArticles.length)
-          );
           setTimeout(tryRestore);
         }
       };
@@ -458,8 +443,6 @@ function PublicationPage() {
     hasMore,
     filteredArticles.length,
     navigate,
-    articlesPerScroll,
-    articlesToShow,
   ]);
 
   // Correction : forcer le scroll à la position 1px au chargement si une restauration est attendue
@@ -619,7 +602,13 @@ function PublicationPage() {
   const [showMentionList, setShowMentionList] = useState(false); // État pour afficher ou masquer la liste des mentions
   const mentionListRef = useRef<HTMLDivElement | null>(null); // Référence pour la liste déroulante
 
-  const { data: usersData } = useQuery(GET_USERS); // Requête pour récupérer les utilisateurs
+  const [searchUsers, { data: usersData }] = useLazyQuery(SEARCH_USERS);
+
+  useEffect(() => {
+    if (usersData?.searchUsers) {
+      setMentionSuggestions(usersData.searchUsers);
+    }
+  }, [usersData]);
 
   // Ajout des états manquants
   const [mentionListPosition, setMentionListPosition] = useState({
@@ -676,11 +665,10 @@ function PublicationPage() {
         leftPos = rect.left + window.scrollX + 4;
       }
       setMentionListPosition({ top: topPos, left: leftPos, width });
-      const query = mentionMatch[1].toLowerCase();
-      const suggestions = usersData?.findAllUsers?.filter((user: any) =>
-        user.username.toLowerCase().startsWith(query)
-      );
-      setMentionSuggestions(suggestions || []);
+      const query = mentionMatch[1];
+      searchUsers({ variables: { query } });
+      const suggestions = usersData?.searchUsers ?? [];
+      setMentionSuggestions(suggestions);
       setSelectedIndexUser(0);
       setShowMentionList(true);
     } else {
@@ -807,13 +795,8 @@ function PublicationPage() {
     }
   };
 
-  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
-  // Récupérer le top 1 du leaderboard
-  const top1User = leaderboardData?.findAllUsers?.length
-    ? [...leaderboardData.findAllUsers].sort(
-        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
-      )[0]
-    : null;
+  const { data: top1Data } = useQuery(GET_TOP1_USER);
+  const top1User = top1Data?.getTop1User ?? null;
 
   // Vérifier si les données sont en cours de chargement
   const isLoading = articlesLoading || mostDislikedLoading;

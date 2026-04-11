@@ -21,10 +21,20 @@ const server = new ApolloServer({
 
 await server.start();
 
+const corsOptions = {
+  origin: [
+    "https://asocial-network.netlify.app",
+    "http://localhost:5173",
+    "http://localhost:4000",
+  ],
+  credentials: true,
+};
+
 app.use(compression());
-app.use(cors(), bodyParser.json());
 app.use(
   "/graphql",
+  cors<cors.CorsRequest>(corsOptions),
+  bodyParser.json(),
   expressMiddleware(server, {
     context: async ({ req }) => {
       const { cache } = server;

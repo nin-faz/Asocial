@@ -44,9 +44,29 @@ export const GET_LEADERBOARD = graphql(`
   }
 `);
 
+export const GET_TOP1_USER = graphql(`
+  query GetTop1User {
+    getTop1User {
+      id
+      top1BadgeMessage
+      top1BadgeColor
+      top1BadgePreset
+    }
+  }
+`);
+
 export const GET_USERS = graphql(`
   query FindUsers {
     findAllUsers {
+      id
+      username
+    }
+  }
+`);
+
+export const SEARCH_USERS = graphql(`
+  query SearchUsers($query: String!) {
+    searchUsers(query: $query) {
       id
       username
     }

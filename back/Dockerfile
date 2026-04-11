@@ -1,23 +1,24 @@
 # Stage 1: Build
-FROM node:18 AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 COPY package*.json ./
 COPY prisma ./prisma
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* \
-    && npm install \
+RUN npm install \
     && npx prisma generate \
     && mkdir -p prisma/migrations
 COPY . .
 RUN npm run build
 
 # Stage 2: Production
-FROM node:18-slim AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache openssl
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules

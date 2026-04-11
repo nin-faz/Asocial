@@ -20,7 +20,7 @@ import {
   Star,
 } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import {
   UPDATE_USER,
   ADD_ARTICLE_DISLIKE,
@@ -46,15 +46,14 @@ const PublicationDetailsPage = lazy(
   () => import("../publications/PublicationDetailsPage")
 );
 const IconSelector = lazy(() => import("../../components/icons/IconSelector"));
-import { GET_LEADERBOARD } from "../../queries/userQuery";
-import { GET_USERS } from "../../queries";
+import { GET_TOP1_USER, SEARCH_USERS } from "../../queries/userQuery";
 import UserIcon from "../../components/icons/UserIcon";
 
 const MyProfilePage = () => {
   // Mention support setup
-  const { data: usersData } = useQuery(GET_USERS);
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
+  const [searchUserByName] = useLazyQuery(SEARCH_USERS);
 
   // Wrap @username in clickable spans
   const highlightMentions = (text: string) => {
@@ -68,28 +67,23 @@ const MyProfilePage = () => {
 
   // Click handler for mention spans
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
+    const onClick = async (e: MouseEvent) => {
       const elt = e.target as HTMLElement;
       if (elt.classList.contains("mention")) {
         const uname = elt.getAttribute("data-username");
         if (uname) {
           e.stopPropagation();
-          const userObj = usersData?.findAllUsers?.find(
-            (u) => u.username === uname
-          );
+          const { data } = await searchUserByName({ variables: { query: uname } });
+          const userObj = data?.searchUsers?.find((u: any) => u.username === uname);
           if (userObj) {
-            navigate(
-              userObj.id === auth?.user?.id
-                ? "/profile"
-                : `/users/${userObj.id}`
-            );
+            navigate(userObj.id === auth?.user?.id ? "/profile" : `/users/${userObj.id}`);
           }
         }
       }
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, [usersData, navigate, auth]);
+  }, [navigate, auth, searchUserByName]);
 
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -163,13 +157,8 @@ const MyProfilePage = () => {
 
   const userInfosData = userInfos?.findUserById;
 
-  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
-
-  const top1User = leaderboardData?.findAllUsers?.length
-    ? [...leaderboardData.findAllUsers].sort(
-        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
-      )[0]
-    : null;
+  const { data: top1Data } = useQuery(GET_TOP1_USER);
+  const top1User = top1Data?.getTop1User ?? null;
   const isTop1 = userInfosData?.id && top1User?.id === userInfosData.id;
 
   const { data: articleDisliked, refetch: refetchArticleDisliked } = useQuery(

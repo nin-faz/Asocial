@@ -29,16 +29,15 @@ export const resolvers: Resolvers = {
   },
 
   Article: {
-    comments: (parent, _, { dataSources: { db } }) => {
+    comments: (parent: any, _, { dataSources: { db } }) => {
+      if (Array.isArray(parent.comments)) return parent.comments;
       return db.comment.findMany({
         where: { articleId: parent.id },
-        include: {
-          author: true,
-          dislikes: true,
-        },
+        include: { author: true, dislikes: true },
       });
     },
-    dislikes: (parent, _, { dataSources: { db } }) => {
+    dislikes: (parent: any, _, { dataSources: { db } }) => {
+      if (Array.isArray(parent.dislikes)) return parent.dislikes;
       return db.dislike.findMany({
         where: { articleId: parent.id },
       });
@@ -75,7 +74,6 @@ export const resolvers: Resolvers = {
   },
   Dislike: {
     article: (parent, _, { dataSources: { db } }) => {
-      console.log("parent article", parent);
       if (!parent.articleId) return null;
       return db.article.findUnique({
         where: { id: parent.articleId },
@@ -85,7 +83,6 @@ export const resolvers: Resolvers = {
       });
     },
     comment: (parent, _, { dataSources: { db } }) => {
-      console.log("parent comment", parent);
       if (!parent.commentId) return null;
       return db.comment.findUnique({
         where: { id: parent.commentId },
@@ -96,80 +93,9 @@ export const resolvers: Resolvers = {
     },
   },
   UserSummary: {
-    TotalDislikes: async (parent, _, { dataSources: { db } }) => {
-      // Trouver tous les articles de l'utilisateur
-      const userArticles = await db.article.findMany({
-        where: { authorId: parent.id },
-        select: { id: true },
-      });
-
-      // Obtenir les IDs des articles
-      const articleIds = userArticles.map((article: any) => article.id);
-
-      // Compter les dislikes sur ces articles
-      const dislikeCount = await db.dislike.count({
-        where: {
-          articleId: {
-            in: articleIds,
-          },
-        },
-      });
-
-      return dislikeCount;
-    },
-
-    TotalComments: async (parent, _, { dataSources: { db } }) => {
-      // Trouver tous les articles de l'utilisateur
-      const userArticles = await db.article.findMany({
-        where: { authorId: parent.id },
-        select: { id: true },
-      });
-
-      // Obtenir les IDs des articles
-      const articleIds = userArticles.map((article: any) => article.id);
-
-      // Compter les commentaires sur ces articles
-      const commentCount = await db.comment.count({
-        where: {
-          articleId: {
-            in: articleIds,
-          },
-        },
-      });
-
-      return commentCount;
-    },
-    scoreGlobal: async (parent, _, { dataSources: { db } }) => {
-      // Nombre de publications
-      const publications = await db.article.count({
-        where: { authorId: parent.id },
-      });
-      // Total des commentaires reçus
-      const userArticles = await db.article.findMany({
-        where: { authorId: parent.id },
-        select: { id: true },
-      });
-      const articleIds = userArticles.map((article) => article.id);
-      const totalCommentsReceived = await db.comment.count({
-        where: { articleId: { in: articleIds } },
-      });
-      // Total des dislikes reçus
-      const totalDislikesReceived = await db.dislike.count({
-        where: { articleId: { in: articleIds } },
-      });
-      // Total des commentaires écrits par l'utilisateur
-      const totalCommentsWritten = await db.comment.count({
-        where: { authorId: parent.id },
-      });
-
-      // Score global
-      return (
-        publications * 3 +
-        totalCommentsReceived * 1.5 +
-        totalDislikesReceived * 1 +
-        totalCommentsWritten * 1
-      );
-    },
+    TotalDislikes: (parent: any) => parent.TotalDislikes ?? 0,
+    TotalComments: (parent: any) => parent.TotalComments ?? 0,
+    scoreGlobal: (parent: any) => parent.scoreGlobal ?? 0,
   },
   Notification: {
     // Le champ type est maintenant un string, donc on le retourne tel quel

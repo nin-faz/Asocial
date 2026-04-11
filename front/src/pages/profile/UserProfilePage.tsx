@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import { ArrowLeft, MessageSquare, Share2, ThumbsDown } from "lucide-react";
-import { GET_USER_BY_ID, GET_LEADERBOARD } from "../../queries/userQuery";
+import { GET_USER_BY_ID, GET_TOP1_USER } from "../../queries/userQuery";
 import { FIND_ARTICLES_BY_USER } from "../../queries/articleQuery";
 import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../../queries/dislikeQuery";
 import UserIcon from "../../components/icons/UserIcon";
@@ -16,25 +16,24 @@ import { AuthContext } from "../../context/AuthContext";
 import { showLoginRequiredToast } from "../../utils/customToasts";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 import Loader from "../../components/Loader";
-import { GET_USERS } from "../../queries";
+import { SEARCH_USERS } from "../../queries/userQuery";
 
 const UserProfilePage = () => {
-  const { data: usersData } = useQuery(GET_USERS);
+  const [searchUserByName] = useLazyQuery(SEARCH_USERS);
   const { userId } = useParams();
   const userIdString = userId ?? "";
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = async (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.classList.contains("mention")) {
         const username = target.getAttribute("data-username");
         if (username) {
           e.stopPropagation();
-          const mentioned = usersData?.findAllUsers?.find(
-            (u) => u.username === username
-          );
+          const { data } = await searchUserByName({ variables: { query: username } });
+          const mentioned = data?.searchUsers?.find((u: any) => u.username === username);
           if (mentioned) {
             navigate(
               mentioned.id === auth?.user?.id
@@ -47,7 +46,7 @@ const UserProfilePage = () => {
     };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [usersData, navigate, auth]);
+  }, [navigate, auth, searchUserByName]);
 
   // Highlight mentions in text
   const highlightMentions = (text: string) => {
@@ -135,12 +134,8 @@ const UserProfilePage = () => {
     }
   }, [auth?.user?.id, userIdString, navigate]);
 
-  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
-  const top1User = leaderboardData?.findAllUsers?.length
-    ? [...leaderboardData.findAllUsers].sort(
-        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
-      )[0]
-    : null;
+  const { data: top1Data } = useQuery(GET_TOP1_USER);
+  const top1User = top1Data?.getTop1User ?? null;
   const isTop1 = user?.id && top1User?.id === user.id;
 
   const handleShareArticle = async (e: React.MouseEvent, articleId: string) => {

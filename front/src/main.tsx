@@ -32,7 +32,28 @@ const authLink = setContext((_, { headers }) => {
 
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          findArticles: {
+            keyArgs: false,
+            merge(existing, incoming, { args }) {
+              if ((args?.offset ?? 0) === 0) return incoming;
+              return [...(existing ?? []), ...incoming];
+            },
+          },
+          findArticleByMostDisliked: {
+            keyArgs: false,
+            merge(existing, incoming, { args }) {
+              if ((args?.offset ?? 0) === 0) return incoming;
+              return [...(existing ?? []), ...incoming];
+            },
+          },
+        },
+      },
+    },
+  }),
 });
 
 createRoot(document.getElementById("root")!).render(

@@ -4,9 +4,9 @@ export const typeDefs = gql`
   type Query {
     findUserById(id: ID!): UserSummary
     findAllUsers: [UserSummary!]!
-    findArticles: [Article]
+    findArticles(limit: Int, offset: Int): [Article]
     findArticleById(id: ID!): Article
-    findArticleByMostDisliked: [Article]
+    findArticleByMostDisliked(limit: Int, offset: Int): [Article]
     findArticlesByUser(userId: ID!): [Article!]!
     getUserbyToken(token: String!): UserToken
     getDislikesByArticleId(articleId: ID!): [Dislike]
@@ -15,6 +15,8 @@ export const typeDefs = gql`
     getDislikesByUserIdForComments(userId: ID!): [Dislike]
     getComments(articleId: ID!): [Comment]
     getNotifications(userId: ID!, limit: Int, offset: Int): [Notification!]!
+    getTop1User: UserSummary
+    searchUsers(query: String!): [UserSummary!]!
   }
 
   type Mutation {

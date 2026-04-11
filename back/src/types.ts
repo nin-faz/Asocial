@@ -257,12 +257,26 @@ export type Query = {
   getDislikesByUserIdForArticles?: Maybe<Array<Maybe<Dislike>>>;
   getDislikesByUserIdForComments?: Maybe<Array<Maybe<Dislike>>>;
   getNotifications: Array<Notification>;
+  getTop1User?: Maybe<UserSummary>;
   getUserbyToken?: Maybe<UserToken>;
+  searchUsers: Array<UserSummary>;
 };
 
 
 export type QueryFindArticleByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryFindArticleByMostDislikedArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryFindArticlesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -310,6 +324,11 @@ export type QueryGetNotificationsArgs = {
 
 export type QueryGetUserbyTokenArgs = {
   token: Scalars['String']['input'];
+};
+
+
+export type QuerySearchUsersArgs = {
+  query: Scalars['String']['input'];
 };
 
 export type RequestPasswordResetResponse = {
@@ -653,8 +672,8 @@ export type NotificationResolvers<ContextType = Context, ParentType extends Reso
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   findAllUsers?: Resolver<Array<ResolversTypes['UserSummary']>, ParentType, ContextType>;
   findArticleById?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticleByIdArgs, 'id'>>;
-  findArticleByMostDisliked?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
-  findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType>;
+  findArticleByMostDisliked?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType, Partial<QueryFindArticleByMostDislikedArgs>>;
+  findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType, Partial<QueryFindArticlesArgs>>;
   findArticlesByUser?: Resolver<Array<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticlesByUserArgs, 'userId'>>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
@@ -663,7 +682,9 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   getDislikesByUserIdForArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdForArticlesArgs, 'userId'>>;
   getDislikesByUserIdForComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByUserIdForCommentsArgs, 'userId'>>;
   getNotifications?: Resolver<Array<ResolversTypes['Notification']>, ParentType, ContextType, RequireFields<QueryGetNotificationsArgs, 'userId'>>;
+  getTop1User?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType>;
   getUserbyToken?: Resolver<Maybe<ResolversTypes['UserToken']>, ParentType, ContextType, RequireFields<QueryGetUserbyTokenArgs, 'token'>>;
+  searchUsers?: Resolver<Array<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QuerySearchUsersArgs, 'query'>>;
 };
 
 export type RequestPasswordResetResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RequestPasswordResetResponse'] = ResolversParentTypes['RequestPasswordResetResponse']> = {

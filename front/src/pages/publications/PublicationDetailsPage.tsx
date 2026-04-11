@@ -1,15 +1,15 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import {
   FIND_ARTICLE_BY_ID,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS,
   GET_COMMENTS,
   GET_USER_BY_ID,
-  GET_USERS,
 } from "../../queries";
+import { SEARCH_USERS } from "../../queries/userQuery";
 import {
   ADD_ARTICLE_DISLIKE,
   ADD_COMMENT,
@@ -46,7 +46,7 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import MediaUploader from "../../components/media/MediaUploader";
-import { GET_LEADERBOARD } from "../../queries/userQuery";
+import { GET_TOP1_USER } from "../../queries/userQuery";
 import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 import getCaretCoordinates from "textarea-caret-position";
 
@@ -76,10 +76,16 @@ const PublicationDetailsPage = ({
   const targetCommentId = queryParams.get("commentId");
   const navigate = useNavigate();
 
-  const { data: usersData } = useQuery(GET_USERS);
+  const [searchUsers, { data: usersData }] = useLazyQuery(SEARCH_USERS);
   const [mentionSuggestions, setMentionSuggestions] = useState<
     { id: string; username: string; __typename?: string }[]
   >([]);
+
+  useEffect(() => {
+    if (usersData?.searchUsers) {
+      setMentionSuggestions(usersData.searchUsers);
+    }
+  }, [usersData]);
   const [showMentionList, setShowMentionList] = useState(false);
   const mentionListRef = useRef<HTMLDivElement | null>(null);
   const [mentionListPosition, setMentionListPosition] = useState({
@@ -127,11 +133,8 @@ const PublicationDetailsPage = ({
         leftPos = rect.left + window.scrollX;
       }
       setMentionListPosition({ top: topPos, left: leftPos, width });
-      const query = mentionMatch[1].toLowerCase();
-      const suggestions = usersData?.findAllUsers?.filter((u: any) =>
-        u.username.toLowerCase().startsWith(query)
-      );
-      setMentionSuggestions(suggestions || []);
+      const query = mentionMatch[1];
+      searchUsers({ variables: { query } });
       setSelectedIndexUser(0);
       setShowMentionList(true);
     } else {
@@ -219,13 +222,13 @@ const PublicationDetailsPage = ({
         if (username) {
           e.stopPropagation();
           // Find the mentioned user's id based on username
-          const mentionedUser = usersData?.findAllUsers?.find(
-            (u) => u.username === username
+          const mentionedUser = usersData?.searchUsers?.find(
+            (u: any) => u.username === username
           );
           if (mentionedUser) {
             const profilePath =
               mentionedUser.id === user?.id
-                ? `/users/${user.id}`
+                ? `/users/${user?.id}`
                 : `/users/${mentionedUser.id}`;
             navigate(profilePath);
           }
@@ -280,7 +283,6 @@ const PublicationDetailsPage = ({
 
       if (response.data?.deleteArticle?.success) {
         showArticleDeletedToast();
-        console.log("Article supprimé avec succès !");
         navigate("/publications");
       } else {
         console.error(
@@ -427,18 +429,15 @@ const PublicationDetailsPage = ({
       if (newDislikeState) {
         // Ajoute le dislike
         await addArticleDislike({ variables: { articleId, userId: user.id! } });
-        console.log(user.username, "a disliké l'article.");
       } else {
         // Supprime le dislike
         await deleteArticleDislike({
           variables: { articleId, userId: user.id! },
         });
-        console.log(user.username, "a retiré son dislike.");
       }
 
       // Rafraîchir les données après l'opération
-      await refetchArticleDislikeUser();
-      await refetchArticleData();
+      await Promise.all([refetchArticleDislikeUser(), refetchArticleData()]);
     } catch (error) {
       // En cas d'erreur, remettre l'état précédent
       setUserArticleDislikes((prev) => ({
@@ -483,12 +482,6 @@ const PublicationDetailsPage = ({
           `[data-comment-id="${targetCommentId}"]`
         );
         if (el) {
-          // Log pour debug
-          console.log(
-            "[ScrollToComment] Element trouvé pour:",
-            targetCommentId,
-            el
-          );
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           el.classList.add("ring-2", "ring-purple-500");
           setTimeout(() => {
@@ -558,11 +551,6 @@ const PublicationDetailsPage = ({
       });
 
       showCommentAddedToast();
-      console.log(
-        replyToCommentId
-          ? "Réponse ajoutée avec succès !"
-          : "Commentaire ajouté avec succès !"
-      );
 
       // Réinitialiser les états
       setNewComment("");
@@ -594,9 +582,7 @@ const PublicationDetailsPage = ({
 
       if (response.data?.deleteComment?.success) {
         showCommentDeletedToast();
-        console.log("Suppression du commentaire", commentId, "réussie");
-        await refetchComments();
-        await refetchArticleData();
+        await Promise.all([refetchComments(), refetchArticleData()]);
       } else {
         console.error(
           "Échec de la suppression du commentaire:",
@@ -646,7 +632,6 @@ const PublicationDetailsPage = ({
 
       if (response.data?.updateComment?.success) {
         showCommentUpdatedToast();
-        console.log("Commentaire mis à jour avec succès !");
         setEditingCommentId(null);
         await refetchComments();
       } else {
@@ -705,18 +690,15 @@ const PublicationDetailsPage = ({
         await addCommentDislike({
           variables: { commentId, userId: user?.id! },
         });
-        console.log(user?.username, "a disliké le commentaire.");
       } else {
         // Supprime le dislike
         await deleteCommentDislike({
           variables: { commentId, userId: user?.id! },
         });
-        console.log(user?.username, "a retiré son dislike.");
       }
 
       // Rafraîchir les données après l'opération
-      await refetchComments();
-      await refetchCommentDislikeUser();
+      await Promise.all([refetchComments(), refetchCommentDislikeUser()]);
     } catch (err) {
       // En cas d'erreur, remettre l'état précédent
       setUserCommentDislikes((prev) => ({
@@ -758,16 +740,6 @@ const PublicationDetailsPage = ({
   }, [article]);
 
   const handleUpdateArticle = async () => {
-    // Ajoutons des logs pour voir ce qui est envoyé
-    console.log("État des médias avant envoi:", {
-      editedImageUrl,
-      editedVideoUrl,
-      typeImage: typeof editedImageUrl,
-      typeVideo: typeof editedVideoUrl,
-      isNullImage: editedImageUrl === null,
-      isNullVideo: editedVideoUrl === null,
-    });
-
     try {
       const variables = {
         id: article?.id!,
@@ -776,8 +748,6 @@ const PublicationDetailsPage = ({
         imageUrl: editedImageUrl,
         videoUrl: editedVideoUrl,
       };
-
-      console.log("Variables envoyées à la mutation:", variables);
 
       const response = await updateArticle({
         variables,
@@ -789,7 +759,6 @@ const PublicationDetailsPage = ({
       });
 
       if (response.data?.updateArticle?.success) {
-        console.log("Article mis à jour avec succès !");
         setIsEditing(false);
         showArticleUpdatedToast();
         refetchArticleData();
@@ -843,12 +812,8 @@ const PublicationDetailsPage = ({
     skip: !user?.id,
   });
 
-  const { data: leaderboardData } = useQuery(GET_LEADERBOARD);
-  const top1User = leaderboardData?.findAllUsers?.length
-    ? [...leaderboardData.findAllUsers].sort(
-        (a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0)
-      )[0]
-    : null;
+  const { data: top1Data } = useQuery(GET_TOP1_USER);
+  const top1User = top1Data?.getTop1User ?? null;
 
   return (
     <main className="w-full max-w-2xl mx-auto px-4 py-8">

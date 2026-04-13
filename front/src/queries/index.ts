@@ -15,6 +15,11 @@ import {
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS,
 } from "./dislikeQuery";
 import { GET_COMMENTS } from "./commentQuery";
+import {
+  GET_BUBBLES,
+  GET_BUBBLE_BY_ID,
+  GET_BUBBLE_MESSAGES,
+} from "./bubbleQuery";
 
 export {
   GET_USER_BY_TOKEN,
@@ -28,4 +33,7 @@ export {
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
   FIND_DISLIKES_BY_USER_ID_FOR_COMMENTS,
   GET_COMMENTS,
+  GET_BUBBLES,
+  GET_BUBBLE_BY_ID,
+  GET_BUBBLE_MESSAGES,
 };

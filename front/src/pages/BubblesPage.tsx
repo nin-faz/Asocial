@@ -4,38 +4,10 @@ import { motion } from "framer-motion";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-
-interface FloatingMessage {
-  id: string;
-  author: string;
-  text: string;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  dislikes: number;
-  size: number;
-  color: string;
-  createdAt: Date;
-  trail: Array<{ x: number; y: number }>;
-  addedAt: number;
-}
-
-interface Bubble {
-  id: string;
-  title: string;
-  author: string;
-  count: number;
-  messages: FloatingMessage[];
-}
-
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-}
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_BUBBLES, GET_BUBBLE_BY_ID } from "../queries";
+import { CREATE_BUBBLE, ADD_MESSAGE_TO_BUBBLE } from "../mutations";
+import { FloatingMessage, Particle, BubbleData } from "../types/bubbles";
 
 const COLORS = [
   "#a855f7",
@@ -46,83 +18,7 @@ const COLORS = [
   "#f59e0b",
 ];
 
-const mockBubbles: Bubble[] = [
-  {
-    id: "1",
-    title: "Quel est le meilleur langage de programmation ?",
-    author: "Nino",
-    count: 156,
-    messages: [
-      {
-        id: "m1",
-        author: "LordXenura",
-        text: "TypeScript 🔥",
-        x: 0,
-        y: 0,
-        vx: 0.8,
-        vy: 0.3,
-        dislikes: 5,
-        size: 60,
-        color: COLORS[0],
-        createdAt: new Date(),
-      },
-      {
-        id: "m2",
-        author: "Jacozizi",
-        text: "Python is king 🐍",
-        x: 0,
-        y: 0,
-        vx: -0.6,
-        vy: 0.5,
-        dislikes: 12,
-        size: 70,
-        color: COLORS[1],
-        createdAt: new Date(),
-      },
-      {
-        id: "m3",
-        author: "AymX",
-        text: "Go > tous",
-        x: 0,
-        y: 0,
-        vx: 0.5,
-        vy: -0.4,
-        dislikes: 0,
-        size: 55,
-        color: COLORS[2],
-        createdAt: new Date(),
-      },
-      {
-        id: "m4",
-        author: "DigitalAnarchist",
-        text: "Rust ftw 🦀",
-        x: 0,
-        y: 0,
-        vx: -0.7,
-        vy: 0.2,
-        dislikes: 8,
-        size: 65,
-        color: COLORS[3],
-        createdAt: new Date(),
-      },
-      {
-        id: "m5",
-        author: "Mouss",
-        text: "JavaScript rules",
-        x: 0,
-        y: 0,
-        vx: 0.9,
-        vy: -0.3,
-        dislikes: 23,
-        size: 62,
-        color: COLORS[4],
-        createdAt: new Date(),
-      },
-    ],
-  },
-];
-
-const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
+const BubbleSession: React.FC<{ bubble: BubbleData; onExit: () => void }> = ({
   bubble,
   onExit,
 }) => {
@@ -133,18 +29,30 @@ const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [newReply, setNewReply] = useState("");
 
+  const [addMessageMutation] = useMutation(ADD_MESSAGE_TO_BUBBLE);
+
   useEffect(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    const messages = bubble.messages.map((m) => ({
-      ...m,
-      x: Math.random() * (vw * 0.8) + vw * 0.1,
-      y: Math.random() * (vh * 0.8) + vh * 0.1,
-      createdAt: new Date(),
-      trail: [],
-      addedAt: Date.now(),
-    }));
+    const messages = bubble.messages.map(
+      (m) =>
+        ({
+          id: m.id,
+          author: m.author.username,
+          text: m.content,
+          x: Math.random() * (vw * 0.8) + vw * 0.1,
+          y: Math.random() * (vh * 0.8) + vh * 0.1,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          dislikes: m.dislikes,
+          size: 60,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          createdAt: new Date(m.createdAt),
+          trail: [],
+          addedAt: Date.now(),
+        }) as FloatingMessage,
+    );
 
     messagesRef.current = messages;
     console.log("✅ Messages prêts:", messages.length);
@@ -236,8 +144,6 @@ const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
           msg.vx *= scale;
           msg.vy *= scale;
         }
-
-        const radius = msg.size * MSG_RADIUS;
 
         if (msg.x < 0) msg.x = window.innerWidth;
         if (msg.x > window.innerWidth) msg.x = 0;
@@ -408,7 +314,7 @@ const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
         if (dist < msg.size) {
           msg.vx += (Math.random() - 0.5) * 2;
           msg.vy += (Math.random() - 0.5) * 2;
-          createCollisionParticles(msg.x, msg.y, msg.color);
+          createCollisionParticles(msg.x, msg.y);
         }
       });
     };
@@ -449,7 +355,9 @@ const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
         <h1 className="text-xl sm:text-3xl font-bold text-purple-400">
           {bubble.title}
         </h1>
-        <p className="text-gray-400 text-xs sm:text-sm">Par {bubble.author}</p>
+        <p className="text-gray-400 text-xs sm:text-sm">
+          Par {bubble.author.username}
+        </p>
       </motion.div>
 
       <motion.div
@@ -466,23 +374,31 @@ const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
                 onChange={(e) => setNewReply(e.target.value)}
                 onKeyPress={(e) => {
                   if (e.key === "Enter" && newReply.trim()) {
-                    const newMsg: FloatingMessage = {
-                      id: `m${Date.now()}`,
-                      author: "You",
-                      text: newReply,
-                      x: Math.random() * window.innerWidth,
-                      y: Math.random() * window.innerHeight,
-                      vx: (Math.random() - 0.5) * 2,
-                      vy: (Math.random() - 0.5) * 2,
-                      dislikes: 0,
-                      size: 60,
-                      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                      createdAt: new Date(),
-                      trail: [],
-                      addedAt: Date.now(),
-                    };
-                    messagesRef.current.push(newMsg);
-                    setNewReply("");
+                    addMessageMutation({
+                      variables: { bubbleId: bubble.id, content: newReply },
+                      onCompleted: (data) => {
+                        const newMsg: FloatingMessage = {
+                          id: data.addMessageToBubble.id,
+                          author: data.addMessageToBubble.author.username,
+                          text: newReply,
+                          x: Math.random() * window.innerWidth,
+                          y: Math.random() * window.innerHeight,
+                          vx: (Math.random() - 0.5) * 2,
+                          vy: (Math.random() - 0.5) * 2,
+                          dislikes: 0,
+                          size: 60,
+                          color:
+                            COLORS[Math.floor(Math.random() * COLORS.length)],
+                          createdAt: new Date(
+                            data.addMessageToBubble.createdAt,
+                          ),
+                          trail: [],
+                          addedAt: Date.now(),
+                        };
+                        messagesRef.current.push(newMsg);
+                        setNewReply("");
+                      },
+                    });
                   }
                 }}
                 placeholder="Lâche ton opinion..."
@@ -491,23 +407,31 @@ const BubbleSession: React.FC<{ bubble: Bubble; onExit: () => void }> = ({
               <button
                 onClick={() => {
                   if (newReply.trim()) {
-                    const newMsg: FloatingMessage = {
-                      id: `m${Date.now()}`,
-                      author: "You",
-                      text: newReply,
-                      x: Math.random() * window.innerWidth,
-                      y: Math.random() * window.innerHeight,
-                      vx: (Math.random() - 0.5) * 2,
-                      vy: (Math.random() - 0.5) * 2,
-                      dislikes: 0,
-                      size: 60,
-                      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                      createdAt: new Date(),
-                      trail: [],
-                      addedAt: Date.now(),
-                    };
-                    messagesRef.current.push(newMsg);
-                    setNewReply("");
+                    addMessageMutation({
+                      variables: { bubbleId: bubble.id, content: newReply },
+                      onCompleted: (data) => {
+                        const newMsg: FloatingMessage = {
+                          id: data.addMessageToBubble.id,
+                          author: data.addMessageToBubble.author.username,
+                          text: newReply,
+                          x: Math.random() * window.innerWidth,
+                          y: Math.random() * window.innerHeight,
+                          vx: (Math.random() - 0.5) * 2,
+                          vy: (Math.random() - 0.5) * 2,
+                          dislikes: 0,
+                          size: 60,
+                          color:
+                            COLORS[Math.floor(Math.random() * COLORS.length)],
+                          createdAt: new Date(
+                            data.addMessageToBubble.createdAt,
+                          ),
+                          trail: [],
+                          addedAt: Date.now(),
+                        };
+                        messagesRef.current.push(newMsg);
+                        setNewReply("");
+                      },
+                    });
                   }
                 }}
                 className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded transition-colors flex-shrink-0"
@@ -533,7 +457,6 @@ export default function BubblesPage() {
   const authContext = useContext(AuthContext);
   const [isEntering, setIsEntering] = useState(false);
   const [showSession, setShowSession] = useState(false);
-  const [bubbles, setBubbles] = useState(mockBubbles);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newBubbleTitle, setNewBubbleTitle] = useState("");
   const [authorMode, setAuthorMode] = useState<
@@ -541,7 +464,32 @@ export default function BubblesPage() {
   >(authContext?.user ? "registered" : "anonymous");
   const [customAuthor, setCustomAuthor] = useState("");
 
-  const selectedBubble = id ? bubbles.find((b) => b.id === id) : null;
+  // Fetch bubbles
+  const { data: bubblesData, refetch: refetchBubbles } = useQuery(GET_BUBBLES, {
+    variables: { limit: 20, offset: 0 },
+  });
+
+  // Fetch specific bubble
+  const { data: bubbleData } = useQuery(GET_BUBBLE_BY_ID, {
+    variables: { id: id || "" },
+    skip: !id,
+  });
+
+  // Create bubble mutation
+  const [createBubbleMutation] = useMutation(CREATE_BUBBLE, {
+    onCompleted: (data) => {
+      if (data.createBubble.success) {
+        refetchBubbles();
+        setNewBubbleTitle("");
+        setCustomAuthor("");
+        setAuthorMode(authContext?.user ? "registered" : "anonymous");
+        setShowCreateModal(false);
+      }
+    },
+  });
+
+  const bubbles = bubblesData?.getBubbles || [];
+  const selectedBubble = id ? bubbleData?.getBubbleById : null;
 
   useEffect(() => {
     if (location.state?.entering) {
@@ -552,35 +500,15 @@ export default function BubblesPage() {
     }
   }, [location.state?.entering, selectedBubble]);
 
-  const handleSelectBubble = (bubble: Bubble) => {
+  const handleSelectBubble = (bubble: BubbleData) => {
     navigate(`/bubbles/${bubble.id}`, { state: { entering: true } });
   };
 
   const handleCreateBubble = () => {
     if (newBubbleTitle.trim()) {
-      let author = "";
-      if (authorMode === "anonymous") {
-        author = "Anonyme";
-      } else if (authorMode === "registered" && authContext?.user) {
-        author = authContext.user.username;
-      } else if (authorMode === "custom") {
-        author = customAuthor.trim();
-      }
-
-      if (!author) return;
-
-      const newBubble: Bubble = {
-        id: `${Date.now()}`,
-        title: newBubbleTitle,
-        author: author,
-        count: 0,
-        messages: [],
-      };
-      setBubbles([newBubble, ...bubbles]);
-      setNewBubbleTitle("");
-      setCustomAuthor("");
-      setAuthorMode(authContext?.user ? "registered" : "anonymous");
-      setShowCreateModal(false);
+      createBubbleMutation({
+        variables: { title: newBubbleTitle },
+      });
     }
   };
 
@@ -666,7 +594,7 @@ export default function BubblesPage() {
         </motion.div>
 
         <div className="space-y-3 sm:space-y-4">
-          {mockBubbles.map((bubble, idx) => (
+          {bubbles.map((bubble: BubbleData, idx: number) => (
             <motion.div
               key={bubble.id}
               initial={{ opacity: 0, y: 20 }}
@@ -681,7 +609,7 @@ export default function BubblesPage() {
                 {bubble.title}
               </h3>
               <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
-                Par {bubble.author}
+                Par {bubble.author.username}
               </p>
               <div className="text-purple-400 text-xs sm:text-sm font-semibold">
                 Rejoindre →

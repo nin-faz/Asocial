@@ -11,6 +11,11 @@ import {
   DELETE_COMMENT_DISLIKE,
 } from "./dislikeMutation";
 import { ADD_COMMENT, DELETE_COMMENT, UPDATE_COMMENT } from "./commentMutation";
+import {
+  CREATE_BUBBLE,
+  ADD_MESSAGE_TO_BUBBLE,
+  DELETE_BUBBLE,
+} from "./bubbleMutation";
 
 export {
   CREATE_USER,
@@ -26,4 +31,7 @@ export {
   ADD_COMMENT,
   DELETE_COMMENT,
   UPDATE_COMMENT,
+  CREATE_BUBBLE,
+  ADD_MESSAGE_TO_BUBBLE,
+  DELETE_BUBBLE,
 };

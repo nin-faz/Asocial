@@ -10,6 +10,8 @@ import { dislikeQueries } from "./domain/dislike/queries.js";
 import { resetPasswordWithToken } from "./domain/user/resetPasswordWithToken.js";
 import { notificationQueries } from "./domain/notification/queries.js";
 import { notificationMutations } from "./domain/notification/mutation.js";
+import { bubbleQueries } from "./domain/bubble/queries.js";
+import { bubbleMutations } from "./domain/bubble/mutation.js";
 
 export const resolvers: Resolvers = {
   Query: {
@@ -18,6 +20,7 @@ export const resolvers: Resolvers = {
     ...commentQueries,
     ...dislikeQueries,
     ...notificationQueries,
+    ...bubbleQueries,
   },
   Mutation: {
     ...userMutations,
@@ -26,6 +29,7 @@ export const resolvers: Resolvers = {
     ...articleMutations,
     ...commentMutations,
     ...notificationMutations,
+    ...bubbleMutations,
   },
 
   Article: {
@@ -100,5 +104,12 @@ export const resolvers: Resolvers = {
   Notification: {
     // Le champ type est maintenant un string, donc on le retourne tel quel
     type: (parent) => parent.type,
+  },
+  Bubble: {
+    author: (parent) => parent.author,
+    messages: (parent) => parent.messages || [],
+  },
+  BubbleMessage: {
+    author: (parent) => parent.author,
   },
 };

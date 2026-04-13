@@ -17,6 +17,9 @@ export const typeDefs = gql`
     getNotifications(userId: ID!, limit: Int, offset: Int): [Notification!]!
     getTop1User: UserSummary
     searchUsers(query: String!): [UserSummary!]!
+    getBubbles(limit: Int, offset: Int): [Bubble!]!
+    getBubbleById(id: ID!): Bubble
+    getBubbleMessages(bubbleId: ID!): [BubbleMessage!]!
   }
 
   type Mutation {
@@ -62,6 +65,9 @@ export const typeDefs = gql`
       newPassword: String!
     ): ResetPasswordWithTokenResponse!
     markNotificationsAsRead(ids: [ID!]!): MarkNotificationsAsReadResponse!
+    createBubble(title: String!): CreateBubbleResponse!
+    addMessageToBubble(bubbleId: ID!, content: String!): BubbleMessage!
+    deleteBubble(id: ID!): DeleteBubbleResponse!
   }
 
   type DeleteDislikeResponse {
@@ -227,5 +233,35 @@ export const typeDefs = gql`
     success: Boolean!
     message: String!
     notifications: [Notification!]!
+  }
+
+  type Bubble {
+    id: ID!
+    title: String!
+    author: UserSummary!
+    messages: [BubbleMessage!]!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type BubbleMessage {
+    id: ID!
+    content: String!
+    author: UserSummary!
+    dislikes: Int!
+    createdAt: String!
+  }
+
+  type CreateBubbleResponse {
+    code: Int!
+    success: Boolean!
+    message: String!
+    bubble: Bubble
+  }
+
+  type DeleteBubbleResponse {
+    code: Int!
+    success: Boolean!
+    message: String!
   }
 `;

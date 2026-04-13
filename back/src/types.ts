@@ -35,6 +35,25 @@ export type Article = {
   videoUrl?: Maybe<Scalars['String']['output']>;
 };
 
+export type Bubble = {
+  __typename?: 'Bubble';
+  author: UserSummary;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  messages: Array<BubbleMessage>;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['String']['output'];
+};
+
+export type BubbleMessage = {
+  __typename?: 'BubbleMessage';
+  author: UserSummary;
+  content: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  dislikes: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+};
+
 export type Comment = {
   __typename?: 'Comment';
   TotalDislikes?: Maybe<Scalars['Int']['output']>;
@@ -64,6 +83,14 @@ export type CreateArticleResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type CreateBubbleResponse = {
+  __typename?: 'CreateBubbleResponse';
+  bubble?: Maybe<Bubble>;
+  code: Scalars['Int']['output'];
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type CreateUserResponse = {
   __typename?: 'CreateUserResponse';
   code: Scalars['Int']['output'];
@@ -74,6 +101,13 @@ export type CreateUserResponse = {
 
 export type DeleteArticleResponse = {
   __typename?: 'DeleteArticleResponse';
+  code: Scalars['Int']['output'];
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
+export type DeleteBubbleResponse = {
+  __typename?: 'DeleteBubbleResponse';
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
@@ -114,10 +148,13 @@ export type Mutation = {
   addArticleDislike?: Maybe<Dislike>;
   addComment?: Maybe<Comment>;
   addCommentDislike?: Maybe<Dislike>;
+  addMessageToBubble: BubbleMessage;
   createArticle: CreateArticleResponse;
+  createBubble: CreateBubbleResponse;
   createUser: CreateUserResponse;
   deleteArticle: DeleteArticleResponse;
   deleteArticleDislike?: Maybe<DeleteDislikeResponse>;
+  deleteBubble: DeleteBubbleResponse;
   deleteComment?: Maybe<DeleteCommentResponse>;
   deleteCommentDislike?: Maybe<DeleteDislikeResponse>;
   markNotificationsAsRead: MarkNotificationsAsReadResponse;
@@ -150,11 +187,22 @@ export type MutationAddCommentDislikeArgs = {
 };
 
 
+export type MutationAddMessageToBubbleArgs = {
+  bubbleId: Scalars['ID']['input'];
+  content: Scalars['String']['input'];
+};
+
+
 export type MutationCreateArticleArgs = {
   content: Scalars['String']['input'];
   imageUrl?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
   videoUrl?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCreateBubbleArgs = {
+  title: Scalars['String']['input'];
 };
 
 
@@ -172,6 +220,11 @@ export type MutationDeleteArticleArgs = {
 export type MutationDeleteArticleDislikeArgs = {
   articleId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteBubbleArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -251,6 +304,9 @@ export type Query = {
   findArticles?: Maybe<Array<Maybe<Article>>>;
   findArticlesByUser: Array<Article>;
   findUserById?: Maybe<UserSummary>;
+  getBubbleById?: Maybe<Bubble>;
+  getBubbleMessages: Array<BubbleMessage>;
+  getBubbles: Array<Bubble>;
   getComments?: Maybe<Array<Maybe<Comment>>>;
   getDislikesByArticleId?: Maybe<Array<Maybe<Dislike>>>;
   getDislikesByCommentId?: Maybe<Array<Maybe<Dislike>>>;
@@ -287,6 +343,22 @@ export type QueryFindArticlesByUserArgs = {
 
 export type QueryFindUserByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetBubbleByIdArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetBubbleMessagesArgs = {
+  bubbleId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetBubblesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -489,11 +561,15 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Article: ResolverTypeWrapper<ArticleModel>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Bubble: ResolverTypeWrapper<Bubble>;
+  BubbleMessage: ResolverTypeWrapper<BubbleMessage>;
   Comment: ResolverTypeWrapper<CommentModel>;
   CommentUpdateResponse: ResolverTypeWrapper<CommentUpdateResponse>;
   CreateArticleResponse: ResolverTypeWrapper<Omit<CreateArticleResponse, 'article'> & { article?: Maybe<ResolversTypes['Article']> }>;
+  CreateBubbleResponse: ResolverTypeWrapper<CreateBubbleResponse>;
   CreateUserResponse: ResolverTypeWrapper<CreateUserResponse>;
   DeleteArticleResponse: ResolverTypeWrapper<DeleteArticleResponse>;
+  DeleteBubbleResponse: ResolverTypeWrapper<DeleteBubbleResponse>;
   DeleteCommentResponse: ResolverTypeWrapper<DeleteCommentResponse>;
   DeleteDislikeResponse: ResolverTypeWrapper<DeleteDislikeResponse>;
   Dislike: ResolverTypeWrapper<DislikeModel>;
@@ -520,11 +596,15 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Article: ArticleModel;
   Boolean: Scalars['Boolean']['output'];
+  Bubble: Bubble;
+  BubbleMessage: BubbleMessage;
   Comment: CommentModel;
   CommentUpdateResponse: CommentUpdateResponse;
   CreateArticleResponse: Omit<CreateArticleResponse, 'article'> & { article?: Maybe<ResolversParentTypes['Article']> };
+  CreateBubbleResponse: CreateBubbleResponse;
   CreateUserResponse: CreateUserResponse;
   DeleteArticleResponse: DeleteArticleResponse;
+  DeleteBubbleResponse: DeleteBubbleResponse;
   DeleteCommentResponse: DeleteCommentResponse;
   DeleteDislikeResponse: DeleteDislikeResponse;
   Dislike: DislikeModel;
@@ -563,6 +643,25 @@ export type ArticleResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type BubbleResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Bubble'] = ResolversParentTypes['Bubble']> = {
+  author?: Resolver<ResolversTypes['UserSummary'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  messages?: Resolver<Array<ResolversTypes['BubbleMessage']>, ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type BubbleMessageResolvers<ContextType = Context, ParentType extends ResolversParentTypes['BubbleMessage'] = ResolversParentTypes['BubbleMessage']> = {
+  author?: Resolver<ResolversTypes['UserSummary'], ParentType, ContextType>;
+  content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dislikes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CommentResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Comment'] = ResolversParentTypes['Comment']> = {
   TotalDislikes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   author?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
@@ -592,6 +691,14 @@ export type CreateArticleResponseResolvers<ContextType = Context, ParentType ext
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreateBubbleResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CreateBubbleResponse'] = ResolversParentTypes['CreateBubbleResponse']> = {
+  bubble?: Resolver<Maybe<ResolversTypes['Bubble']>, ParentType, ContextType>;
+  code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateUserResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CreateUserResponse'] = ResolversParentTypes['CreateUserResponse']> = {
   code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -601,6 +708,13 @@ export type CreateUserResponseResolvers<ContextType = Context, ParentType extend
 };
 
 export type DeleteArticleResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DeleteArticleResponse'] = ResolversParentTypes['DeleteArticleResponse']> = {
+  code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DeleteBubbleResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DeleteBubbleResponse'] = ResolversParentTypes['DeleteBubbleResponse']> = {
   code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -641,10 +755,13 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   addArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddArticleDislikeArgs, 'articleId' | 'userId'>>;
   addComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationAddCommentArgs, 'articleId' | 'content' | 'userId'>>;
   addCommentDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddCommentDislikeArgs, 'commentId' | 'userId'>>;
+  addMessageToBubble?: Resolver<ResolversTypes['BubbleMessage'], ParentType, ContextType, RequireFields<MutationAddMessageToBubbleArgs, 'bubbleId' | 'content'>>;
   createArticle?: Resolver<ResolversTypes['CreateArticleResponse'], ParentType, ContextType, RequireFields<MutationCreateArticleArgs, 'content'>>;
+  createBubble?: Resolver<ResolversTypes['CreateBubbleResponse'], ParentType, ContextType, RequireFields<MutationCreateBubbleArgs, 'title'>>;
   createUser?: Resolver<ResolversTypes['CreateUserResponse'], ParentType, ContextType, RequireFields<MutationCreateUserArgs, 'password' | 'username'>>;
   deleteArticle?: Resolver<ResolversTypes['DeleteArticleResponse'], ParentType, ContextType, RequireFields<MutationDeleteArticleArgs, 'id'>>;
   deleteArticleDislike?: Resolver<Maybe<ResolversTypes['DeleteDislikeResponse']>, ParentType, ContextType, RequireFields<MutationDeleteArticleDislikeArgs, 'articleId' | 'userId'>>;
+  deleteBubble?: Resolver<ResolversTypes['DeleteBubbleResponse'], ParentType, ContextType, RequireFields<MutationDeleteBubbleArgs, 'id'>>;
   deleteComment?: Resolver<Maybe<ResolversTypes['DeleteCommentResponse']>, ParentType, ContextType, RequireFields<MutationDeleteCommentArgs, 'commentId'>>;
   deleteCommentDislike?: Resolver<Maybe<ResolversTypes['DeleteDislikeResponse']>, ParentType, ContextType, RequireFields<MutationDeleteCommentDislikeArgs, 'commentId' | 'userId'>>;
   markNotificationsAsRead?: Resolver<ResolversTypes['MarkNotificationsAsReadResponse'], ParentType, ContextType, RequireFields<MutationMarkNotificationsAsReadArgs, 'ids'>>;
@@ -676,6 +793,9 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   findArticles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Article']>>>, ParentType, ContextType, Partial<QueryFindArticlesArgs>>;
   findArticlesByUser?: Resolver<Array<ResolversTypes['Article']>, ParentType, ContextType, RequireFields<QueryFindArticlesByUserArgs, 'userId'>>;
   findUserById?: Resolver<Maybe<ResolversTypes['UserSummary']>, ParentType, ContextType, RequireFields<QueryFindUserByIdArgs, 'id'>>;
+  getBubbleById?: Resolver<Maybe<ResolversTypes['Bubble']>, ParentType, ContextType, RequireFields<QueryGetBubbleByIdArgs, 'id'>>;
+  getBubbleMessages?: Resolver<Array<ResolversTypes['BubbleMessage']>, ParentType, ContextType, RequireFields<QueryGetBubbleMessagesArgs, 'bubbleId'>>;
+  getBubbles?: Resolver<Array<ResolversTypes['Bubble']>, ParentType, ContextType, Partial<QueryGetBubblesArgs>>;
   getComments?: Resolver<Maybe<Array<Maybe<ResolversTypes['Comment']>>>, ParentType, ContextType, RequireFields<QueryGetCommentsArgs, 'articleId'>>;
   getDislikesByArticleId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByArticleIdArgs, 'articleId'>>;
   getDislikesByCommentId?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType, RequireFields<QueryGetDislikesByCommentIdArgs, 'commentId'>>;
@@ -764,11 +884,15 @@ export type UpdateUserResponseResolvers<ContextType = Context, ParentType extend
 
 export type Resolvers<ContextType = Context> = {
   Article?: ArticleResolvers<ContextType>;
+  Bubble?: BubbleResolvers<ContextType>;
+  BubbleMessage?: BubbleMessageResolvers<ContextType>;
   Comment?: CommentResolvers<ContextType>;
   CommentUpdateResponse?: CommentUpdateResponseResolvers<ContextType>;
   CreateArticleResponse?: CreateArticleResponseResolvers<ContextType>;
+  CreateBubbleResponse?: CreateBubbleResponseResolvers<ContextType>;
   CreateUserResponse?: CreateUserResponseResolvers<ContextType>;
   DeleteArticleResponse?: DeleteArticleResponseResolvers<ContextType>;
+  DeleteBubbleResponse?: DeleteBubbleResponseResolvers<ContextType>;
   DeleteCommentResponse?: DeleteCommentResponseResolvers<ContextType>;
   DeleteDislikeResponse?: DeleteDislikeResponseResolvers<ContextType>;
   Dislike?: DislikeResolvers<ContextType>;

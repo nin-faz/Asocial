@@ -19,8 +19,10 @@ model User {
   articles  Article[]
   comments  Comment[]
   dislikes  Dislike[]
-  notifications Notification[] // Ajout relation notifications reçues
+  notifications Notification[]
   pushSubscriptions PushSubscription[]
+  bubbles   Bubble[]
+  bubbleMessages BubbleMessage[]
   top1BadgeMessage String?
   top1BadgeColor   String?
   top1BadgePreset  String?
@@ -114,4 +116,31 @@ model PushSubscription {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Bubble {
+  id        String   @id @default(uuid())
+  title     String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  messages  BubbleMessage[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model BubbleMessage {
+  id        String   @id @default(uuid())
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  bubbleId  String
+  bubble    Bubble   @relation(fields: [bubbleId], references: [id], onDelete: Cascade)
+  dislikes  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([bubbleId])
+  @@index([authorId])
 }

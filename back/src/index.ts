@@ -31,10 +31,10 @@ const corsOptions = {
 };
 
 app.use(compression());
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
 app.use(
   "/graphql",
-  cors<cors.CorsRequest>(corsOptions),
-  bodyParser.json(),
   expressMiddleware(server, {
     context: async ({ req }) => {
       const { cache } = server;

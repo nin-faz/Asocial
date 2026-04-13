@@ -23,7 +23,7 @@ import { PushNotificationsProvider } from "../../context/PushNotificationsContex
 import Loader from "../Loader";
 
 const NotificationsBell = lazy(
-  () => import("../notifications/NotificationsBell")
+  () => import("../notifications/NotificationsBell"),
 );
 
 const Header = () => {
@@ -201,6 +201,16 @@ const Header = () => {
                   >
                     <Trophy className="h-6 w-6" />
                   </motion.button>
+
+                  <motion.button
+                    className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => navigate("/bubbles")}
+                    title="Bulles de débat"
+                  >
+                    <span className="text-xl">🫧</span>
+                  </motion.button>
+
                   <motion.button
                     className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                     whileHover={{ scale: 1.1 }}

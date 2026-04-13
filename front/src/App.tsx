@@ -1,5 +1,5 @@
 import React, { Suspense, useContext, useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import Loader from "./components/Loader";
 import Header from "./components/fragments/Header";
@@ -11,22 +11,23 @@ const AuthPage = React.lazy(() => import("./pages/AuthPage"));
 const MyProfilePage = React.lazy(() => import("./pages/profile/MyProfilePage"));
 const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const PublicationPage = React.lazy(
-  () => import("./pages/publications/PublicationPage")
+  () => import("./pages/publications/PublicationPage"),
 );
 const PublicationDetailsPage = React.lazy(
-  () => import("./pages/publications/PublicationDetailsPage")
+  () => import("./pages/publications/PublicationDetailsPage"),
 );
 const UserProfilePage = React.lazy(
-  () => import("./pages/profile/UserProfilePage")
+  () => import("./pages/profile/UserProfilePage"),
 );
 const RequestPasswordResetPage = React.lazy(
-  () => import("./pages/password/RequestPasswordResetPage")
+  () => import("./pages/password/RequestPasswordResetPage"),
 );
 const ResetPasswordWithTokenPage = React.lazy(
-  () => import("./pages/password/ResetPasswordWithTokenPage")
+  () => import("./pages/password/ResetPasswordWithTokenPage"),
 );
 const NotificationsPage = React.lazy(() => import("./pages/NotificationsPage"));
 const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
+const BubblesPage = React.lazy(() => import("./pages/BubblesPage"));
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
@@ -35,6 +36,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const authContext = useContext(AuthContext);
   if (!authContext) {
@@ -74,7 +76,7 @@ function App() {
       } catch (error) {
         console.error(
           "Erreur lors de l'initialisation de l'application:",
-          error
+          error,
         );
       } finally {
         // Continue avec le chargement normal
@@ -98,7 +100,7 @@ function App() {
         hideProgressBar
       />
 
-      <Header />
+      {!pathname.match(/^\/bubbles\/\d+$/) && <Header />}
       <div className="min-h-screen bg-black">
         <Routes>
           {/* Routes publiques */}
@@ -172,6 +174,24 @@ function App() {
             element={
               <Suspense fallback={<Loader />}>
                 <LeaderboardPage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/bubbles"
+            element={
+              <Suspense fallback={<Loader />}>
+                <BubblesPage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/bubbles/:id"
+            element={
+              <Suspense fallback={<Loader />}>
+                <BubblesPage />
               </Suspense>
             }
           />

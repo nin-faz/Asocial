@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x"]
+  binaryTargets = ["native"]
 }
 
 datasource db {
@@ -119,27 +119,29 @@ model PushSubscription {
 }
 
 model Bubble {
-  id        String   @id @default(uuid())
-  title     String
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  messages  BubbleMessage[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  title       String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  isAnonymous Boolean  @default(false)
+  messages    BubbleMessage[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([authorId])
   @@index([createdAt])
 }
 
 model BubbleMessage {
-  id        String   @id @default(uuid())
-  content   String
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  bubbleId  String
-  bubble    Bubble   @relation(fields: [bubbleId], references: [id], onDelete: Cascade)
-  dislikes  Int      @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  content     String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  bubbleId    String
+  bubble      Bubble   @relation(fields: [bubbleId], references: [id], onDelete: Cascade)
+  isAnonymous Boolean  @default(false)
+  dislikes    Int      @default(0)
+  createdAt   DateTime @default(now())
 
   @@index([bubbleId])
   @@index([authorId])

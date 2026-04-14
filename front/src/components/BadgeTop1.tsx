@@ -1,3 +1,4 @@
+/*
 import { Trophy, Flame, Star, Crown } from "lucide-react";
 import React from "react";
 
@@ -47,3 +48,7 @@ export const BadgeTop1: React.FC<BadgeTop1Props> = ({
     </span>
   );
 };
+*/
+
+// Badge Top 1 - Fonctionnalité du leaderboard mise en pause
+export const BadgeTop1 = () => null;

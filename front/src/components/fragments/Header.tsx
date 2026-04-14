@@ -10,7 +10,7 @@ import {
   ThumbsDown,
   Info,
   Bell,
-  Trophy,
+  MessageCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -186,29 +186,30 @@ const Header = () => {
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center space-x-3 sm:space-x-4 z-10">
+            <div className="flex items-center space-x-1.5 sm:space-x-4 z-10">
               {user && (
                 <>
                   <Suspense fallback={<Loader />}>
                     <NotificationsBell />
                   </Suspense>
 
-                  <motion.button
+                  {/* <motion.button
                     className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                     whileHover={{ scale: 1.1 }}
                     onClick={() => navigate("/leaderboard")}
                     title="Classement global"
                   >
                     <Trophy className="h-6 w-6" />
-                  </motion.button>
+                  </motion.button> */}
 
                   <motion.button
-                    className="p-1 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
+                    className="p-2 text-gray-400 hover:text-purple-400 hover:bg-gray-800 rounded-full"
                     whileHover={{ scale: 1.1 }}
                     onClick={() => navigate("/bubbles")}
                     title="Bulles de débat"
                   >
-                    <span className="text-xl">🫧</span>
+                    {/* <span className="text-xl hover:text-purple-400">🫧</span> */}
+                    <MessageCircle />
                   </motion.button>
 
                   <motion.button
@@ -257,8 +258,9 @@ const Header = () => {
                         <div className="p-3 border-b border-gray-800">
                           <p className="text-purple-400 font-medium">
                             {userInfosData?.username
-                              ? userInfosData.username.charAt(0).toUpperCase()
-                              : userInfosData?.username?.slice(1)}
+                              ? userInfosData.username.charAt(0).toUpperCase() +
+                                userInfosData.username.slice(1)
+                              : "Utilisateur"}
                           </p>
                         </div>
                         <div className="py-1">

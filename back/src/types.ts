@@ -40,6 +40,7 @@ export type Bubble = {
   author: UserSummary;
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  isAnonymous: Scalars['Boolean']['output'];
   messages: Array<BubbleMessage>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['String']['output'];
@@ -52,6 +53,7 @@ export type BubbleMessage = {
   createdAt: Scalars['String']['output'];
   dislikes: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  isAnonymous: Scalars['Boolean']['output'];
 };
 
 export type Comment = {
@@ -190,6 +192,7 @@ export type MutationAddCommentDislikeArgs = {
 export type MutationAddMessageToBubbleArgs = {
   bubbleId: Scalars['ID']['input'];
   content: Scalars['String']['input'];
+  isAnonymous?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -202,6 +205,7 @@ export type MutationCreateArticleArgs = {
 
 
 export type MutationCreateBubbleArgs = {
+  isAnonymous?: InputMaybe<Scalars['Boolean']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -441,9 +445,6 @@ export type User = {
   dislikes?: Maybe<Array<Maybe<Dislike>>>;
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  top1BadgeColor?: Maybe<Scalars['String']['output']>;
-  top1BadgeMessage?: Maybe<Scalars['String']['output']>;
-  top1BadgePreset?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
 };
 
@@ -458,9 +459,6 @@ export type UserSummary = {
   iconName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   scoreGlobal?: Maybe<Scalars['Float']['output']>;
-  top1BadgeColor?: Maybe<Scalars['String']['output']>;
-  top1BadgeMessage?: Maybe<Scalars['String']['output']>;
-  top1BadgePreset?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
 };
 
@@ -482,9 +480,6 @@ export type UserUpdateBody = {
   bio?: InputMaybe<Scalars['String']['input']>;
   iconName?: InputMaybe<Scalars['String']['input']>;
   password?: InputMaybe<Scalars['String']['input']>;
-  top1BadgeColor?: InputMaybe<Scalars['String']['input']>;
-  top1BadgeMessage?: InputMaybe<Scalars['String']['input']>;
-  top1BadgePreset?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -647,6 +642,7 @@ export type BubbleResolvers<ContextType = Context, ParentType extends ResolversP
   author?: Resolver<ResolversTypes['UserSummary'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isAnonymous?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   messages?: Resolver<Array<ResolversTypes['BubbleMessage']>, ParentType, ContextType>;
   title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -659,6 +655,7 @@ export type BubbleMessageResolvers<ContextType = Context, ParentType extends Res
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dislikes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isAnonymous?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -844,9 +841,6 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   dislikes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Dislike']>>>, ParentType, ContextType>;
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  top1BadgeColor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top1BadgeMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top1BadgePreset?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -861,9 +855,6 @@ export type UserSummaryResolvers<ContextType = Context, ParentType extends Resol
   iconName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   scoreGlobal?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  top1BadgeColor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top1BadgeMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top1BadgePreset?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

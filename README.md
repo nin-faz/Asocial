@@ -2,6 +2,12 @@
 
 ## FAZER Nino - PEREIRA-ELENGA MAKOUALA Jordy - TRAN Huu-Nghia - MONMARCHE Romain
 
+## 🚀 Démo en ligne
+- **Frontend**: https://asocial-network.netlify.app
+- **API GraphQL**: https://asocial-backend-3fc3.run.app/graphql
+
+---
+
 ## Description du Projet
 
 Asocial est un réseau social moderne qui permet aux utilisateurs de :
@@ -12,7 +18,30 @@ Asocial est un réseau social moderne qui permet aux utilisateurs de :
 - "Disliker" des articles et des commentaires
 - Accéder à un profil utilisateur personnalisé avec bio et icône
 - Recevoir des notifications en temps réel (Socket.IO + Web Push)
-- Consulter un leaderboard des utilisateurs les plus impopulaires
+- **Créer des bulles de session** - Salons de discussion temporaires et anonymes pour débattre en direct
+- ~~Consulter un leaderboard des utilisateurs les plus impopulaires~~ *(désactivé temporairement)*
+
+---
+
+## 🫧 Bulles de Session (Bubbles)
+
+Les **Bubbles** sont des salons de discussion créés dynamiquement pour des conversations éphémères :
+
+- **Création rapide** : Créer une nouvelle bulle en 1 clic
+- **Anonymat optionnel** : Participer avec ou sans révéler son identité
+- **Messages en temps réel** : Socket.IO pour les updates instantanées
+- **Auto-destruction** : Les bulles disparaissent après la session
+- **Liberté d'expression** : Espace dédié pour débattre sans jugement
+
+### Mutations Bubble
+- `createBubble(title, isAnonymous)` - Créer une nouvelle bulle
+- `addMessageToBubble(bubbleId, content, isAnonymous)` - Poster un message
+- `deleteBubble(id)` - Supprimer une bulle
+
+### Queries Bubble
+- `getBubbles(limit, offset)` - Lister les bulles actives
+- `getBubbleById(id)` - Détail d'une bulle
+- `getBubbleMessages(bubbleId)` - Messages d'une bulle
 
 ---
 
@@ -23,7 +52,7 @@ Asocial est un réseau social moderne qui permet aux utilisateurs de :
 - **Apollo Server** — Serveur GraphQL
 - **Prisma ORM** — Modélisation de données et migrations
 - **PostgreSQL** (Supabase) — Base de données
-- **Socket.IO** — Notifications temps réel
+- **Socket.IO** — Notifications temps réel + Bubbles
 - **JWT** + **bcrypt** — Authentification sécurisée
 - **GraphQL Codegen** — Génération automatique des types
 - **Nodemailer** — Envoi d'emails (reset mot de passe)
@@ -54,7 +83,7 @@ Asocial/
 │   │   ├── schema.prisma       # Schéma de la base de données
 │   │   └── migrations/         # Historique des migrations
 │   ├── src/
-│   │   ├── domain/             # Resolvers par domaine (article, user, comment...)
+│   │   ├── domain/             # Resolvers par domaine (article, user, comment, bubble...)
 │   │   ├── module/             # Auth (JWT, bcrypt)
 │   │   ├── utils/              # Helpers (push, email, supabase...)
 │   │   ├── datasource/db.ts    # Client Prisma
@@ -127,8 +156,8 @@ VITE_GRAPHQL_URL=http://localhost:4000/graphql
 VITE_API_URL=http://localhost:4000
 
 # En production (pointer vers Cloud Run)
-# VITE_GRAPHQL_URL=https://[votre-service].run.app/graphql
-# VITE_API_URL=https://[votre-service].run.app
+VITE_GRAPHQL_URL=https://asocial-backend-3fc3.run.app/graphql
+VITE_API_URL=https://asocial-backend-3fc3.run.app
 
 # Supabase Storage
 VITE_SUPABASE_URL=https://[ref].supabase.co
@@ -185,6 +214,26 @@ npm run dev
 Ouvrir `http://localhost:5173`
 
 > **Important** : le backend doit tourner avant de lancer le frontend.
+
+---
+
+## 📋 Scripts disponibles
+
+### Backend
+```sh
+npm run dev      # Démarrer mode développement (localhost:4000)
+npm run build    # Builder pour production
+npm run codegen  # Regénérer types GraphQL + Prisma
+npm run lint     # Vérifier le code (TypeScript)
+```
+
+### Frontend
+```sh
+npm run dev      # Démarrer mode développement (localhost:5173)
+npm run build    # Builder pour production (dist/)
+npm run codegen  # Regénérer types GraphQL (⚠️ backend doit tourner)
+npm run preview  # Preview du build production
+```
 
 ---
 
@@ -290,10 +339,12 @@ Le backend expose un endpoint GraphQL sur `/graphql`.
 | `findArticlesByUser(userId)` | Articles d'un utilisateur |
 | `findUserById(id)` | Profil d'un utilisateur |
 | `findAllUsers` | Tous les utilisateurs avec stats |
-| `getTop1User` | L'utilisateur avec le score le plus élevé |
 | `searchUsers(query)` | Recherche d'utilisateurs par nom (max 10) |
 | `getComments(articleId)` | Commentaires d'un article |
 | `getNotifications(userId, limit, offset)` | Notifications d'un utilisateur |
+| `getBubbles(limit, offset)` | Bulles de session actives |
+| `getBubbleById(id)` | Détail d'une bulle |
+| `getBubbleMessages(bubbleId)` | Messages d'une bulle |
 
 ### Mutations
 
@@ -314,7 +365,10 @@ Le backend expose un endpoint GraphQL sur `/graphql`.
 | `requestPasswordReset(email, username)` | Demander un reset de mot de passe |
 | `resetPasswordWithToken(token, username, newPassword)` | Réinitialiser le mot de passe |
 | `markNotificationsAsRead(ids)` | Marquer des notifications comme lues |
+| `createBubble(title, isAnonymous)` | Créer une bulle de session |
+| `addMessageToBubble(bubbleId, content, isAnonymous)` | Poster un message dans une bulle |
+| `deleteBubble(id)` | Supprimer une bulle |
 
 ---
 
-Bonne exploration !
+Bonne exploration ! 🚀

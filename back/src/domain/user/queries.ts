@@ -13,16 +13,42 @@ export const userQueries: UserQueries = {
   findUserById: async (_parent, { id }, _context) => {
     const user = await prisma.user.findUnique({
       where: { id: String(id) },
+      include: {
+        _count: {
+          select: { articles: true, comments: true },
+        },
+        articles: {
+          select: {
+            _count: { select: { dislikes: true, comments: true } },
+          },
+        },
+      },
     });
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
+
+    const totalDislikes = user.articles.reduce(
+      (sum, a) => sum + a._count.dislikes,
+      0,
+    );
+    const totalComments = user.articles.reduce(
+      (sum, a) => sum + a._count.comments,
+      0,
+    );
+
     return {
-      ...user,
+      id: user.id,
+      username: user.username,
+      bio: user.bio,
+      iconName: user.iconName,
       createdAt: user.createdAt.toISOString(),
-      top1BadgeMessage: user.top1BadgeMessage,
-      top1BadgeColor: user.top1BadgeColor,
-      top1BadgePreset: user.top1BadgePreset,
+      TotalDislikes: totalDislikes,
+      TotalComments: totalComments,
+      // top1Badge fields - LEADERBOARD DISABLED
+      // top1BadgeMessage: user.top1BadgeMessage,
+      // top1BadgeColor: user.top1BadgeColor,
+      // top1BadgePreset: user.top1BadgePreset,
     };
   },
   getTop1User: async () => {
@@ -38,8 +64,14 @@ export const userQueries: UserQueries = {
     });
 
     const scored = users.map((user) => {
-      const totalDislikes = user.articles.reduce((sum, a) => sum + a._count.dislikes, 0);
-      const totalComments = user.articles.reduce((sum, a) => sum + a._count.comments, 0);
+      const totalDislikes = user.articles.reduce(
+        (sum, a) => sum + a._count.dislikes,
+        0,
+      );
+      const totalComments = user.articles.reduce(
+        (sum, a) => sum + a._count.comments,
+        0,
+      );
       const scoreGlobal =
         user._count.articles * 3 +
         totalComments * 1.5 +
@@ -54,7 +86,10 @@ export const userQueries: UserQueries = {
       };
     });
 
-    return scored.sort((a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0))[0] ?? null;
+    return (
+      scored.sort((a, b) => (b.scoreGlobal ?? 0) - (a.scoreGlobal ?? 0))[0] ??
+      null
+    );
   },
   searchUsers: async (_parent, { query }) => {
     const users = await prisma.user.findMany({
@@ -83,11 +118,11 @@ export const userQueries: UserQueries = {
     return users.map((user) => {
       const totalDislikes = user.articles.reduce(
         (sum, a) => sum + a._count.dislikes,
-        0
+        0,
       );
       const totalComments = user.articles.reduce(
         (sum, a) => sum + a._count.comments,
-        0
+        0,
       );
       const publications = user._count.articles;
       const commentsWritten = user._count.comments;
@@ -100,9 +135,10 @@ export const userQueries: UserQueries = {
       return {
         ...user,
         createdAt: user.createdAt.toISOString(),
-        top1BadgeMessage: user.top1BadgeMessage,
-        top1BadgeColor: user.top1BadgeColor,
-        top1BadgePreset: user.top1BadgePreset,
+        // top1Badge fields - LEADERBOARD DISABLED
+        // top1BadgeMessage: user.top1BadgeMessage,
+        // top1BadgeColor: user.top1BadgeColor,
+        // top1BadgePreset: user.top1BadgePreset,
         TotalDislikes: totalDislikes,
         TotalComments: totalComments,
         scoreGlobal,

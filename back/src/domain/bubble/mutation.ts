@@ -25,7 +25,7 @@ const transformBubble = (bubble: any) => ({
 });
 
 export const bubbleMutations: BubbleMutations = {
-  createBubble: async (_, { title }, { dataSources: { db }, user }) => {
+  createBubble: async (_, { title, isAnonymous }, { dataSources: { db }, user }) => {
     if (!user) {
       return {
         code: 401,
@@ -48,6 +48,7 @@ export const bubbleMutations: BubbleMutations = {
       data: {
         title: title.trim(),
         authorId: user.id,
+        isAnonymous: isAnonymous ?? false,
       },
       include: {
         author: true,
@@ -65,7 +66,7 @@ export const bubbleMutations: BubbleMutations = {
 
   addMessageToBubble: async (
     _,
-    { bubbleId, content },
+    { bubbleId, content, isAnonymous },
     { dataSources: { db }, user },
   ) => {
     if (!user) {
@@ -90,6 +91,7 @@ export const bubbleMutations: BubbleMutations = {
         content: content.trim(),
         authorId: user.id,
         bubbleId,
+        isAnonymous: isAnonymous ?? false,
       },
       include: { author: true },
     });

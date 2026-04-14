@@ -5,6 +5,7 @@ export const GET_BUBBLES = graphql(`
     getBubbles(limit: $limit, offset: $offset) {
       id
       title
+      isAnonymous
       author {
         id
         username
@@ -13,6 +14,7 @@ export const GET_BUBBLES = graphql(`
       messages {
         id
         content
+        isAnonymous
         author {
           id
           username
@@ -32,6 +34,7 @@ export const GET_BUBBLE_BY_ID = graphql(`
     getBubbleById(id: $id) {
       id
       title
+      isAnonymous
       author {
         id
         username
@@ -40,6 +43,7 @@ export const GET_BUBBLE_BY_ID = graphql(`
       messages {
         id
         content
+        isAnonymous
         author {
           id
           username
@@ -59,6 +63,7 @@ export const GET_BUBBLE_MESSAGES = graphql(`
     getBubbleMessages(bubbleId: $bubbleId) {
       id
       content
+      isAnonymous
       author {
         id
         username

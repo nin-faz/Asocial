@@ -1,14 +1,15 @@
 import { graphql } from "../gql";
 
 export const CREATE_BUBBLE = graphql(`
-  mutation CreateBubble($title: String!) {
-    createBubble(title: $title) {
+  mutation CreateBubble($title: String!, $isAnonymous: Boolean) {
+    createBubble(title: $title, isAnonymous: $isAnonymous) {
       code
       success
       message
       bubble {
         id
         title
+        isAnonymous
         author {
           id
           username
@@ -17,6 +18,7 @@ export const CREATE_BUBBLE = graphql(`
         messages {
           id
           content
+          isAnonymous
           author {
             id
             username
@@ -33,10 +35,11 @@ export const CREATE_BUBBLE = graphql(`
 `);
 
 export const ADD_MESSAGE_TO_BUBBLE = graphql(`
-  mutation AddMessageToBubble($bubbleId: ID!, $content: String!) {
-    addMessageToBubble(bubbleId: $bubbleId, content: $content) {
+  mutation AddMessageToBubble($bubbleId: ID!, $content: String!, $isAnonymous: Boolean) {
+    addMessageToBubble(bubbleId: $bubbleId, content: $content, isAnonymous: $isAnonymous) {
       id
       content
+      isAnonymous
       author {
         id
         username

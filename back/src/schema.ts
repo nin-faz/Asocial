@@ -65,8 +65,8 @@ export const typeDefs = gql`
       newPassword: String!
     ): ResetPasswordWithTokenResponse!
     markNotificationsAsRead(ids: [ID!]!): MarkNotificationsAsReadResponse!
-    createBubble(title: String!): CreateBubbleResponse!
-    addMessageToBubble(bubbleId: ID!, content: String!): BubbleMessage!
+    createBubble(title: String!, isAnonymous: Boolean): CreateBubbleResponse!
+    addMessageToBubble(bubbleId: ID!, content: String!, isAnonymous: Boolean): BubbleMessage!
     deleteBubble(id: ID!): DeleteBubbleResponse!
   }
 
@@ -93,9 +93,10 @@ export const typeDefs = gql`
     commentsWritten: Int
     dislikesGiven: Int
     scoreGlobal: Float
-    top1BadgeMessage: String
-    top1BadgeColor: String
-    top1BadgePreset: String
+    # TOP 1 Badge fields - LEADERBOARD DISABLED
+    # top1BadgeMessage: String
+    # top1BadgeColor: String
+    # top1BadgePreset: String
   }
 
   type CreateUserResponse {
@@ -123,9 +124,9 @@ export const typeDefs = gql`
     username: String
     password: String
     iconName: String
-    top1BadgeMessage: String
-    top1BadgeColor: String
-    top1BadgePreset: String
+    # top1BadgeMessage: String
+    # top1BadgeColor: String
+    # top1BadgePreset: String
   }
 
   type CreateArticleResponse {
@@ -153,9 +154,9 @@ export const typeDefs = gql`
     bio: String
     iconName: String
     createdAt: String!
-    top1BadgeMessage: String
-    top1BadgeColor: String
-    top1BadgePreset: String
+    # top1BadgeMessage: String
+    # top1BadgeColor: String
+    # top1BadgePreset: String
   }
 
   type UserToken {
@@ -239,6 +240,7 @@ export const typeDefs = gql`
     id: ID!
     title: String!
     author: UserSummary!
+    isAnonymous: Boolean!
     messages: [BubbleMessage!]!
     createdAt: String!
     updatedAt: String!
@@ -248,6 +250,7 @@ export const typeDefs = gql`
     id: ID!
     content: String!
     author: UserSummary!
+    isAnonymous: Boolean!
     dislikes: Int!
     createdAt: String!
   }

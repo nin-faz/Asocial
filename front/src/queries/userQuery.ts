@@ -19,9 +19,10 @@ export const GET_USER_BY_ID = graphql(`
       createdAt
       TotalDislikes
       TotalComments
-      top1BadgeMessage
-      top1BadgeColor
-      top1BadgePreset
+      # TOP1 LEADERBOARD - DISABLED
+      # top1BadgeMessage
+      # top1BadgeColor
+      # top1BadgePreset
     }
   }
 `);
@@ -37,9 +38,10 @@ export const GET_LEADERBOARD = graphql(`
       scoreGlobal
       TotalDislikes
       TotalComments
-      top1BadgeMessage
-      top1BadgeColor
-      top1BadgePreset
+      # TOP1 LEADERBOARD - DISABLED
+      # top1BadgeMessage
+      # top1BadgeColor
+      # top1BadgePreset
     }
   }
 `);
@@ -48,9 +50,10 @@ export const GET_TOP1_USER = graphql(`
   query GetTop1User {
     getTop1User {
       id
-      top1BadgeMessage
-      top1BadgeColor
-      top1BadgePreset
+      # TOP1 LEADERBOARD - DISABLED
+      # top1BadgeMessage
+      # top1BadgeColor
+      # top1BadgePreset
     }
   }
 `);

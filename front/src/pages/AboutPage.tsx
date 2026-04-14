@@ -1,4 +1,4 @@
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,10 +9,17 @@ import {
   Bomb,
   Zap,
   Hammer,
+  LucideIcon,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 
-const features = [
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+const features: Feature[] = [
   {
     icon: ThumbsDown,
     title: "Dislikes Uniquement",
@@ -54,10 +61,14 @@ const features = [
 const AboutPage = () => {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
+
   if (!authContext) {
-    throw new Error("AuthContext is null");
+    return null;
   }
+
   const { user } = authContext;
+
+  const ctaRoute = useMemo(() => (user ? "/publications" : "/auth"), [user]);
 
   useEffect(() => {
     document.title = "À propos";
@@ -71,16 +82,13 @@ const AboutPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-20"
       >
-        {/* <motion.div
-         className="mx-auto w-24 h-24 bg-purple-900 rounded-full flex items-center justify-center mb-8"> */}
         <div className="flex justify-center mb-8">
           <motion.img
             whileHover={{ scale: 1.05 }}
             src="/logo.svg"
             alt="Logo Asocial"
-            className="flex items-center cursor-pointer w-16 h-16"
+            className="w-16 h-16 cursor-pointer"
           />
-          {/* </motion.div> */}
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-purple-400 mb-6">
           Bienvenue dans l'Anti-Social
@@ -102,13 +110,13 @@ const AboutPage = () => {
         <h2 className="text-3xl font-bold text-purple-400 mb-6">
           Notre Manifeste
         </h2>
-        <div className="prose prose-invert max-w-none text-gray-300">
-          <p className="text-lg mb-4">
+        <div className="prose prose-invert max-w-none text-gray-300 space-y-4">
+          <p className="text-lg">
             Dans un monde numérique saturé de positivité toxique et de
             connexions superficielles, Asocial émerge comme un havre de paix
             pour les âmes numériques fatiguées des conventions sociales.
           </p>
-          <p className="text-lg mb-4">
+          <p className="text-lg">
             Nous rejetons les algorithmes qui façonnent vos pensées, les likes
             qui valident votre existence, et les filtres qui masquent votre
             vraie nature.
@@ -137,7 +145,6 @@ const AboutPage = () => {
             whileHover={{
               scale: 1.05,
               boxShadow: "0px 0px 20px rgba(128, 0, 128, 0.5)",
-              transition: { duration: 0.15 },
             }}
             whileTap={{ scale: 0.95 }}
             className="bg-gray-900 rounded-lg p-6 border border-purple-900"
@@ -171,13 +178,7 @@ const AboutPage = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="flex items-center justify-center gap-2 px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          onClick={() => {
-            if (user) {
-              navigate("/publications");
-            } else {
-              navigate("/auth");
-            }
-          }}
+          onClick={() => navigate(ctaRoute)}
         >
           Commencer la Destruction <Hammer className="w-5 h-5" />
         </motion.button>

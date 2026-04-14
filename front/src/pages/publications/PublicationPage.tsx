@@ -43,8 +43,8 @@ import {
 import UserIcon from "../../components/icons/UserIcon";
 import MediaUploader from "../../components/media/MediaUploader";
 import getCaretCoordinates from "textarea-caret-position";
-import { GET_TOP1_USER } from "../../queries/userQuery";
-import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
+// import { GET_TOP1_USER } from "../../queries/userQuery";
+// import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
 function PublicationPage() {
   const authContext = useContext(AuthContext);
@@ -84,7 +84,7 @@ function PublicationPage() {
     {
       variables: { id: user?.id! },
       skip: !user?.id,
-    }
+    },
   );
 
   const userIconName = userData?.findUserById?.iconName ?? "Skull";
@@ -165,24 +165,35 @@ function PublicationPage() {
       if (sortOption === "recent") {
         const newOffset = offsetRecent + ARTICLES_PER_PAGE;
         setOffsetRecent(newOffset);
-        fetchMoreRecent({ variables: { limit: ARTICLES_PER_PAGE, offset: newOffset } })
-          .then(({ data: newData }) => {
-            const count = newData?.findArticles?.length ?? 0;
-            if (count < ARTICLES_PER_PAGE) setHasMoreRecent(false);
-          });
+        fetchMoreRecent({
+          variables: { limit: ARTICLES_PER_PAGE, offset: newOffset },
+        }).then(({ data: newData }) => {
+          const count = newData?.findArticles?.length ?? 0;
+          if (count < ARTICLES_PER_PAGE) setHasMoreRecent(false);
+        });
       } else {
         const newOffset = offsetDisliked + ARTICLES_PER_PAGE;
         setOffsetDisliked(newOffset);
-        fetchMoreDisliked({ variables: { limit: ARTICLES_PER_PAGE, offset: newOffset } })
-          .then(({ data: newData }) => {
-            const count = newData?.findArticleByMostDisliked?.length ?? 0;
-            if (count < ARTICLES_PER_PAGE) setHasMoreDisliked(false);
-          });
+        fetchMoreDisliked({
+          variables: { limit: ARTICLES_PER_PAGE, offset: newOffset },
+        }).then(({ data: newData }) => {
+          const count = newData?.findArticleByMostDisliked?.length ?? 0;
+          if (count < ARTICLES_PER_PAGE) setHasMoreDisliked(false);
+        });
       }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, sortOption, offsetRecent, offsetDisliked, articlesLoading, mostDislikedLoading, fetchMoreRecent, fetchMoreDisliked]);
+  }, [
+    hasMore,
+    sortOption,
+    offsetRecent,
+    offsetDisliked,
+    articlesLoading,
+    mostDislikedLoading,
+    fetchMoreRecent,
+    fetchMoreDisliked,
+  ]);
 
   // Rafraîchir les articles au chargement
   useEffect(() => {
@@ -206,7 +217,10 @@ function PublicationPage() {
       if (sortOption === "unpopular") {
         setOffsetDisliked(0);
         setHasMoreDisliked(true);
-        await refetechMostDislikedArticles({ limit: ARTICLES_PER_PAGE, offset: 0 });
+        await refetechMostDislikedArticles({
+          limit: ARTICLES_PER_PAGE,
+          offset: 0,
+        });
       } else {
         setOffsetRecent(0);
         setHasMoreRecent(true);
@@ -316,7 +330,7 @@ function PublicationPage() {
       } else {
         console.error(
           response?.data?.createArticle?.message ??
-            "Echec de la création de l'article:"
+            "Echec de la création de l'article:",
         );
         setTempArticleId(null); // Supprimer l'article temporaire en cas d'échec
       }
@@ -385,7 +399,7 @@ function PublicationPage() {
       } else {
         console.error(
           response?.data?.deleteArticle?.message ??
-            "Echec de la suppression de l'article."
+            "Echec de la suppression de l'article.",
         );
         setDeletedArticleIds((prev) => prev.filter((id) => id !== articleId));
       }
@@ -438,12 +452,7 @@ function PublicationPage() {
       setIsRestoringScroll(false);
       document.body.style.overflow = "";
     }
-  }, [
-    location.state,
-    hasMore,
-    filteredArticles.length,
-    navigate,
-  ]);
+  }, [location.state, hasMore, filteredArticles.length, navigate]);
 
   // Correction : forcer le scroll à la position 1px au chargement si une restauration est attendue
   useEffect(() => {
@@ -476,11 +485,11 @@ function PublicationPage() {
     {
       variables: { userId: user?.id! },
       skip: !user?.id,
-    }
+    },
   );
 
   const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
-    {}
+    {},
   );
 
   // Met à jour userDislikes en fonction des articles et des dislikes de l'utilisateur
@@ -548,7 +557,7 @@ function PublicationPage() {
 
       // Mettre à jour visuellement le compteur de dislikes
       const articleElement = document.querySelector(
-        `[data-article-id="${articleId}"]`
+        `[data-article-id="${articleId}"]`,
       );
       if (articleElement) {
         const dislikeCountElement =
@@ -556,10 +565,10 @@ function PublicationPage() {
         if (dislikeCountElement) {
           const currentCount = parseInt(
             dislikeCountElement.textContent ?? "0",
-            10
+            10,
           );
           dislikeCountElement.textContent = String(
-            newDislikeState ? currentCount + 1 : currentCount - 1
+            newDislikeState ? currentCount + 1 : currentCount - 1,
           );
         }
       }
@@ -617,7 +626,7 @@ function PublicationPage() {
     width: 0,
   });
   const [activeField, setActiveField] = useState<"title" | "content" | null>(
-    null
+    null,
   );
 
   const [selectedIndexUser, setSelectedIndexUser] = useState(0);
@@ -632,7 +641,7 @@ function PublicationPage() {
   const handleTextChange = (
     text: string,
     setText: React.Dispatch<React.SetStateAction<string>>,
-    inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+    inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>,
   ) => {
     if (!inputRef?.current) return;
 
@@ -679,12 +688,12 @@ function PublicationPage() {
   // Update the insertMention function to dynamically determine the active field
   const insertMention = (
     username: string,
-    setText: React.Dispatch<React.SetStateAction<string>>
+    setText: React.Dispatch<React.SetStateAction<string>>,
   ) => {
     setText((prev) => {
       const updatedText = prev.replace(
         /@([a-zA-Z0-9_.\-' ]*)$/,
-        `@${username}`
+        `@${username}`,
       );
       return updatedText;
     });
@@ -693,7 +702,7 @@ function PublicationPage() {
 
   // Définition correcte de handleKeyDown comme fonction React
   const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     if (!showMentionList || mentionSuggestions.length === 0) return;
 
@@ -703,13 +712,13 @@ function PublicationPage() {
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setSelectedIndexUser((prev) =>
-        prev === 0 ? mentionSuggestions.length - 1 : prev - 1
+        prev === 0 ? mentionSuggestions.length - 1 : prev - 1,
       );
     } else if (event.key === "Enter") {
       event.preventDefault();
       insertMention(
         mentionSuggestions[selectedIndexUser].username,
-        activeField === "title" ? setTitle : setContent
+        activeField === "title" ? setTitle : setContent,
       );
     }
   };
@@ -763,7 +772,7 @@ function PublicationPage() {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
-      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
     return withMentions.replace(/\n/g, "<br>");
   };
@@ -795,8 +804,8 @@ function PublicationPage() {
     }
   };
 
-  const { data: top1Data } = useQuery(GET_TOP1_USER);
-  const top1User = top1Data?.getTop1User ?? null;
+  // const { data: top1Data } = useQuery(GET_TOP1_USER);
+  // const top1User = top1Data?.getTop1User ?? null;
 
   // Vérifier si les données sont en cours de chargement
   const isLoading = articlesLoading || mostDislikedLoading;
@@ -1006,7 +1015,7 @@ function PublicationPage() {
                   <source
                     srcSet={tempArticleData.imageUrl.replace(
                       /\.(jpg|jpeg|png)$/i,
-                      ".webp"
+                      ".webp",
                     )}
                     type="image/webp"
                   />
@@ -1077,7 +1086,7 @@ function PublicationPage() {
           visibleArticles
             .filter(
               (article) =>
-                article !== null && !deletedArticleIds.includes(article.id)
+                article !== null && !deletedArticleIds.includes(article.id),
             )
             .map(
               ({
@@ -1134,14 +1143,14 @@ function PublicationPage() {
                           >
                             {author.username}
                           </button>
-                          {top1User && author.id === top1User.id && (
+                          {/* {top1User && author.id === top1User.id && (
                             <BadgeTop1
                               message={top1User.top1BadgeMessage}
                               color={top1User.top1BadgeColor}
                               preset={top1User.top1BadgePreset as BadgePreset}
                               className="ml-2"
                             />
-                          )}
+                          )} */}
                         </div>
                         <div>
                           <p className="text-gray-500 text-sm">
@@ -1177,7 +1186,7 @@ function PublicationPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowMenu(
-                              articleId === showMenu ? null : articleId
+                              articleId === showMenu ? null : articleId,
                             );
                           }}
                         >
@@ -1242,7 +1251,7 @@ function PublicationPage() {
                         <source
                           srcSet={imageUrl.replace(
                             /\.(jpg|jpeg|png)$/i,
-                            ".webp"
+                            ".webp",
                           )}
                           type="image/webp"
                         />
@@ -1317,7 +1326,7 @@ function PublicationPage() {
                     </button>
                   </div>
                 </motion.div>
-              )
+              ),
             )
         ) : (
           <p className="text-center text-gray-400">Aucun article trouvé.</p>
@@ -1363,7 +1372,7 @@ function PublicationPage() {
               onClick={() =>
                 insertMention(
                   user.username,
-                  activeField === "title" ? setTitle : setContent
+                  activeField === "title" ? setTitle : setContent,
                 )
               }
             >

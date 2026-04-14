@@ -2,6 +2,7 @@ export interface FloatingMessage {
   id: string;
   author: string;
   text: string;
+  isAnonymous: boolean;
   x: number;
   y: number;
   vx: number;
@@ -20,6 +21,7 @@ export interface Particle {
   vx: number;
   vy: number;
   life: number;
+  color: string;
 }
 
 export interface BubbleAuthor {
@@ -31,6 +33,7 @@ export interface BubbleAuthor {
 export interface BubbleMessageData {
   id: string;
   content: string;
+  isAnonymous: boolean;
   author: BubbleAuthor;
   dislikes: number;
   createdAt: string;
@@ -39,6 +42,7 @@ export interface BubbleMessageData {
 export interface BubbleData {
   id: string;
   title: string;
+  isAnonymous: boolean;
   author: BubbleAuthor;
   messages: BubbleMessageData[];
   createdAt: string;

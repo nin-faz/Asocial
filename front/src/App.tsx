@@ -26,8 +26,11 @@ const ResetPasswordWithTokenPage = React.lazy(
   () => import("./pages/password/ResetPasswordWithTokenPage"),
 );
 const NotificationsPage = React.lazy(() => import("./pages/NotificationsPage"));
-const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
-const BubblesPage = React.lazy(() => import("./pages/BubblesPage"));
+// const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
+const BubblesPage = React.lazy(() => import("./pages/bubbles/BubblesPage"));
+const BubbleSessionPage = React.lazy(
+  () => import("./pages/bubbles/BubbleSessionPage"),
+);
 import { ProtectedRoute, RedirectIfAuthenticated } from "./routes";
 import { AuthContext } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
@@ -100,7 +103,7 @@ function App() {
         hideProgressBar
       />
 
-      {!pathname.match(/^\/bubbles\/\d+$/) && <Header />}
+      {!pathname.match(/^\/bubbles\//) && <Header />}
       <div className="min-h-screen bg-black">
         <Routes>
           {/* Routes publiques */}
@@ -169,32 +172,14 @@ function App() {
             }
           />
 
-          <Route
+          {/* <Route
             path="/leaderboard"
             element={
               <Suspense fallback={<Loader />}>
                 <LeaderboardPage />
               </Suspense>
             }
-          />
-
-          <Route
-            path="/bubbles"
-            element={
-              <Suspense fallback={<Loader />}>
-                <BubblesPage />
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/bubbles/:id"
-            element={
-              <Suspense fallback={<Loader />}>
-                <BubblesPage />
-              </Suspense>
-            }
-          />
+          /> */}
 
           <Route element={<RedirectIfAuthenticated />}>
             <Route
@@ -209,6 +194,23 @@ function App() {
 
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>
+            <Route
+              path="/bubbles"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <BubblesPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/bubbles/:id"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <BubbleSessionPage />
+                </Suspense>
+              }
+            />
             <Route
               path="/profile"
               element={
@@ -237,7 +239,7 @@ function App() {
           />
         </Routes>
       </div>
-      <Footer />
+      {!pathname.match(/^\/bubbles\//) && <Footer />}
     </>
   );
 }

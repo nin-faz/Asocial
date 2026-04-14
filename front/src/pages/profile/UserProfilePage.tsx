@@ -2,7 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import { ArrowLeft, MessageSquare, Share2, ThumbsDown } from "lucide-react";
-import { GET_USER_BY_ID, GET_TOP1_USER } from "../../queries/userQuery";
+import {
+  GET_USER_BY_ID,
+  // GET_TOP1_USER
+} from "../../queries/userQuery";
 import { FIND_ARTICLES_BY_USER } from "../../queries/articleQuery";
 import { FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES } from "../../queries/dislikeQuery";
 import UserIcon from "../../components/icons/UserIcon";
@@ -14,7 +17,7 @@ import {
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { showLoginRequiredToast } from "../../utils/customToasts";
-import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
+// import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 import Loader from "../../components/Loader";
 import { SEARCH_USERS } from "../../queries/userQuery";
 
@@ -32,13 +35,17 @@ const UserProfilePage = () => {
         const username = target.getAttribute("data-username");
         if (username) {
           e.stopPropagation();
-          const { data } = await searchUserByName({ variables: { query: username } });
-          const mentioned = data?.searchUsers?.find((u: any) => u.username === username);
+          const { data } = await searchUserByName({
+            variables: { query: username },
+          });
+          const mentioned = data?.searchUsers?.find(
+            (u: any) => u.username === username,
+          );
           if (mentioned) {
             navigate(
               mentioned.id === auth?.user?.id
                 ? "/profile"
-                : `/users/${mentioned.id}`
+                : `/users/${mentioned.id}`,
             );
           }
         }
@@ -53,7 +60,7 @@ const UserProfilePage = () => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
-      `<span class="mention text-purple-400 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+      `<span class="mention text-purple-400 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
     return withMentions.replace(/\n/g, "<br>");
   };
@@ -73,12 +80,12 @@ const UserProfilePage = () => {
     {
       variables: { userId: userIdString },
       skip: !userIdString,
-    }
+    },
   );
   const articles = articlesData?.findArticlesByUser || [];
 
   const [userDislikes, setUserDislikes] = useState<{ [key: string]: boolean }>(
-    {}
+    {},
   );
   const [addDislike] = useMutation(ADD_ARTICLE_DISLIKE);
   const [deleteDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
@@ -89,7 +96,7 @@ const UserProfilePage = () => {
     {
       variables: { userId: auth?.user?.id! },
       skip: !auth?.user?.id,
-    }
+    },
   );
   const { refetch: refetchArticlesByUser } = useQuery(FIND_ARTICLES_BY_USER, {
     variables: { userId: userIdString },
@@ -134,9 +141,9 @@ const UserProfilePage = () => {
     }
   }, [auth?.user?.id, userIdString, navigate]);
 
-  const { data: top1Data } = useQuery(GET_TOP1_USER);
-  const top1User = top1Data?.getTop1User ?? null;
-  const isTop1 = user?.id && top1User?.id === user.id;
+  // const { data: top1Data } = useQuery(GET_TOP1_USER);
+  // const top1User = top1Data?.getTop1User ?? null;
+  // const isTop1 = user?.id && top1User?.id === user.id;
 
   const handleShareArticle = async (e: React.MouseEvent, articleId: string) => {
     e.stopPropagation();
@@ -220,14 +227,14 @@ const UserProfilePage = () => {
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-3xl font-bold text-purple-400 mb-2 flex items-center justify-center md:justify-start">
               {user?.username}
-              {isTop1 && (
+              {/* {isTop1 && (
                 <BadgeTop1
                   message={user?.top1BadgeMessage}
                   color={user?.top1BadgeColor}
                   preset={user?.top1BadgePreset as BadgePreset}
                   className="ml-3"
                 />
-              )}
+              )} */}
             </h1>
             <p className="text-gray-500 mb-4">
               Membre depuis{" "}
@@ -306,14 +313,14 @@ const UserProfilePage = () => {
                       <p className="text-gray-500 text-[10px] leading-tight">
                         {article.updatedAt
                           ? new Date(
-                              parseInt(article.updatedAt, 10)
+                              parseInt(article.updatedAt, 10),
                             ).toLocaleString("fr-FR", {
                               year: "2-digit",
                               month: "2-digit",
                               day: "2-digit",
                             })
                           : new Date(
-                              parseInt(article.createdAt ?? "0", 10)
+                              parseInt(article.createdAt ?? "0", 10),
                             ).toLocaleString("fr-FR", {
                               year: "2-digit",
                               month: "2-digit",
@@ -343,7 +350,7 @@ const UserProfilePage = () => {
                         <source
                           srcSet={article.imageUrl.replace(
                             /\.(jpg|jpeg|png)$/i,
-                            ".webp"
+                            ".webp",
                           )}
                           type="image/webp"
                         />

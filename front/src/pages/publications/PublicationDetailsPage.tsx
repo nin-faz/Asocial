@@ -46,8 +46,8 @@ import {
 } from "../../utils/customToasts";
 import UserIcon from "../../components/icons/UserIcon";
 import MediaUploader from "../../components/media/MediaUploader";
-import { GET_TOP1_USER } from "../../queries/userQuery";
-import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
+// import { GET_TOP1_USER } from "../../queries/userQuery";
+// import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 import getCaretCoordinates from "textarea-caret-position";
 
 interface PublicationDetailsPageProps {
@@ -106,7 +106,7 @@ const PublicationDetailsPage = ({
   const handleTextChange = (
     text: string,
     setText: React.Dispatch<React.SetStateAction<string>>,
-    inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+    inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>,
   ) => {
     setText(text);
     const mentionRegex = /@([a-zA-Z0-9_.\-' ]*)$/;
@@ -144,12 +144,12 @@ const PublicationDetailsPage = ({
 
   const insertMention = (
     username: string,
-    setText: React.Dispatch<React.SetStateAction<string>>
+    setText: React.Dispatch<React.SetStateAction<string>>,
   ) => {
     setText((prev) => {
       const updatedText = prev.replace(
         /@([a-zA-Z0-9_.\-' ]*)$/,
-        `@${username}`
+        `@${username}`,
       );
       return updatedText;
     });
@@ -157,7 +157,7 @@ const PublicationDetailsPage = ({
   };
 
   const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     if (!showMentionList || mentionSuggestions.length === 0) return;
 
@@ -168,23 +168,23 @@ const PublicationDetailsPage = ({
       event.preventDefault();
       setSelectedIndexUser(
         (prev) =>
-          (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length
+          (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length,
       );
     } else if (event.key === "Enter") {
       event.preventDefault();
       const mentionSetter = editingCommentId
         ? setEditedCommentContent
         : activeField === "title"
-        ? setEditedTitle
-        : activeField === "content"
-        ? setEditedContent
-        : activeField === "reply"
-        ? setReplyContent
-        : setNewComment;
+          ? setEditedTitle
+          : activeField === "content"
+            ? setEditedContent
+            : activeField === "reply"
+              ? setReplyContent
+              : setNewComment;
 
       insertMention(
         mentionSuggestions[selectedIndexUser].username,
-        mentionSetter
+        mentionSetter,
       );
     }
   };
@@ -223,7 +223,7 @@ const PublicationDetailsPage = ({
           e.stopPropagation();
           // Find the mentioned user's id based on username
           const mentionedUser = usersData?.searchUsers?.find(
-            (u: any) => u.username === username
+            (u: any) => u.username === username,
           );
           if (mentionedUser) {
             const profilePath =
@@ -244,7 +244,7 @@ const PublicationDetailsPage = ({
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withMentions = escaped.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
-      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
     return withMentions.replace(/\n/g, "<br>");
   };
@@ -263,7 +263,7 @@ const PublicationDetailsPage = ({
     FIND_ARTICLE_BY_ID,
     {
       variables: { id: finalId! },
-    }
+    },
   );
 
   const article = articleData?.findArticleById;
@@ -287,7 +287,7 @@ const PublicationDetailsPage = ({
       } else {
         console.error(
           response?.data?.deleteArticle?.message ||
-            "Echec de la suppression de l'article."
+            "Echec de la suppression de l'article.",
         );
       }
     } catch (err) {
@@ -350,7 +350,7 @@ const PublicationDetailsPage = ({
     // Vérification des dislikes pour l'article
     if (
       articleData?.findArticleById?.dislikes?.some(
-        (dislike) => dislike?.user?.id === user?.id
+        (dislike) => dislike?.user?.id === user?.id,
       )
     ) {
       dislikesMap[articleData.findArticleById.id] = true;
@@ -392,7 +392,7 @@ const PublicationDetailsPage = ({
 
   const handleArticleDislike = async (
     e: React.MouseEvent,
-    articleId: string
+    articleId: string,
   ) => {
     e.stopPropagation();
 
@@ -462,7 +462,7 @@ const PublicationDetailsPage = ({
     GET_COMMENTS,
     {
       variables: { articleId: finalId! },
-    }
+    },
   );
 
   // Rafraîchit les commentaires si le flag sessionStorage est présent (après un refresh global)
@@ -479,7 +479,7 @@ const PublicationDetailsPage = ({
       const maxAttempts = 20; // 2s max (20 x 100ms)
       const interval = setInterval(() => {
         const el = document.querySelector(
-          `[data-comment-id="${targetCommentId}"]`
+          `[data-comment-id="${targetCommentId}"]`,
         );
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -493,7 +493,7 @@ const PublicationDetailsPage = ({
           if (attempts >= maxAttempts) {
             console.warn(
               "[ScrollToComment] Échec: élément non trouvé pour:",
-              targetCommentId
+              targetCommentId,
             );
             // Fallback : naviguer vers l'article sans le paramètre commentId
             const url = window.location.pathname.split("?")[0];
@@ -513,14 +513,14 @@ const PublicationDetailsPage = ({
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [replyingToUsername, setReplyingToUsername] = useState<string | null>(
-    null
+    null,
   );
 
   const [createComment] = useMutation(ADD_COMMENT);
 
   // Variable pour empêcher les clics multiples rapides (debounce)
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
-  
+
   const handleCreateComment = async () => {
     // Vérifier si c'est un commentaire principal ou une réponse
     const content = replyToCommentId ? replyContent : newComment;
@@ -530,14 +530,15 @@ const PublicationDetailsPage = ({
       showLoginRequiredToast("comment");
       return;
     }
-    
+
     // Protection anti-double clic/spam
     const now = Date.now();
-    if (now - lastSubmitTime < 2000) { // 2 secondes de délai minimum entre les envois
+    if (now - lastSubmitTime < 2000) {
+      // 2 secondes de délai minimum entre les envois
       return;
     }
     setLastSubmitTime(now);
-    
+
     setIsSubmitting(true);
 
     try {
@@ -586,12 +587,12 @@ const PublicationDetailsPage = ({
       } else {
         console.error(
           "Échec de la suppression du commentaire:",
-          response?.data?.deleteComment?.message || "Raison inconnue"
+          response?.data?.deleteComment?.message || "Raison inconnue",
         );
         toast.error(
           `Échec de la suppression : ${
             response?.data?.deleteComment?.message || "Erreur inconnue"
-          }`
+          }`,
         );
       }
     } catch (err) {
@@ -637,14 +638,14 @@ const PublicationDetailsPage = ({
       } else {
         console.error(
           response?.data?.updateComment?.message ||
-            "Échec de la mise à jour du commentaire."
+            "Échec de la mise à jour du commentaire.",
         );
         toast.error("Échec de la mise à jour du commentaire.");
       }
     } catch (err) {
       console.error("Erreur lors de la mise à jour du commentaire :", err);
       toast.error(
-        "Une erreur est survenue lors de la mise à jour du commentaire."
+        "Une erreur est survenue lors de la mise à jour du commentaire.",
       );
     }
   };
@@ -679,7 +680,7 @@ const PublicationDetailsPage = ({
 
       // Mettre à jour l'UI immédiatement avec la nouvelle valeur
       const dislikeElement = document.querySelector(
-        `[data-comment-id="${commentId}"] .comment-dislike-count`
+        `[data-comment-id="${commentId}"] .comment-dislike-count`,
       );
       if (dislikeElement) {
         dislikeElement.textContent = String(Math.max(0, updatedDislikes));
@@ -709,7 +710,7 @@ const PublicationDetailsPage = ({
       // Remettre le compteur de dislikes à sa valeur précédente en cas d'erreur
       const currentDislikes = comment?.TotalDislikes || 0;
       const dislikeElement = document.querySelector(
-        `[data-comment-id="${commentId}"] .comment-dislike-count`
+        `[data-comment-id="${commentId}"] .comment-dislike-count`,
       );
       if (dislikeElement) {
         dislikeElement.textContent = String(currentDislikes);
@@ -724,10 +725,10 @@ const PublicationDetailsPage = ({
   const [editedTitle, setEditedTitle] = useState(article?.title || "");
   const [editedContent, setEditedContent] = useState(article?.content || "");
   const [editedImageUrl, setEditedImageUrl] = useState<string | null>(
-    article?.imageUrl || null
+    article?.imageUrl || null,
   );
   const [editedVideoUrl, setEditedVideoUrl] = useState<string | null>(
-    article?.videoUrl || null
+    article?.videoUrl || null,
   );
 
   useEffect(() => {
@@ -765,7 +766,7 @@ const PublicationDetailsPage = ({
       } else {
         console.error(
           response?.data?.updateArticle?.message ||
-            "Échec de la mise à jour de l'article."
+            "Échec de la mise à jour de l'article.",
         );
       }
     } catch (err) {
@@ -812,8 +813,8 @@ const PublicationDetailsPage = ({
     skip: !user?.id,
   });
 
-  const { data: top1Data } = useQuery(GET_TOP1_USER);
-  const top1User = top1Data?.getTop1User ?? null;
+  // const { data: top1Data } = useQuery(GET_TOP1_USER);
+  // const top1User = top1Data?.getTop1User ?? null;
 
   return (
     <main className="w-full max-w-2xl mx-auto px-4 py-8">
@@ -865,14 +866,14 @@ const PublicationDetailsPage = ({
                 >
                   {article?.author.username}
                 </button>
-                {top1User && article?.author.id === top1User.id && (
+                {/* {top1User && article?.author.id === top1User.id && (
                   <BadgeTop1
                     message={top1User.top1BadgeMessage}
                     color={top1User.top1BadgeColor}
                     preset={top1User.top1BadgePreset as BadgePreset}
                     className="ml-2"
                   />
-                )}
+                )} */}
               </div>
               <div>
                 <p className="text-gray-500 text-sm">
@@ -908,7 +909,7 @@ const PublicationDetailsPage = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowMenu(
-                    article?.id === showMenu ? null : article?.id ?? null
+                    article?.id === showMenu ? null : (article?.id ?? null),
                   );
                 }}
               >
@@ -970,7 +971,7 @@ const PublicationDetailsPage = ({
                   handleTextChange(
                     e.target.value,
                     setEditedTitle,
-                    titleInputRef
+                    titleInputRef,
                   )
                 }
                 onFocus={() => setActiveField("title")}
@@ -996,7 +997,7 @@ const PublicationDetailsPage = ({
                   handleTextChange(
                     e.target.value,
                     setEditedContent,
-                    contentInputRef
+                    contentInputRef,
                   )
                 }
                 onFocus={() => setActiveField("content")}
@@ -1168,10 +1169,10 @@ const PublicationDetailsPage = ({
                   activeField === "title"
                     ? setEditedTitle
                     : activeField === "content"
-                    ? setEditedContent
-                    : activeField === "reply"
-                    ? setEditedCommentContent
-                    : setNewComment
+                      ? setEditedContent
+                      : activeField === "reply"
+                        ? setEditedCommentContent
+                        : setNewComment,
                 )
               }
             >
@@ -1216,7 +1217,7 @@ const PublicationDetailsPage = ({
                     handleTextChange(
                       e.target.value,
                       setNewComment,
-                      commentInputRef
+                      commentInputRef,
                     )
                   }
                   onFocus={() => setActiveField("comment")}
@@ -1230,8 +1231,8 @@ const PublicationDetailsPage = ({
               <button
                 onClick={handleCreateComment}
                 className={`absolute right-3 bottom-3 ${
-                  isSubmitting || newComment.trim() === "" 
-                    ? "text-gray-500 cursor-not-allowed" 
+                  isSubmitting || newComment.trim() === ""
+                    ? "text-gray-500 cursor-not-allowed"
                     : "text-purple-400 hover:text-purple-300"
                 }`}
                 disabled={isSubmitting || newComment.trim() === ""}
@@ -1329,7 +1330,7 @@ const PublicationDetailsPage = ({
                           setShowMenu(
                             comment?.id === showMenu
                               ? null
-                              : comment?.id ?? null
+                              : (comment?.id ?? null),
                           );
                         }}
                       >
@@ -1390,7 +1391,7 @@ const PublicationDetailsPage = ({
                           handleTextChange(
                             e.target.value,
                             setEditedCommentContent,
-                            commentInputRef
+                            commentInputRef,
                           )
                         }
                         onFocus={() => setActiveField("comment")}
@@ -1499,7 +1500,7 @@ const PublicationDetailsPage = ({
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             navigate(
-                                              `/users/${reply?.author.id}`
+                                              `/users/${reply?.author.id}`,
                                             );
                                           }}
                                           title={`Voir le profil de ${reply?.author.username}`}
@@ -1516,7 +1517,7 @@ const PublicationDetailsPage = ({
                                           if (!date) return null;
 
                                           const formatted = new Date(
-                                            parseInt(date, 10)
+                                            parseInt(date, 10),
                                           )
                                             .toLocaleString("fr-FR", {
                                               year: "numeric",
@@ -1541,7 +1542,7 @@ const PublicationDetailsPage = ({
                                           dangerouslySetInnerHTML={{
                                             __html:
                                               highlightMentions(
-                                                editedCommentContent
+                                                editedCommentContent,
                                               ) + "<br>",
                                           }}
                                         />
@@ -1552,7 +1553,7 @@ const PublicationDetailsPage = ({
                                             handleTextChange(
                                               e.target.value,
                                               setEditedCommentContent,
-                                              commentRepliedInputRef
+                                              commentRepliedInputRef,
                                             )
                                           }
                                           onFocus={() =>
@@ -1569,7 +1570,7 @@ const PublicationDetailsPage = ({
                                         className="text-gray-300 text-sm mt-1"
                                         dangerouslySetInnerHTML={{
                                           __html: highlightMentions(
-                                            reply?.content ?? ""
+                                            reply?.content ?? "",
                                           ),
                                         }}
                                       ></p>
@@ -1611,7 +1612,7 @@ const PublicationDetailsPage = ({
                                           setShowMenu(
                                             reply?.id === showMenu
                                               ? null
-                                              : reply?.id ?? null
+                                              : (reply?.id ?? null),
                                           );
                                         }}
                                       >
@@ -1762,7 +1763,7 @@ const PublicationDetailsPage = ({
                               handleTextChange(
                                 e.target.value,
                                 setReplyContent,
-                                commentRepliedInputRef
+                                commentRepliedInputRef,
                               )
                             }
                             onFocus={() => setActiveField("reply")}
@@ -1775,8 +1776,8 @@ const PublicationDetailsPage = ({
                         <button
                           onClick={handleCreateComment}
                           className={`absolute right-2 bottom-2 ${
-                            isSubmitting || replyContent.trim() === "" 
-                              ? "text-gray-500 cursor-not-allowed" 
+                            isSubmitting || replyContent.trim() === ""
+                              ? "text-gray-500 cursor-not-allowed"
                               : "text-purple-400 hover:text-purple-300"
                           }`}
                           disabled={isSubmitting || replyContent.trim() === ""}

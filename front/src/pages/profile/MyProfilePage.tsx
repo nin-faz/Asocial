@@ -1,6 +1,14 @@
-import { useState, useEffect, useContext, useRef, Suspense, lazy } from "react";
+import {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  Suspense,
+  lazy,
+  useMemo,
+} from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
@@ -14,10 +22,6 @@ import {
   Trash2,
   Edit2,
   BarChart2,
-  Trophy,
-  Crown,
-  Flame,
-  Star,
 } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
 import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
@@ -43,29 +47,49 @@ import { renderUserIcon } from "../../utils/iconUtil";
 import Loader from "../../components/Loader";
 
 const PublicationDetailsPage = lazy(
-  () => import("../publications/PublicationDetailsPage")
+  () => import("../publications/PublicationDetailsPage"),
 );
 const IconSelector = lazy(() => import("../../components/icons/IconSelector"));
-import { GET_TOP1_USER, SEARCH_USERS } from "../../queries/userQuery";
+import {
+  // GET_TOP1_USER,
+  SEARCH_USERS,
+} from "../../queries/userQuery";
 import UserIcon from "../../components/icons/UserIcon";
 
+// Utility functions for date formatting
+const formatDateShort = (timestamp: string): string => {
+  return new Date(parseInt(timestamp, 10)).toLocaleString("fr-FR", {
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
+
+const formatDateLong = (timestamp: string): string => {
+  return new Date(parseInt(timestamp, 10)).toLocaleString("fr-FR", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const MyProfilePage = () => {
-  // Mention support setup
   const navigate = useNavigate();
+  const location = useLocation();
   const auth = useContext(AuthContext);
   const [searchUserByName] = useLazyQuery(SEARCH_USERS);
 
-  // Wrap @username in clickable spans
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withTags = escaped.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
-      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`
+      `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
     return withTags.replace(/\n/g, "<br>");
   };
 
-  // Click handler for mention spans
   useEffect(() => {
     const onClick = async (e: MouseEvent) => {
       const elt = e.target as HTMLElement;
@@ -73,10 +97,18 @@ const MyProfilePage = () => {
         const uname = elt.getAttribute("data-username");
         if (uname) {
           e.stopPropagation();
-          const { data } = await searchUserByName({ variables: { query: uname } });
-          const userObj = data?.searchUsers?.find((u: any) => u.username === uname);
+          const { data } = await searchUserByName({
+            variables: { query: uname },
+          });
+          const userObj = data?.searchUsers?.find(
+            (u: any) => u.username === uname,
+          );
           if (userObj) {
-            navigate(userObj.id === auth?.user?.id ? "/profile" : `/users/${userObj.id}`);
+            navigate(
+              userObj.id === auth?.user?.id
+                ? "/profile"
+                : `/users/${userObj.id}`,
+            );
           }
         }
       }
@@ -87,7 +119,6 @@ const MyProfilePage = () => {
 
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-
   const [activeTab, setActiveTab] = useState(tabParam || "publications");
 
   useEffect(() => {
@@ -101,37 +132,23 @@ const MyProfilePage = () => {
   }, []);
 
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
-
   const [isEditing, setIsEditing] = useState(false);
-
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [iconName, setIconName] = useState("Skull");
-
   const [error, setError] = useState("");
-
-  const [numberOfPostDisliked, setNumberOfPostDisliked] = useState(0);
-
   const [userArticleDislikes, setUserArticleDislikes] = useState<{
     [key: string]: boolean;
   }>({});
-
-  // State for dropdown menu
   const [showMenu, setShowMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const [top1BadgeMessage, setTop1BadgeMessage] = useState("");
-  const [top1BadgeColor, setTop1BadgeColor] = useState("");
-  const [top1BadgePreset, setTop1BadgePreset] = useState("");
-
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowMenu(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -152,35 +169,54 @@ const MyProfilePage = () => {
     {
       variables: { id: user?.id! },
       skip: !user,
-    }
+    },
   );
 
   const userInfosData = userInfos?.findUserById;
-
-  const { data: top1Data } = useQuery(GET_TOP1_USER);
-  const top1User = top1Data?.getTop1User ?? null;
-  const isTop1 = userInfosData?.id && top1User?.id === userInfosData.id;
+  // const { data: top1Data } = useQuery(GET_TOP1_USER);
+  // const top1User = top1Data?.getTop1User ?? null;
+  // const isTop1 = userInfosData?.id && top1User?.id === userInfosData.id;
 
   const { data: articleDisliked, refetch: refetchArticleDisliked } = useQuery(
     FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
     {
       variables: { userId: user?.id! },
       skip: !user,
-    }
+    },
   );
 
   const dislikesByUser = articleDisliked?.getDislikesByUserIdForArticles ?? [];
 
   const [updateUserMutation, { loading: updating }] = useMutation(UPDATE_USER);
-  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE);
-  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE);
-  const [deleteArticle] = useMutation(DELETE_ARTICLE);
+  const [addArticleDislike] = useMutation(ADD_ARTICLE_DISLIKE, {
+    refetchQueries: [
+      { query: FIND_ARTICLES_BY_USER, variables: { userId: user?.id! } },
+      {
+        query: FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
+        variables: { userId: user?.id! },
+      },
+    ],
+  });
+  const [deleteArticleDislike] = useMutation(DELETE_ARTICLE_DISLIKE, {
+    refetchQueries: [
+      { query: FIND_ARTICLES_BY_USER, variables: { userId: user?.id! } },
+      {
+        query: FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
+        variables: { userId: user?.id! },
+      },
+    ],
+  });
+  const [deleteArticle] = useMutation(DELETE_ARTICLE, {
+    refetchQueries: [
+      { query: FIND_ARTICLES_BY_USER, variables: { userId: user?.id! } },
+    ],
+  });
   const { data: articleByUser, refetch: refetchArticleByUser } = useQuery(
     FIND_ARTICLES_BY_USER,
     {
       variables: { userId: user?.id ?? "" },
       skip: !user,
-    }
+    },
   );
 
   const articleByUserData = articleByUser?.findArticlesByUser ?? [];
@@ -190,13 +226,14 @@ const MyProfilePage = () => {
   }>({});
 
   useEffect(() => {
-    if (articleByUserData) {
-      const initialDislikes = articleByUserData.reduce((acc, article) => {
+    const initialDislikes = articleByUserData.reduce(
+      (acc, article) => {
         acc[article.id] = article.TotalDislikes ?? 0;
         return acc;
-      }, {} as { [key: string]: number });
-      setArticleDislikes(initialDislikes);
-    }
+      },
+      {} as { [key: string]: number },
+    );
+    setArticleDislikes(initialDislikes);
   }, [articleByUserData]);
 
   useEffect(() => {
@@ -216,19 +253,19 @@ const MyProfilePage = () => {
     }
 
     setUserArticleDislikes(dislikesMap);
+  }, [dislikesByUser.length, user?.id]);
 
-    setNumberOfPostDisliked(dislikesByUser.length);
-  }, [dislikesByUser, user, articleDisliked]);
+  // Memoized - no state needed
+  const numberOfPostDisliked = useMemo(
+    () => dislikesByUser.length,
+    [dislikesByUser.length],
+  );
 
-  // Populate badge fields from userInfosData
   useEffect(() => {
     if (userInfosData) {
       setUsername(userInfosData.username ?? "");
       setBio(userInfosData.bio ?? "");
       setIconName(userInfosData.iconName ?? "Skull");
-      setTop1BadgeMessage(userInfosData.top1BadgeMessage ?? "");
-      setTop1BadgeColor(userInfosData.top1BadgeColor ?? "");
-      setTop1BadgePreset(userInfosData.top1BadgePreset ?? "");
     }
   }, [userInfosData]);
 
@@ -239,13 +276,6 @@ const MyProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const badgeFields = isTop1
-        ? {
-            top1BadgeMessage,
-            top1BadgeColor,
-            top1BadgePreset,
-          }
-        : {};
       const { data } = await updateUserMutation({
         variables: {
           id: user?.id!,
@@ -253,7 +283,6 @@ const MyProfilePage = () => {
             username,
             bio,
             iconName,
-            ...badgeFields,
           },
         },
         context: {
@@ -282,9 +311,6 @@ const MyProfilePage = () => {
       setUsername(userInfosData?.username! ?? "");
       setBio(userInfosData?.bio! ?? "");
       setIconName(userInfosData?.iconName ?? "Skull");
-      setTop1BadgeMessage(userInfosData?.top1BadgeMessage ?? "");
-      setTop1BadgeColor(userInfosData?.top1BadgeColor ?? "");
-      setTop1BadgePreset(userInfosData?.top1BadgePreset ?? "");
     }
     setIsEditing(false);
     setError("");
@@ -292,7 +318,7 @@ const MyProfilePage = () => {
 
   const handleArticleDislike = async (
     e: React.MouseEvent,
-    articleId: string
+    articleId: string,
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -303,14 +329,12 @@ const MyProfilePage = () => {
     }
 
     try {
-      // Mettre à jour l'état local immédiatement pour une réponse instantanée
       const newDislikeState = !userArticleDislikes[articleId];
       setUserArticleDislikes((prev) => ({
         ...prev,
         [articleId]: newDislikeState,
       }));
 
-      // Mettre à jour le compteur de dislikes immédiatement
       const currentCount = articleDislikes[articleId] || 0;
       setArticleDislikes((prev) => ({
         ...prev,
@@ -319,18 +343,12 @@ const MyProfilePage = () => {
 
       if (newDislikeState) {
         await addArticleDislike({ variables: { articleId, userId: user.id! } });
-        console.log(user.username, "a disliké l'article.");
       } else {
         await deleteArticleDislike({
           variables: { articleId, userId: user.id! },
         });
-        console.log(user.username, "a retiré son dislike.");
       }
-
-      await refetchArticleDisliked();
-      await refetchArticleByUser();
     } catch (err) {
-      // En cas d'erreur, remettre l'état précédent
       setUserArticleDislikes((prev) => ({
         ...prev,
         [articleId]: !userArticleDislikes[articleId],
@@ -361,12 +379,9 @@ const MyProfilePage = () => {
 
       if (response.data?.deleteArticle?.success) {
         showArticleDeletedToast();
-        await refetchArticleByUser();
-        console.log("Article supprimé avec succès !");
       } else {
         console.error(
-          response?.data?.deleteArticle?.message ||
-            "Echec de la suppression de l'article."
+          response?.data?.deleteArticle?.message || "Echec de la suppression",
         );
       }
     } catch (err) {
@@ -383,12 +398,10 @@ const MyProfilePage = () => {
     navigate(`/publications/${articleId}?edit=true`);
   };
 
-  // Effet pour rafraîchir les données quand on revient sur la page
   useEffect(() => {
-    // Rafraîchir les articles de l'utilisateur quand la page est affichée
     refetchArticleByUser();
     refetchArticleDisliked();
-  }, [location.pathname]);
+  }, [location.pathname, refetchArticleByUser, refetchArticleDisliked]);
 
   const handlePostClick = (articleId: string) => {
     setSelectedArticle(articleId);
@@ -400,7 +413,6 @@ const MyProfilePage = () => {
       return;
     }
 
-    // Données d'objet avec toutes les infos du user
     const userData = {
       profile: {
         id: user.id,
@@ -420,20 +432,17 @@ const MyProfilePage = () => {
         totalComments: article.TotalComments,
       })),
       dislikes: dislikesByUser
-        ? dislikesByUser
-            .filter((dislike) => dislike?.article)
-            .map((dislike) => ({
-              articleId: dislike?.article?.id,
-              articleTitle: dislike?.article?.title,
-              articleAuthor: dislike?.article?.author.username,
-              createdAt: dislike?.article?.createdAt,
-            }))
-        : [],
+        .filter((dislike) => dislike?.article)
+        .map((dislike) => ({
+          articleId: dislike?.article?.id,
+          articleTitle: dislike?.article?.title,
+          articleAuthor: dislike?.article?.author.username,
+          createdAt: dislike?.article?.createdAt,
+        })),
     };
 
     const jsonData = JSON.stringify(userData, null, 2);
     const blob = new Blob([jsonData], { type: "application/json" });
-
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -441,7 +450,6 @@ const MyProfilePage = () => {
       new Date().toISOString().split("T")[0]
     }.json`;
     link.click();
-
     URL.revokeObjectURL(url);
     toast.success("Données exportées avec succès !");
   };
@@ -451,7 +459,6 @@ const MyProfilePage = () => {
     navigate(`/profile?tab=${tab}`, { replace: true });
   };
 
-  // Fonction pour partager un article
   const handleShareArticle = async (e: React.MouseEvent, articleId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -461,7 +468,6 @@ const MyProfilePage = () => {
     const shareText = "Rejoignez la discussion sur cet article intéressant!";
 
     try {
-      // Vérifier si l'API Web Share est disponible
       if (navigator.share) {
         await navigator.share({
           title: shareTitle,
@@ -469,7 +475,6 @@ const MyProfilePage = () => {
           url: shareUrl,
         });
       } else {
-        // Fallback: copier le lien dans le presse-papier
         await navigator.clipboard.writeText(shareUrl);
         toast.success("Lien copié dans le presse-papier!");
       }
@@ -481,58 +486,6 @@ const MyProfilePage = () => {
 
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      {/* Badge TOP 1 cumulé au-dessus du header profil, si l'utilisateur est top 1 */}
-      {isTop1 && (
-        <div className="flex justify-center mb-3">
-          <span
-            className="flex flex-col items-center gap-0.5 px-4 py-1 rounded-full shadow-lg border-2 font-bold text-xs sm:text-sm animate-pulse"
-            style={{
-              background: top1BadgeColor || "#FFD600",
-              color: top1BadgeColor ? "#222" : "#7c5700",
-              borderColor: top1BadgeColor || "#FFD600",
-              minWidth: 0,
-              maxWidth: "90vw",
-            }}
-            aria-label="Badge TOP 1 personnalisé"
-          >
-            <span className="flex items-center gap-1">
-              {/* Icône Lucide React selon le preset */}
-              {top1BadgePreset === "crown" ? (
-                <Crown
-                  className="h-4 w-4 text-yellow-700"
-                  aria-label="Couronne"
-                />
-              ) : top1BadgePreset === "flame" ? (
-                <Flame className="h-4 w-4 text-red-500" aria-label="Flamme" />
-              ) : top1BadgePreset === "star" ? (
-                <Star className="h-4 w-4 text-yellow-400" aria-label="Étoile" />
-              ) : top1BadgePreset === "trophy" ? (
-                <Trophy
-                  className="h-4 w-4 text-yellow-700"
-                  aria-label="Trophée"
-                />
-              ) : (
-                <Trophy
-                  className="h-4 w-4 text-yellow-700"
-                  aria-label="Trophée"
-                />
-              )}
-              <span className="truncate font-semibold text-base sm:text-lg">
-                {top1BadgeMessage?.trim() ? top1BadgeMessage : "TOP 1"}
-              </span>
-            </span>
-            {/* Affiche 'TOP 1' en petit sous le message custom si présent */}
-            {top1BadgeMessage?.trim() && (
-              <span
-                className="text-[10px] sm:text-xs font-bold tracking-wide mt-0.5 opacity-80"
-                style={{ letterSpacing: "0.04em" }}
-              >
-                TOP 1
-              </span>
-            )}
-          </span>
-        </div>
-      )}
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -547,14 +500,12 @@ const MyProfilePage = () => {
             </Suspense>
           ) : (
             <motion.div
-              whileHover={{
-                scale: 1.05,
-              }}
+              whileHover={{ scale: 1.05 }}
               className="w-32 h-32 rounded-full bg-purple-900 flex items-center justify-center relative cursor-pointer group"
               onClick={() => setIsEditing(true)}
             >
               {renderUserIcon(userInfosData?.iconName, "large")}
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                 <p className="text-white text-sm text-center font-medium">
                   Cliquez pour modifier
                 </p>
@@ -596,69 +547,6 @@ const MyProfilePage = () => {
                   />
                 </div>
                 {error && <div className="text-red-400 text-sm">{error}</div>}
-                {/* Personnalisation badge TOP 1 : visible uniquement pour le top 1, sous le username */}
-                {isTop1 && (
-                  <div className="space-y-2 border-t border-purple-800 pt-4 mt-2">
-                    <div>
-                      <label className="block text-sm font-medium text-yellow-400 mb-1">
-                        Personnalisation du badge TOP 1
-                      </label>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">
-                        Message personnalisé
-                      </label>
-                      <input
-                        type="text"
-                        value={top1BadgeMessage}
-                        onChange={(e) => setTop1BadgeMessage(e.target.value)}
-                        maxLength={32}
-                        className="w-full bg-gray-800 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-900"
-                        placeholder="Ex: Roi du chaos"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">
-                        Couleur du badge
-                      </label>
-                      <input
-                        type="color"
-                        value={top1BadgeColor || "#FFD600"}
-                        onChange={(e) => setTop1BadgeColor(e.target.value)}
-                        className="w-12 h-8 p-0 border-0 bg-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">
-                        Badge prédéfini
-                      </label>
-                      <select
-                        value={top1BadgePreset}
-                        onChange={(e) => setTop1BadgePreset(e.target.value)}
-                        className="{w-full bg-gray-800 text-white p-2 rounded-lg"
-                      >
-                        <option value="">Aucun</option>
-                        <option value="crown">Couronne</option>
-                        <option value="trophy">Trophée</option>
-                        <option value="flame">Flamme</option>
-                        <option value="star">Étoile</option>
-                      </select>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <button
-                        type="button"
-                        className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-500"
-                        onClick={() => {
-                          setTop1BadgeMessage("");
-                          setTop1BadgeColor("");
-                          setTop1BadgePreset("");
-                        }}
-                      >
-                        Réinitialiser
-                      </button>
-                    </div>
-                  </div>
-                )}
                 <div className="flex justify-end space-x-2 sm:space-x-3">
                   <button
                     onClick={cancelEditing}
@@ -667,7 +555,6 @@ const MyProfilePage = () => {
                     <X className="h-3 sm:h-4 w-3 sm:w-4 mr-1" />
                     Annuler
                   </button>
-
                   <button
                     onClick={handleSaveProfile}
                     disabled={updating}
@@ -684,9 +571,8 @@ const MyProfilePage = () => {
               </div>
             ) : (
               <>
-                <h1 className="text-3xl font-bold text-purple-400 mb-2 flex items-center justify-center md:justify-start">
+                <h1 className="text-3xl font-bold text-purple-400 mb-2">
                   {username}
-                  {/* SUPPRESSION du badge ici pour éviter la redondance */}
                 </h1>
                 <p className="text-gray-500 mb-4">
                   Membre depuis{" "}
@@ -696,12 +582,11 @@ const MyProfilePage = () => {
                         {
                           month: "short",
                           year: "numeric",
-                        }
+                        },
                       )
                     : "?"}
                 </p>
                 <p className="text-gray-300 mb-6 max-w-2xl">{bio}</p>
-                {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-gray-400">
                   <div className="flex items-center space-x-2 hover:text-purple-400">
                     <MessageSquare className="h-5 w-5" />
@@ -720,7 +605,6 @@ const MyProfilePage = () => {
                     </span>
                   </div>
                 </div>
-                {/* Edit Profile Button */}{" "}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -732,7 +616,7 @@ const MyProfilePage = () => {
                 </motion.button>
               </>
             )}
-          </div>{" "}
+          </div>
           {/* Actions */}
           <div className="flex md:flex-col gap-2 sm:gap-3">
             <motion.button
@@ -761,7 +645,8 @@ const MyProfilePage = () => {
             </motion.button>
           </div>
         </div>
-      </motion.div>{" "}
+      </motion.div>
+
       {/* Tabs */}
       <div className="mt-8 border-b border-purple-900">
         <nav className="flex justify-center md:justify-between w-full mx-auto overflow-x-auto">
@@ -769,7 +654,7 @@ const MyProfilePage = () => {
             className={`px-3 sm:px-6 py-3 text-center flex-1 whitespace-nowrap transition-all duration-200 ${
               activeTab === "publications"
                 ? "text-purple-400 border-b-2 border-purple-500 font-medium"
-                : "text-gray-500 hover:text-gray-300 "
+                : "text-gray-500 hover:text-gray-300"
             }`}
             onClick={() => handleTabChange("publications")}
           >
@@ -777,12 +662,12 @@ const MyProfilePage = () => {
               <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
               Publications
             </span>
-          </button>{" "}
+          </button>
           <button
             className={`px-3 sm:px-6 py-3 text-center flex-1 whitespace-nowrap transition-all duration-200 ${
               activeTab === "dislikes"
                 ? "text-purple-400 border-b-2 border-purple-500 font-medium"
-                : "text-gray-500 hover:text-gray-300 "
+                : "text-gray-500 hover:text-gray-300"
             }`}
             onClick={() => handleTabChange("dislikes")}
           >
@@ -795,7 +680,7 @@ const MyProfilePage = () => {
             className={`px-3 sm:px-6 py-3 text-center flex-1 whitespace-nowrap transition-all duration-200 ${
               activeTab === "statistiques"
                 ? "text-purple-400 border-b-2 border-purple-500 font-medium"
-                : "text-gray-500 hover:text-gray-300 "
+                : "text-gray-500 hover:text-gray-300"
             }`}
             onClick={() => handleTabChange("statistiques")}
           >
@@ -806,11 +691,12 @@ const MyProfilePage = () => {
           </button>
         </nav>
       </div>
+
       {/* Feed */}
       <div className="mt-8 space-y-6">
         {activeTab === "publications" && (
           <div className="space-y-6 mt-4">
-            {articleByUserData && articleByUserData.length > 0 ? (
+            {articleByUserData?.length > 0 ? (
               articleByUserData.map((article) => (
                 <motion.div
                   key={article.id}
@@ -820,10 +706,6 @@ const MyProfilePage = () => {
                   whileHover={{
                     scale: 1.05,
                     boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
-                    transition: {
-                      duration: 0.2,
-                      ease: "easeOut",
-                    },
                   }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handlePostClick(article.id)}
@@ -833,37 +715,26 @@ const MyProfilePage = () => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-purple-900 flex items-center justify-center">
                         {renderUserIcon(userInfosData?.iconName, "small")}
-                      </div>{" "}
+                      </div>
                       <p className="text-gray-500 text-sm">
-                        {(() => {
-                          const date = article?.updatedAt || article?.createdAt;
-                          if (!date) return null;
-
-                          const formatted = new Date(parseInt(date, 10))
-                            .toLocaleString("fr-FR", {
-                              year: "numeric",
-                              month: "numeric",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                            .replace(" ", " à ");
-
-                          return `Publié le ${formatted}${
-                            article?.updatedAt ? " (modifié)" : ""
-                          }`;
-                        })()}
+                        {article?.updatedAt || article?.createdAt
+                          ? `Publié le ${formatDateLong(
+                              article?.updatedAt || article?.createdAt!,
+                            ).replace(
+                              " ",
+                              " à ",
+                            )}${article?.updatedAt ? " (modifié)" : ""}`
+                          : null}
                       </p>
                     </div>
 
-                    {/* Menu button with dropdown */}
                     <div className="relative">
                       <button
                         className="text-gray-500 hover:text-purple-400"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowMenu(
-                            article.id === showMenu ? null : article.id
+                            article.id === showMenu ? null : article.id,
                           );
                         }}
                       >
@@ -919,14 +790,13 @@ const MyProfilePage = () => {
                         __html: highlightMentions(article.content || ""),
                       }}
                     />
-                    {/* Ajout de l'affichage de l'image si elle existe */}
                     {article.imageUrl && (
                       <div className="mb-6 rounded-lg overflow-hidden">
                         <picture>
                           <source
                             srcSet={article.imageUrl.replace(
                               /\.(jpg|jpeg|png)$/i,
-                              ".webp"
+                              ".webp",
                             )}
                             type="image/webp"
                           />
@@ -939,7 +809,6 @@ const MyProfilePage = () => {
                         </picture>
                       </div>
                     )}
-                    {/* Ajout de l'affichage de la vidéo si elle existe */}
                     {article.videoUrl && (
                       <div className="mb-6 rounded-lg overflow-hidden">
                         <video
@@ -954,18 +823,9 @@ const MyProfilePage = () => {
                           preload="metadata"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Lire/pauser la vidéo quand on clique dessus
                             const target = e.target as HTMLVideoElement;
                             if (target.tagName === "VIDEO") {
-                              if (!target.paused) {
-                                target.pause();
-                              } else {
-                                target
-                                  .play()
-                                  .catch((err) =>
-                                    console.error("Erreur de lecture:", err)
-                                  );
-                              }
+                              target.paused ? target.play() : target.pause();
                             }
                           }}
                         >
@@ -974,9 +834,9 @@ const MyProfilePage = () => {
                         </video>
                       </div>
                     )}
-                  </div>{" "}
+                  </div>
                   <div className="flex items-center justify-between text-gray-500 border-t border-gray-800 pt-4">
-                    <div className="flex items-center space-x-2 sm:space-x-6 text-gray-500">
+                    <div className="flex items-center space-x-2 sm:space-x-6">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
@@ -1012,13 +872,13 @@ const MyProfilePage = () => {
               <p className="text-gray-500">Aucune publication trouvée.</p>
             )}
           </div>
-        )}{" "}
+        )}
+
         {selectedArticle && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4"
             style={{ margin: 0 }}
           >
-            {" "}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1042,11 +902,11 @@ const MyProfilePage = () => {
               </div>
             </motion.div>
           </div>
-        )}{" "}
-        {/* Onglet Dislikes */}
+        )}
+
         {activeTab === "dislikes" && (
           <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4">
-            {dislikesByUser && dislikesByUser.length > 0 ? (
+            {dislikesByUser?.length > 0 ? (
               dislikesByUser
                 .filter((dislike) => dislike?.article)
                 .map((dislike) => (
@@ -1058,10 +918,6 @@ const MyProfilePage = () => {
                     whileHover={{
                       scale: 1.05,
                       boxShadow: "0px 0px 15px rgba(128, 0, 128, 0.7)",
-                      transition: {
-                        duration: 0.2,
-                        ease: "easeOut",
-                      },
                     }}
                     whileTap={{ scale: 0.98 }}
                     className="bg-gray-900 rounded-lg p-2 sm:p-6 border border-purple-900 hover:border-purple-700 transition-colors flex flex-col"
@@ -1090,15 +946,11 @@ const MyProfilePage = () => {
                           title={`Voir le profil de ${dislike?.article?.author.username}`}
                         >
                           {dislike?.article?.author.username}
-                        </button>{" "}
+                        </button>
                         <p className="text-gray-500 text-sm">
-                          {new Date(parseInt(dislike?.article?.createdAt!, 10))
-                            .toLocaleString("fr-FR", {
-                              year: "2-digit",
-                              month: "2-digit",
-                              day: "2-digit",
-                            })
-                            .replace(" ", " à ")}
+                          {formatDateShort(
+                            dislike?.article?.createdAt!,
+                          ).replace(" ", " à ")}
                         </p>
                       </div>
                     </div>
@@ -1108,7 +960,7 @@ const MyProfilePage = () => {
                           className="text-xl font-semibold text-purple-400 mb-2"
                           dangerouslySetInnerHTML={{
                             __html: highlightMentions(
-                              dislike?.article?.title || ""
+                              dislike?.article?.title || "",
                             ),
                           }}
                         />
@@ -1117,18 +969,17 @@ const MyProfilePage = () => {
                         className="text-gray-300 text-lg mb-6 whitespace-pre-wrap flex-grow"
                         dangerouslySetInnerHTML={{
                           __html: highlightMentions(
-                            dislike?.article?.content || ""
+                            dislike?.article?.content || "",
                           ),
                         }}
                       />
-                      {/* Ajout de l'affichage de l'image si elle existe */}
                       {dislike?.article?.imageUrl && (
                         <div className="mb-4 rounded-lg overflow-hidden">
                           <picture>
                             <source
                               srcSet={dislike.article.imageUrl.replace(
                                 /\.(jpg|jpeg|png)$/i,
-                                ".webp"
+                                ".webp",
                               )}
                               type="image/webp"
                             />
@@ -1153,7 +1004,6 @@ const MyProfilePage = () => {
                           <ThumbsDown className="w-4 h-4 sm:h-5 sm:w-5" />
                           <span>Disliké</span>
                         </motion.button>
-
                         <button
                           className="hidden sm:flex items-center space-x-2 hover:text-purple-400"
                           onClick={(e) =>
@@ -1171,10 +1021,10 @@ const MyProfilePage = () => {
               <p className="text-gray-500">Aucun article disliké.</p>
             )}
           </div>
-        )}{" "}
+        )}
+
         {activeTab === "statistiques" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8">
-            {/* Première carte: Activité totale */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1209,7 +1059,6 @@ const MyProfilePage = () => {
               </div>
             </motion.div>
 
-            {/* Deuxième carte: Engagement */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1225,13 +1074,11 @@ const MyProfilePage = () => {
               <p className="text-gray-400 text-xs mb-4">
                 <span className="block mb-1">
                   <strong>Taux d'engagement</strong> = dislikes reçus /
-                  publications (mesure la moyenne de dislikes reçus par
-                  publication).
+                  publications
                 </span>
                 <span>
                   <strong>Quotient de haine</strong> = dislikes donnés /
-                  publications (mesure la moyenne de dislikes que tu as donnés
-                  par publication).
+                  publications
                 </span>
               </p>
               <div className="space-y-4">
@@ -1255,7 +1102,6 @@ const MyProfilePage = () => {
               </div>
             </motion.div>
 
-            {/* Troisième carte: Dernière activité */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1272,9 +1118,9 @@ const MyProfilePage = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Dernière publication</span>
                   <span className="text-purple-400 font-semibold">
-                    {articleByUserData && articleByUserData.length > 0
+                    {articleByUserData?.length > 0
                       ? new Date(
-                          parseInt(articleByUserData[0].createdAt)
+                          parseInt(articleByUserData[0].createdAt),
                         ).toLocaleDateString()
                       : "Aucune"}
                   </span>
@@ -1283,7 +1129,7 @@ const MyProfilePage = () => {
                   <span className="text-gray-400">Membre depuis</span>
                   <span className="text-purple-400 font-semibold">
                     {new Date(
-                      userInfosData?.createdAt || Date.now()
+                      userInfosData?.createdAt || Date.now(),
                     ).toLocaleDateString()}
                   </span>
                 </div>
@@ -1293,9 +1139,9 @@ const MyProfilePage = () => {
                     {Math.floor(
                       (Date.now() -
                         new Date(
-                          userInfosData?.createdAt || Date.now()
+                          userInfosData?.createdAt || Date.now(),
                         ).getTime()) /
-                        (1000 * 60 * 60 * 24)
+                        86400000,
                     )}
                   </span>
                 </div>

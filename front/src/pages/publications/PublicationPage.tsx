@@ -305,14 +305,26 @@ function PublicationPage() {
         // Indique que le rafraîchissement est en cours
         setIsRefreshing(true);
 
-        // Rafraîchir uniquement les articles récents
-        await refetchArticles();
+        // Rafraîchir les articles récents avec les variables
+        await refetchArticles({
+          limit: ARTICLES_PER_PAGE,
+          offset: 0,
+        });
+
+        // Réinitialiser les offsets
+        setOffsetRecent(0);
+        setHasMoreRecent(true);
 
         // Rafraîchir les articles les plus dislikés seulement si nécessaire
         if (sortOption === "unpopular") {
           setTimeout(() => {
-            refetechMostDislikedArticles();
-          }, 1000);
+            refetechMostDislikedArticles({
+              limit: ARTICLES_PER_PAGE,
+              offset: 0,
+            });
+            setOffsetDisliked(0);
+            setHasMoreDisliked(true);
+          }, 500);
         }
 
         // Indiquer que le rafraîchissement est terminé

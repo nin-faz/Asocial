@@ -34,7 +34,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
       // Vérifiez la taille du fichier (limite à 8 MB)
       if (file.size > 8 * 1024 * 1024) {
         alert(
-          "L'image est trop grande. Veuillez sélectionner une image de moins de 8 MB."
+          "L'image est trop grande. Veuillez sélectionner une image de moins de 8 MB.",
         );
         return;
       }
@@ -54,7 +54,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         const webpFile = new File(
           [compressedFile],
           compressedFile.name.replace(/\.(jpe?g|png|gif)$/i, ".webp"),
-          { type: "image/webp" }
+          { type: "image/webp" },
         );
         const uploadedUrl = await imageUpload(webpFile);
 
@@ -71,7 +71,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         setLoading(false);
       }
     },
-    [onImageChange, onVideoChange, videoUrl]
+    [onImageChange, onVideoChange, videoUrl],
   );
 
   const processVideoFile = useCallback(
@@ -85,7 +85,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
       // Vérifiez la taille du fichier (limite à 50 MB)
       if (file.size > 50 * 1024 * 1024) {
         alert(
-          "La vidéo est trop grande. Veuillez sélectionner une vidéo de moins de 50 MB."
+          "La vidéo est trop grande. Veuillez sélectionner une vidéo de moins de 50 MB.",
         );
         return;
       }
@@ -107,7 +107,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         setLoading(false);
       }
     },
-    [onVideoChange, onImageChange, imageUrl]
+    [onVideoChange, onImageChange, imageUrl],
   );
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,7 +172,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         }
       }
     },
-    [processImageFile, processVideoFile]
+    [processImageFile, processVideoFile],
   );
 
   // Support pour le presse-papier (coller)
@@ -191,7 +191,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         }
       }
     },
-    [processImageFile]
+    [processImageFile],
   );
 
   return (

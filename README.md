@@ -64,13 +64,15 @@ Les **Bubbles** sont des salons de discussion créés dynamiquement pour des con
 - **TailwindCSS** — Styling
 - **React Router v7** — Navigation
 - **Framer Motion** — Animations
-- **Supabase Storage** — Stockage des vidéos/images uploadées
+- **Cloudinary** — Upload et stockage des vidéos
+- **ImgBB** — Stockage des images uploadées
 
 ### Hébergement
 - **Frontend** → Netlify (`https://asocial-network.netlify.app`)
 - **Backend** → Google Cloud Run (Docker)
 - **Base de données** → Supabase PostgreSQL
-- **Storage** → Supabase Storage
+- **Storage images** → ImgBB (i.ibb)
+- **Upload vidéos** → Cloudinary
 
 ---
 
@@ -162,6 +164,10 @@ VITE_API_URL=https://asocial-backend-3fc3.run.app
 # Supabase Storage
 VITE_SUPABASE_URL=https://[ref].supabase.co
 VITE_SUPABASE_ANON_KEY=votre_anon_key
+
+# Cloudinary (upload videos)
+VITE_CLOUDINARY_CLOUD_NAME=votre_cloud_name
+VITE_CLOUDINARY_API_KEY=votre_api_key
 ```
 
 > Les URLs Supabase se trouvent dans **Settings → API** de ton projet Supabase.

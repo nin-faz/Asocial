@@ -1,23 +1,33 @@
-import { supabase } from "./supabaseClient";
-
-// Upload a video file to Supabase Storage and return its public URL
 export async function videoUpload(file: File): Promise<string | null> {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${fileExt}`;
-  const filePath = `videos/${fileName}`;
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
-  const { error: uploadError } = await supabase.storage
-    .from("videos")
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
-  if (uploadError) {
-    console.error("Supabase video upload error:", uploadError.message);
+  if (!cloudName) {
+    console.error("Missing Cloudinary cloud name");
     return null;
   }
 
-  const { data } = supabase.storage.from("videos").getPublicUrl(filePath);
-  if (!data.publicUrl) {
-    console.error("Supabase getPublicUrl returned no URL");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "asocial_videos"); // ← Change-moi dans Cloudinary si c'est différent
+
+  try {
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Cloudinary upload failed:", await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Video upload error:", error);
     return null;
   }
-  return data.publicUrl;
 }

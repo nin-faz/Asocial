@@ -763,6 +763,7 @@ const PublicationDetailsPage = ({
         setIsEditing(false);
         showArticleUpdatedToast();
         refetchArticleData();
+        navigate("/publications");
       } else {
         console.error(
           response?.data?.updateArticle?.message ||

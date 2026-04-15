@@ -105,6 +105,13 @@ function PublicationPage() {
   });
   const articles = data?.findArticles || [];
 
+  // Détecte si on a moins d'articles que la limite et désactive le loader
+  useEffect(() => {
+    if (articles.length < ARTICLES_PER_PAGE && offsetRecent === 0) {
+      setHasMoreRecent(false);
+    }
+  }, [articles.length]);
+
   const {
     data: mostDislikedArticles,
     loading: mostDislikedLoading,
@@ -305,40 +312,45 @@ function PublicationPage() {
         // Indique que le rafraîchissement est en cours
         setIsRefreshing(true);
 
-        // Rafraîchir les articles récents avec les variables
-        await refetchArticles({
-          limit: ARTICLES_PER_PAGE,
-          offset: 0,
-        });
+        try {
+          // Rafraîchir les articles récents avec network-only pour forcer le serveur
+          const refetchResult = await refetchArticles({
+            limit: ARTICLES_PER_PAGE,
+            offset: 0,
+          });
 
-        // Réinitialiser les offsets
-        setOffsetRecent(0);
-        setHasMoreRecent(true);
+          console.log("Refetch result:", refetchResult);
+          console.log("Articles après refetch:", refetchResult.data?.findArticles);
 
-        // Rafraîchir les articles les plus dislikés seulement si nécessaire
-        if (sortOption === "unpopular") {
-          setTimeout(() => {
-            refetechMostDislikedArticles({
+          // Réinitialiser les offsets
+          setOffsetRecent(0);
+          setHasMoreRecent(true);
+
+          // Rafraîchir les articles les plus dislikés seulement si nécessaire
+          if (sortOption === "unpopular") {
+            await refetechMostDislikedArticles({
               limit: ARTICLES_PER_PAGE,
               offset: 0,
             });
             setOffsetDisliked(0);
             setHasMoreDisliked(true);
-          }, 500);
+          }
+
+          showArticleCreatedToast();
+          console.log("Article créé avec succès !");
+        } catch (refetchError) {
+          console.error("Erreur lors du refetch:", refetchError);
+          toast.error("Erreur lors de l'actualisation des articles");
+        } finally {
+          setIsRefreshing(false);
+          setTempArticleId(null);
+          setTempArticleData({
+            title: "",
+            content: "",
+            imageUrl: null,
+            videoUrl: null,
+          });
         }
-
-        // Indiquer que le rafraîchissement est terminé
-        setIsRefreshing(false);
-        setTempArticleId(null);
-        setTempArticleData({
-          title: "",
-          content: "",
-          imageUrl: null,
-          videoUrl: null,
-        });
-
-        showArticleCreatedToast();
-        console.log("Article créé avec succès !");
       } else {
         console.error(
           response?.data?.createArticle?.message ??
@@ -403,9 +415,21 @@ function PublicationPage() {
 
       if (response.data?.deleteArticle?.success) {
         if (sortOption === "unpopular") {
-          await refetechMostDislikedArticles();
+          const result = await refetechMostDislikedArticles({
+            limit: ARTICLES_PER_PAGE,
+            offset: 0,
+          });
+          const count = result.data?.findArticleByMostDisliked?.length ?? 0;
+          if (count < ARTICLES_PER_PAGE) setHasMoreDisliked(false);
+          setOffsetDisliked(0);
         } else {
-          await refetchArticles();
+          const result = await refetchArticles({
+            limit: ARTICLES_PER_PAGE,
+            offset: 0,
+          });
+          const count = result.data?.findArticles?.length ?? 0;
+          if (count < ARTICLES_PER_PAGE) setHasMoreRecent(false);
+          setOffsetRecent(0);
         }
         console.log("Article supprimé avec succès !");
       } else {

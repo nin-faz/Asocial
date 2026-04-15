@@ -21,12 +21,22 @@ export const CREATE_ARTICLE = graphql(`
         id
         title
         content
-        createdAt
+        imageUrl
         videoUrl
+        createdAt
         updatedAt
+        TotalDislikes
+        TotalComments
         author {
           id
           username
+          iconName
+        }
+        dislikes {
+          id
+          user {
+            id
+          }
         }
       }
     }

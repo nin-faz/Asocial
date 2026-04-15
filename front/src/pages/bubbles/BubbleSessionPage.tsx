@@ -32,6 +32,7 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
   const [isReady, setIsReady] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [newReply, setNewReply] = useState("");
+  const [isAnonymousMsg, setIsAnonymousMsg] = useState(false);
 
   const [addMessageMutation] = useMutation(ADD_MESSAGE_TO_BUBBLE);
 
@@ -50,7 +51,6 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
           y: Math.random() * (vh * 0.8) + vh * 0.1,
           vx: (Math.random() - 0.5) * 3,
           vy: (Math.random() - 0.5) * 3,
-          dislikes: m.dislikes,
           size: 60,
           color: COLORS[Math.floor(Math.random() * COLORS.length)],
           createdAt: new Date(m.createdAt),
@@ -394,6 +394,19 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
           <div className="text-right mb-2 text-gray-300 text-[9px] sm:text-[10px] md:text-xs">
             💬 Clique pour une animation et voir la suite du message
           </div>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="anonymousMsg"
+              checked={isAnonymousMsg}
+              onChange={(e) => setIsAnonymousMsg(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-600 cursor-pointer"
+            />
+            <label htmlFor="anonymousMsg" className="text-gray-300 text-xs cursor-pointer flex items-center gap-1">
+              <Skull size={12} className="text-purple-400" />
+              Envoyer anonymement
+            </label>
+          </div>
           <div className="flex gap-2 sm:gap-3">
             <input
               type="text"
@@ -402,7 +415,7 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
               onKeyPress={(e) => {
                 if (e.key === "Enter" && newReply.trim()) {
                   addMessageMutation({
-                    variables: { bubbleId: bubble.id, content: newReply },
+                    variables: { bubbleId: bubble.id, content: newReply, isAnonymous: isAnonymousMsg },
                     onCompleted: (data) => {
                       const newMsg: FloatingMessage = {
                         id: data.addMessageToBubble.id,
@@ -415,7 +428,6 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
                         y: Math.random() * window.innerHeight,
                         vx: (Math.random() - 0.5) * 2,
                         vy: (Math.random() - 0.5) * 2,
-                        dislikes: 0,
                         size: 60,
                         color:
                           COLORS[Math.floor(Math.random() * COLORS.length)],
@@ -436,7 +448,7 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
               onClick={() => {
                 if (newReply.trim()) {
                   addMessageMutation({
-                    variables: { bubbleId: bubble.id, content: newReply },
+                    variables: { bubbleId: bubble.id, content: newReply, isAnonymous: isAnonymousMsg },
                     onCompleted: (data) => {
                       const newMsg: FloatingMessage = {
                         id: data.addMessageToBubble.id,
@@ -449,7 +461,6 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
                         y: Math.random() * window.innerHeight,
                         vx: (Math.random() - 0.5) * 2,
                         vy: (Math.random() - 0.5) * 2,
-                        dislikes: 0,
                         size: 60,
                         color:
                           COLORS[Math.floor(Math.random() * COLORS.length)],

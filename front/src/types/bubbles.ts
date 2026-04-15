@@ -7,7 +7,6 @@ export interface FloatingMessage {
   y: number;
   vx: number;
   vy: number;
-  dislikes: number;
   size: number;
   color: string;
   createdAt: Date;
@@ -35,7 +34,6 @@ export interface BubbleMessageData {
   content: string;
   isAnonymous: boolean;
   author: BubbleAuthor;
-  dislikes: number;
   createdAt: string;
 }
 

@@ -8,7 +8,7 @@ export const createArticle: NonNullable<
 > = async (
   _,
   { title, content, imageUrl, videoUrl },
-  { dataSources: { db }, user }
+  { dataSources: { db }, user },
 ) => {
   try {
     if (!user) {
@@ -82,24 +82,45 @@ export const createArticle: NonNullable<
       }
     }
 
+    // Fetch l'article complet avec tous les includes
+    const fullArticle = await db.article.findUnique({
+      where: { id: createdArticle.id },
+      include: {
+        author: true,
+        dislikes: { include: { user: { select: { id: true } } } },
+        _count: { select: { dislikes: true, comments: true } },
+      },
+    });
+
+    console.log("✅ ARTICLE CRÉÉ:", {
+      id: fullArticle?.id,
+      title: fullArticle?.title,
+      content: fullArticle?.content,
+      authorId: fullArticle?.authorId,
+      createdAt: fullArticle?.createdAt,
+      updatedAt: fullArticle?.updatedAt,
+    });
+
     return {
       code: 201,
       success: true,
       message: `Article has been created`,
-      article: {
-        id: createdArticle.id,
-        title: createdArticle.title,
-        content: createdArticle.content,
-        imageUrl: createdArticle.imageUrl,
-        videoUrl: createdArticle.videoUrl,
-        createdAt: createdArticle.createdAt,
-        authorId: user.id,
-        updatedAt: createdArticle.updatedAt,
-        author: {
-          id: user.id,
-          username: user.username,
-        },
-      },
+      article: fullArticle
+        ? {
+            id: fullArticle.id,
+            title: fullArticle.title,
+            content: fullArticle.content,
+            imageUrl: fullArticle.imageUrl,
+            videoUrl: fullArticle.videoUrl,
+            authorId: fullArticle.authorId,
+            author: fullArticle.author,
+            dislikes: fullArticle.dislikes as any,
+            TotalDislikes: fullArticle._count?.dislikes,
+            TotalComments: fullArticle._count?.comments,
+            createdAt: fullArticle.createdAt,
+            updatedAt: fullArticle.updatedAt,
+          }
+        : null,
     };
   } catch (error) {
     console.error("Error creating article:", error);

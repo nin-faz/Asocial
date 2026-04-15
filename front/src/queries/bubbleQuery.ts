@@ -20,7 +20,6 @@ export const GET_BUBBLES = graphql(`
           username
           iconName
         }
-        dislikes
         createdAt
       }
       createdAt
@@ -49,7 +48,6 @@ export const GET_BUBBLE_BY_ID = graphql(`
           username
           iconName
         }
-        dislikes
         createdAt
       }
       createdAt
@@ -69,7 +67,6 @@ export const GET_BUBBLE_MESSAGES = graphql(`
         username
         iconName
       }
-      dislikes
       createdAt
     }
   }

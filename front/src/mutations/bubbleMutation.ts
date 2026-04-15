@@ -24,7 +24,6 @@ export const CREATE_BUBBLE = graphql(`
             username
             iconName
           }
-          dislikes
           createdAt
         }
         createdAt
@@ -45,7 +44,6 @@ export const ADD_MESSAGE_TO_BUBBLE = graphql(`
         username
         iconName
       }
-      dislikes
       createdAt
     }
   }

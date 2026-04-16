@@ -41,6 +41,9 @@ function App() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
+  const isPublicationsRoute = pathname.startsWith("/publications");
+  const isPublicationDetail = /^\/publications\/[^/]+/.test(pathname);
+
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error("AuthContext is null");
@@ -105,6 +108,14 @@ function App() {
 
       {!pathname.match(/^\/bubbles\//) && <Header />}
       <div className="min-h-screen bg-black">
+        {/* Keep-alive: PublicationPage reste monté, caché quand on est sur le détail */}
+        {isPublicationsRoute && (
+          <div style={{ display: isPublicationDetail ? "none" : "block" }}>
+            <Suspense fallback={<Loader />}>
+              <PublicationPage isActive={!isPublicationDetail} />
+            </Suspense>
+          </div>
+        )}
         <Routes>
           {/* Routes publiques */}
           <Route
@@ -124,14 +135,6 @@ function App() {
             }
           />
           <Route
-            path="/publications/*"
-            element={
-              <Suspense fallback={<Loader />}>
-                <PublicationPage />
-              </Suspense>
-            }
-          />
-          <Route
             path="/reset-password"
             element={
               <Suspense fallback={<Loader />}>
@@ -147,6 +150,7 @@ function App() {
               </Suspense>
             }
           />
+          <Route path="/publications" element={null} />
           <Route
             path="/publications/:id"
             element={

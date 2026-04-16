@@ -182,6 +182,8 @@ export default function BubblesPage() {
     loading,
   } = useQuery(GET_BUBBLES, {
     variables: { limit: 20, offset: 0 },
+    fetchPolicy: "cache-and-network",
+    pollInterval: 10000,
   });
 
   // Create bubble mutation

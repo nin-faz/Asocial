@@ -818,7 +818,7 @@ const PublicationDetailsPage = ({
   // const top1User = top1Data?.getTop1User ?? null;
 
   return (
-    <main className="w-full max-w-2xl mx-auto px-4 py-8">
+    <main className="w-full max-w-2xl mx-auto px-4 py-8 overflow-x-hidden">
       {/* Back Button */}
 
       {!isModal && (
@@ -1431,7 +1431,7 @@ const PublicationDetailsPage = ({
                     {comment &&
                       comment.replies &&
                       comment.replies.length > 0 && (
-                        <div className="ml-8 mt-4 space-y-3">
+                        <div className="ml-4 sm:ml-8 mt-4 space-y-3 overflow-hidden">
                           <h4 className="text-purple-300 text-sm font-medium mb-2">
                             {comment.replies.length}{" "}
                             {comment.replies.length === 1

@@ -253,7 +253,6 @@ const Header = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
                         className="absolute right-0 mt-2 w-56 bg-gray-900 border border-purple-900 rounded-lg shadow-lg overflow-hidden z-50"
-                        ref={userMenuRef}
                       >
                         <div className="p-3 border-b border-gray-800">
                           <p className="text-purple-400 font-medium">
@@ -343,6 +342,7 @@ const Header = () => {
                           setShowMobileMenu(false);
                         }
                       }}
+                      onBlur={() => setTimeout(() => setShowMobileMenu(false), 150)}
                     />
                     <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
                   </div>

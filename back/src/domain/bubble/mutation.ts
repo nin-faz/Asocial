@@ -1,4 +1,6 @@
 import { MutationResolvers } from "../../types.js";
+import { io } from "../../index.js";
+import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
 type BubbleMutations = Pick<
   MutationResolvers,
@@ -95,6 +97,25 @@ export const bubbleMutations: BubbleMutations = {
       },
       include: { author: true },
     });
+
+    // Notifier le propriétaire de la bulle (sauf s'il est l'auteur du message)
+    if (bubble.authorId !== user.id) {
+      const senderName = isAnonymous ? "Quelqu'un" : message.author.username;
+      const notif = await db.notification.create({
+        data: {
+          type: "BUBBLE_MESSAGE",
+          message: `${senderName} a répondu dans votre bulle "${bubble.title.length > 30 ? bubble.title.slice(0, 30) + "..." : bubble.title}"`,
+          userId: bubble.authorId,
+          bubbleId: bubble.id,
+        },
+      });
+      io.to(bubble.authorId).emit("notification", { type: "BUBBLE_MESSAGE" });
+      await sendPushNotificationToUser(bubble.authorId, {
+        title: "Nouveau message dans votre bulle",
+        body: notif.message,
+        url: `/bubbles/${bubble.id}`,
+      });
+    }
 
     return transformMessage(message);
   },

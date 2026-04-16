@@ -6,14 +6,16 @@ import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js"
 
 export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
   _,
-  { content, userId, articleId, parentId },
-  { dataSources: { db } }
+  { content, articleId, parentId },
+  { dataSources: { db }, user },
 ) => {
+  if (!user) throw new Error("Unauthorized");
+
   try {
     const newComment = await db.comment.create({
       data: {
         content,
-        authorId: userId,
+        authorId: user.id,
         articleId,
         ...(parentId && { parentId }),
       },
@@ -61,13 +63,13 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
     await notifyTelegram(message);
 
     // Création de la notification pour l'auteur de l'article si ce n'est pas lui-même
-    if (!isReply && article && article.authorId !== userId) {
+    if (!isReply && article && article.authorId !== user.id) {
       const articleLabel =
         article.title && article.title.trim().length > 0
           ? article.title
           : article.content
-          ? article.content.slice(0, 30) + "..."
-          : "";
+            ? article.content.slice(0, 30) + "..."
+            : "";
       const notif = await db.notification.create({
         data: {
           type: "COMMENT",
@@ -95,13 +97,17 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
     }
 
     // Création de la notification pour l'auteur du commentaire parent si ce n'est pas lui-même
-    if (isReply && newComment.parent && newComment.parent.authorId !== userId) {
+    if (
+      isReply &&
+      newComment.parent &&
+      newComment.parent.authorId !== user.id
+    ) {
       const articleLabel =
         article && article.title && article.title.trim().length > 0
           ? article.title
           : article && article.content
-          ? article.content.slice(0, 30) + "..."
-          : "";
+            ? article.content.slice(0, 30) + "..."
+            : "";
       const notif = await db.notification.create({
         data: {
           type: "REPLY",
@@ -130,15 +136,15 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
     if (
       isReply &&
       article &&
-      article.authorId !== userId &&
+      article.authorId !== user.id &&
       (!newComment.parent || article.authorId !== newComment.parent.authorId)
     ) {
       const articleLabel =
         article.title && article.title.trim().length > 0
           ? article.title
           : article.content
-          ? article.content.slice(0, 30) + "..."
-          : "";
+            ? article.content.slice(0, 30) + "..."
+            : "";
       const notif = await db.notification.create({
         data: {
           type: "REPLY",

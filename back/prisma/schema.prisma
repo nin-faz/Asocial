@@ -98,8 +98,10 @@ model Notification {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   articleId   String?  // Lien optionnel vers un article
   commentId   String?  // Lien optionnel vers un commentaire
-  article     Article? @relation(fields: [articleId], references: [id])
-  comment     Comment? @relation(fields: [commentId], references: [id])
+  bubbleId    String?  // Lien optionnel vers une bulle
+  article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  bubble      Bubble?  @relation(fields: [bubbleId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isRead])
@@ -119,14 +121,15 @@ model PushSubscription {
 }
 
 model Bubble {
-  id          String   @id @default(uuid())
-  title       String
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  isAnonymous Boolean  @default(false)
-  messages    BubbleMessage[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String         @id @default(uuid())
+  title         String
+  authorId      String
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  isAnonymous   Boolean        @default(false)
+  messages      BubbleMessage[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([authorId])
   @@index([createdAt])
@@ -140,7 +143,6 @@ model BubbleMessage {
   bubbleId    String
   bubble      Bubble   @relation(fields: [bubbleId], references: [id], onDelete: Cascade)
   isAnonymous Boolean  @default(false)
-  dislikes    Int      @default(0)
   createdAt   DateTime @default(now())
 
   @@index([bubbleId])

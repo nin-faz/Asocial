@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   ThumbsDown,
   MessageSquare,
@@ -46,7 +46,7 @@ import getCaretCoordinates from "textarea-caret-position";
 // import { GET_TOP1_USER } from "../../queries/userQuery";
 // import { BadgeTop1, BadgePreset } from "../../components/BadgeTop1";
 
-function PublicationPage() {
+function PublicationPage({ isActive = true }: { isActive?: boolean }) {
   const authContext = useContext(AuthContext);
   if (!authContext) {
     throw new Error("AuthContext is null");
@@ -54,7 +54,6 @@ function PublicationPage() {
 
   const { token, user } = authContext;
   const navigate = useNavigate();
-  const location = useLocation();
 
   // État pour afficher/masquer le bouton de retour en haut
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -93,6 +92,7 @@ function PublicationPage() {
   const [offsetDisliked, setOffsetDisliked] = useState(0);
   const [hasMoreRecent, setHasMoreRecent] = useState(true);
   const [hasMoreDisliked, setHasMoreDisliked] = useState(true);
+  const isFetchingMoreRef = useRef(false);
 
   const {
     data,
@@ -107,10 +107,14 @@ function PublicationPage() {
 
   // Détecte si on a moins d'articles que la limite et désactive le loader
   useEffect(() => {
-    if (articles.length < ARTICLES_PER_PAGE && offsetRecent === 0) {
+    if (
+      !articlesLoading &&
+      offsetRecent === 0 &&
+      articles.length < ARTICLES_PER_PAGE
+    ) {
       setHasMoreRecent(false);
     }
-  }, [articles.length]);
+  }, [articles.length, articlesLoading]);
 
   const {
     data: mostDislikedArticles,
@@ -122,6 +126,16 @@ function PublicationPage() {
     fetchPolicy: "cache-and-network",
   });
   const mostDisliked = mostDislikedArticles?.findArticleByMostDisliked || [];
+
+  useEffect(() => {
+    if (
+      !mostDislikedLoading &&
+      offsetDisliked === 0 &&
+      mostDisliked.length < ARTICLES_PER_PAGE
+    ) {
+      setHasMoreDisliked(false);
+    }
+  }, [mostDisliked.length, mostDislikedLoading]);
 
   type ArticleType = NonNullable<
     NonNullable<FindArticlesQuery["findArticles"]>[number]
@@ -164,34 +178,52 @@ function PublicationPage() {
   // Scroll infini réel : fetchMore au scroll
   useEffect(() => {
     const handleScroll = () => {
-      if (!hasMore || articlesLoading || mostDislikedLoading) return;
+      if (
+        !isActive ||
+        !hasMore ||
+        articlesLoading ||
+        mostDislikedLoading ||
+        isFetchingMoreRef.current
+      )
+        return;
       const scrollPosition = window.innerHeight + window.scrollY;
       const threshold = document.body.offsetHeight - 800;
       if (scrollPosition < threshold) return;
+
+      isFetchingMoreRef.current = true;
 
       if (sortOption === "recent") {
         const newOffset = offsetRecent + ARTICLES_PER_PAGE;
         setOffsetRecent(newOffset);
         fetchMoreRecent({
           variables: { limit: ARTICLES_PER_PAGE, offset: newOffset },
-        }).then(({ data: newData }) => {
-          const count = newData?.findArticles?.length ?? 0;
-          if (count < ARTICLES_PER_PAGE) setHasMoreRecent(false);
-        });
+        })
+          .then(({ data: newData }) => {
+            const count = newData?.findArticles?.length ?? 0;
+            if (count < ARTICLES_PER_PAGE) setHasMoreRecent(false);
+          })
+          .finally(() => {
+            isFetchingMoreRef.current = false;
+          });
       } else {
         const newOffset = offsetDisliked + ARTICLES_PER_PAGE;
         setOffsetDisliked(newOffset);
         fetchMoreDisliked({
           variables: { limit: ARTICLES_PER_PAGE, offset: newOffset },
-        }).then(({ data: newData }) => {
-          const count = newData?.findArticleByMostDisliked?.length ?? 0;
-          if (count < ARTICLES_PER_PAGE) setHasMoreDisliked(false);
-        });
+        })
+          .then(({ data: newData }) => {
+            const count = newData?.findArticleByMostDisliked?.length ?? 0;
+            if (count < ARTICLES_PER_PAGE) setHasMoreDisliked(false);
+          })
+          .finally(() => {
+            isFetchingMoreRef.current = false;
+          });
       }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [
+    isActive,
     hasMore,
     sortOption,
     offsetRecent,
@@ -320,7 +352,10 @@ function PublicationPage() {
           });
 
           console.log("Refetch result:", refetchResult);
-          console.log("Articles après refetch:", refetchResult.data?.findArticles);
+          console.log(
+            "Articles après refetch:",
+            refetchResult.data?.findArticles,
+          );
 
           // Réinitialiser les offsets
           setOffsetRecent(0);
@@ -450,69 +485,22 @@ function PublicationPage() {
     }
   };
 
-  // Restauration du scroll APRÈS que la page soit assez longue
-  const hasRestoredScroll = useRef(false);
-  const [isRestoringScroll, setIsRestoringScroll] = useState(false);
+  // Keep-alive scroll save/restore
+  const savedScrollYRef = useRef(0);
   useEffect(() => {
-    const scrollY =
-      location.state?.scrollY ??
-      Number(sessionStorage.getItem("publicationScroll"));
-    if (
-      !hasRestoredScroll.current &&
-      typeof scrollY === "number" &&
-      scrollY > 0
-    ) {
-      setIsRestoringScroll(true);
-      // Masque le scroll pendant la restauration
-      document.body.style.overflow = "hidden";
-      const tryRestore = () => {
-        const maxScroll = document.body.scrollHeight - window.innerHeight;
-        if (maxScroll >= scrollY || !hasMore) {
-          window.scrollTo(0, scrollY);
-          hasRestoredScroll.current = true;
-          sessionStorage.removeItem("publicationScroll");
-          setTimeout(() => {
-            setIsRestoringScroll(false);
-            document.body.style.overflow = "";
-            navigate("/publications", { replace: true, state: {} });
-          }, 0);
-        } else {
-          setTimeout(tryRestore);
-        }
-      };
-      tryRestore();
-      return () => {
-        document.body.style.overflow = "";
-      };
-    } else {
-      setIsRestoringScroll(false);
-      document.body.style.overflow = "";
+    if (isActive && savedScrollYRef.current > 0) {
+      const y = savedScrollYRef.current;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, y);
+        });
+      });
     }
-  }, [location.state, hasMore, filteredArticles.length, navigate]);
-
-  // Correction : forcer le scroll à la position 1px au chargement si une restauration est attendue
-  useEffect(() => {
-    const scrollY =
-      location.state?.scrollY ??
-      Number(sessionStorage.getItem("publicationScroll"));
-    if (typeof scrollY === "number" && scrollY > 0) {
-      window.scrollTo(0, 1); // Empêche le navigateur de scroller tout en bas par défaut sur mobile
-    }
-  }, []);
-  // Remet au cas où c'est bizarre
-  // useEffect(() => {
-  //   const scrollY = sessionStorage.getItem("publicationScroll");
-  //   if (scrollY) {
-  //     // Décale un peu le scroll pour être sûr que le DOM est prêt
-  //     window.requestAnimationFrame(() => {
-  //       window.scrollTo(0, Number(scrollY));
-  //       sessionStorage.removeItem("publicationScroll");
-  //     });
-  //   }
-  // }, []);
+  }, [isActive]);
 
   const handlePostClick = (articleId: string) => {
-    sessionStorage.setItem("publicationScroll", window.scrollY.toString());
+    // Sauvegarder avant la navigation, avant que display:none rétrécisse le document
+    savedScrollYRef.current = window.scrollY;
     navigate(`/publications/${articleId}`);
   };
 
@@ -846,8 +834,8 @@ function PublicationPage() {
   // Vérifier si les données sont en cours de chargement
   const isLoading = articlesLoading || mostDislikedLoading;
 
-  // Afficher le loader pendant le chargement des articles
-  if (isRestoringScroll || isLoading) {
+  // Afficher le loader pendant le chargement initial uniquement
+  if (isLoading && articles.length === 0 && mostDisliked.length === 0) {
     return <Loader />;
   }
 
@@ -874,7 +862,7 @@ function PublicationPage() {
               value={sortOption}
               onChange={(e) => {
                 setSortOption(e.target.value);
-                console.log("Nouveau tri : ", e.target.value);
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="bg-gray-800 text-gray-300 text-xs sm:text-base p-2 pl-8 sm:px-10 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
             >
@@ -1368,9 +1356,8 @@ function PublicationPage() {
           <p className="text-center text-gray-400">Aucun article trouvé.</p>
         )}
       </div>
-      {/* Optionnel : loader en bas si hasMore */}
-      {hasMore && (
-        <div className="flex justify-center py-48">
+      {hasMore ? (
+        <div className="flex justify-center py-8">
           <motion.div
             className="w-16 h-16 border-t-4 border-purple-500 rounded-full animate-spin"
             initial={{ rotate: 0 }}
@@ -1378,7 +1365,11 @@ function PublicationPage() {
             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
           />
         </div>
-      )}
+      ) : hasArticles ? (
+        <p className="text-center text-gray-500 text-sm py-8">
+          Vous avez tout lu.
+        </p>
+      ) : null}
       {/* Ajout de la liste déroulante pour les mentions */}
       {showMentionList && mentionSuggestions.length > 0 && (
         <div

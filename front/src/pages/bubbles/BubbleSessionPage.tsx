@@ -30,6 +30,7 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
   const messagesRef = useRef<FloatingMessage[]>([]);
   const particlesRef = useRef<Particle[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const initializedRef = useRef(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [newReply, setNewReply] = useState("");
   const [isAnonymousMsg, setIsAnonymousMsg] = useState(false);
@@ -40,28 +41,35 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    const messages = bubble.messages.map(
-      (m) =>
-        ({
-          id: m.id,
-          author: m.isAnonymous ? "Anonyme" : m.author.username,
-          text: m.content,
-          isAnonymous: m.isAnonymous,
-          x: Math.random() * (vw * 0.8) + vw * 0.1,
-          y: Math.random() * (vh * 0.8) + vh * 0.1,
-          vx: (Math.random() - 0.5) * 3,
-          vy: (Math.random() - 0.5) * 3,
-          size: 60,
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          createdAt: new Date(m.createdAt),
-          trail: [],
-          addedAt: Date.now(),
-        }) as FloatingMessage,
-    );
+    const existingIds = new Set(messagesRef.current.map((m) => m.id));
 
-    messagesRef.current = messages;
-    console.log("✅ Messages prêts:", messages.length);
-    setIsReady(true);
+    const newMessages = bubble.messages
+      .filter((m) => !existingIds.has(m.id))
+      .map(
+        (m) =>
+          ({
+            id: m.id,
+            author: m.isAnonymous ? "Anonyme" : m.author.username,
+            text: m.content,
+            isAnonymous: m.isAnonymous,
+            x: Math.random() * (vw * 0.8) + vw * 0.1,
+            y: Math.random() * (vh * 0.8) + vh * 0.1,
+            vx: (Math.random() - 0.5) * 3,
+            vy: (Math.random() - 0.5) * 3,
+            size: 60,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            createdAt: new Date(m.createdAt),
+            trail: [],
+            addedAt: Date.now(),
+          }) as FloatingMessage,
+      );
+
+    messagesRef.current.push(...newMessages);
+
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      setIsReady(true);
+    }
   }, [bubble]);
 
   const hoveredMessageRef = useRef<string | null>(null);
@@ -494,6 +502,8 @@ export default function BubbleSessionPage() {
   const { data: bubbleData, loading } = useQuery(GET_BUBBLE_BY_ID, {
     variables: { id: id || "" },
     skip: !id,
+    fetchPolicy: "cache-and-network",
+    pollInterval: 3000,
   });
 
   const selectedBubble = bubbleData?.getBubbleById;

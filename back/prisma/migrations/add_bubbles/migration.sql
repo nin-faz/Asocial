@@ -3,6 +3,7 @@ CREATE TABLE "Bubble" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "authorId" TEXT NOT NULL,
+    "isAnonymous" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -15,7 +16,7 @@ CREATE TABLE "BubbleMessage" (
     "content" TEXT NOT NULL,
     "authorId" TEXT NOT NULL,
     "bubbleId" TEXT NOT NULL,
-    "dislikes" INTEGER NOT NULL DEFAULT 0,
+    "isAnonymous" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "BubbleMessage_pkey" PRIMARY KEY ("id")
@@ -41,3 +42,16 @@ ALTER TABLE "BubbleMessage" ADD CONSTRAINT "BubbleMessage_authorId_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "BubbleMessage" ADD CONSTRAINT "BubbleMessage_bubbleId_fkey" FOREIGN KEY ("bubbleId") REFERENCES "Bubble"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddColumn to Notification
+ALTER TABLE "Notification" ADD COLUMN "bubbleId" TEXT;
+
+-- Update cascade delete constraints for Notification
+ALTER TABLE "Notification" DROP CONSTRAINT IF EXISTS "Notification_articleId_fkey";
+ALTER TABLE "Notification" DROP CONSTRAINT IF EXISTS "Notification_commentId_fkey";
+
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_articleId_fkey" FOREIGN KEY ("articleId") REFERENCES "Article"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey for Notification -> Bubble with cascade
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_bubbleId_fkey" FOREIGN KEY ("bubbleId") REFERENCES "Bubble"("id") ON DELETE CASCADE ON UPDATE CASCADE;

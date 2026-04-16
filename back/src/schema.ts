@@ -225,8 +225,10 @@ export const typeDefs = gql`
     createdAt: String!
     articleId: String
     commentId: String
+    bubbleId: String
     article: Article
     comment: Comment
+    bubble: Bubble
   }
 
   type MarkNotificationsAsReadResponse {
@@ -251,7 +253,6 @@ export const typeDefs = gql`
     content: String!
     author: UserSummary!
     isAnonymous: Boolean!
-    dislikes: Int!
     createdAt: String!
   }
 

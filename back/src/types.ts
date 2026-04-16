@@ -51,7 +51,6 @@ export type BubbleMessage = {
   author: UserSummary;
   content: Scalars['String']['output'];
   createdAt: Scalars['String']['output'];
-  dislikes: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   isAnonymous: Scalars['Boolean']['output'];
 };
@@ -291,6 +290,8 @@ export type Notification = {
   __typename?: 'Notification';
   article?: Maybe<Article>;
   articleId?: Maybe<Scalars['String']['output']>;
+  bubble?: Maybe<Bubble>;
+  bubbleId?: Maybe<Scalars['String']['output']>;
   comment?: Maybe<Comment>;
   commentId?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
@@ -653,7 +654,6 @@ export type BubbleMessageResolvers<ContextType = Context, ParentType extends Res
   author?: Resolver<ResolversTypes['UserSummary'], ParentType, ContextType>;
   content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  dislikes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isAnonymous?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -773,6 +773,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export type NotificationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Notification'] = ResolversParentTypes['Notification']> = {
   article?: Resolver<Maybe<ResolversTypes['Article']>, ParentType, ContextType>;
   articleId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  bubble?: Resolver<Maybe<ResolversTypes['Bubble']>, ParentType, ContextType>;
+  bubbleId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType>;
   commentId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

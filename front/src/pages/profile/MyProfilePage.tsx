@@ -883,7 +883,7 @@ const MyProfilePage = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto relative"
+              className="bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden relative"
             >
               <button
                 onClick={() => setSelectedArticle(null)}

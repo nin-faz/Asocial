@@ -7,6 +7,7 @@ import {
   lazy,
   useMemo,
 } from "react";
+import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -87,7 +88,11 @@ const MyProfilePage = () => {
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
-    return withTags.replace(/\n/g, "<br>");
+    const withLineBreaks = withTags.replace(/\n/g, "<br>");
+    return DOMPurify.sanitize(withLineBreaks, {
+      ALLOWED_TAGS: ["span", "br"],
+      ALLOWED_ATTR: ["class", "data-username"],
+    });
   };
 
   useEffect(() => {

@@ -3,12 +3,23 @@ import { formatUsername } from "../../module/usernameFormatter.js";
 import { MutationResolvers } from "../../types.js";
 import { notifyTelegram } from "../../utils/notifyTelegram.js";
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_.\-']+$/;
+
 export const createUser: NonNullable<MutationResolvers["createUser"]> = async (
   _,
   { username, password },
   { dataSources: { db } }
 ) => {
   try {
+    if (!username || !USERNAME_REGEX.test(username)) {
+      return {
+        code: 400,
+        success: false,
+        message: "Username invalide : lettres, chiffres, _, ., -, ' uniquement",
+        user: null,
+      };
+    }
+
     // Format the username
     const formattedUsername = formatUsername(username);
 

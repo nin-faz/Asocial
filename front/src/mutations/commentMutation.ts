@@ -3,13 +3,11 @@ import { graphql } from "../gql";
 export const ADD_COMMENT = graphql(`
   mutation AddComment(
     $content: String!
-    $userId: ID!
     $articleId: ID!
     $parentId: ID
   ) {
     addComment(
       content: $content
-      userId: $userId
       articleId: $articleId
       parentId: $parentId
     ) {

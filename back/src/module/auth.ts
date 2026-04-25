@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
+import db from "../datasource/db.js";
 
 export const createJWT = (user: { id: string; username: string }) => {
-  // Définir une expiration très longue (1 an) pour une connexion persistante
   const token = jwt.sign(
     {
       id: user.id,
@@ -17,13 +17,17 @@ export const createJWT = (user: { id: string; username: string }) => {
 
 export type AuthenticatedUser = { id: string; username: string };
 
-export const getUser = (token: string): AuthenticatedUser | null => {
+export const getUser = async (token: string): Promise<AuthenticatedUser | null> => {
   try {
     const payload = jwt.verify(
       token,
       process.env.JWT_SECRET as string
     ) as AuthenticatedUser;
-    return payload;
+    const dbUser = await db.user.findUnique({
+      where: { id: payload.id },
+      select: { id: true, username: true },
+    });
+    return dbUser;
   } catch (err: any) {
     if (err.name === "TokenExpiredError") {
       console.error("Token expiré !");

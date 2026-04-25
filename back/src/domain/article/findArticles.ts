@@ -19,13 +19,6 @@ export const findArticles: NonNullable<QueryResolvers["findArticles"]> = async (
       },
     });
 
-    console.log("📝 ARTICLES TROUVÉS (limit:", limit, "offset:", offset, "):");
-    articles.forEach((article: any, index: number) => {
-      console.log(
-        `  ${index}: ${article.id} - "${article.title}" - createdAt: ${article.createdAt}`,
-      );
-    });
-
     if (!articles) return [];
 
     return articles.map((article: any) => ({

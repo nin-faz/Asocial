@@ -5,11 +5,32 @@ import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { Server as SocketIOServer } from "socket.io";
+import multer from "multer";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import { resolvers } from "./resolvers.js";
 import { typeDefs } from "./schema.js";
 import { getUser } from "./module/auth.js";
 import db from "./datasource/db.js";
 import compression from "compression";
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Trop de tentatives, réessaie dans 15 minutes." },
+});
+
+const graphqlLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Trop de requêtes, réessaie dans 15 minutes." },
+});
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -17,6 +38,7 @@ const httpServer = http.createServer(app);
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  introspection: process.env.NODE_ENV !== "production",
 });
 
 await server.start();
@@ -30,16 +52,18 @@ const corsOptions = {
   credentials: true,
 };
 
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(
   "/graphql",
+  graphqlLimiter,
   expressMiddleware(server, {
     context: async ({ req }) => {
       const { cache } = server;
       const authorization = req.headers.authorization?.split("Bearer ")?.[1];
-      const user = authorization ? getUser(authorization) : null;
+      const user = authorization ? await getUser(authorization) : null;
       return {
         dataSources: {
           db,
@@ -53,12 +77,12 @@ app.use(
 // --- Socket.IO setup ---
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: "*",
+    origin: corsOptions.origin,
     methods: ["GET", "POST"],
   },
 });
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   // Récupère le token envoyé par le client (query ou header)
   const token =
     socket.handshake.auth?.token ||
@@ -67,7 +91,7 @@ io.use((socket, next) => {
     return next(new Error("Authentication error: no token"));
   }
   try {
-    const user = getUser(token); // ta fonction d'extraction/validation JWT
+    const user = await getUser(token);
     if (!user) return next(new Error("Authentication error: invalid token"));
     // On attache l'utilisateur à la socket pour l'utiliser plus tard
     socket.data.user = user;
@@ -87,14 +111,37 @@ io.on("connection", (socket) => {
 
 export { io };
 
+// --- API REST pour l’upload d’images (proxy ImgBB) ---
+app.post("/api/upload/image", authLimiter, upload.single("image"), async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+  const user = await getUser(authHeader.split("Bearer ")[1]);
+  if (!user) return res.status(401).json({ error: "Invalid token" });
+  if (!req.file) return res.status(400).json({ error: "No file provided" });
+
+  const formData = new FormData();
+  const blob = new Blob([new Uint8Array(req.file.buffer)], { type: req.file.mimetype });
+  formData.append("image", blob, req.file.originalname);
+
+  const response = await fetch(
+    `https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`,
+    { method: "POST", body: formData }
+  );
+  if (!response.ok) return res.status(502).json({ error: "ImgBB upload failed" });
+  const data: any = await response.json();
+  return res.status(200).json({ url: data.data.url });
+});
+
 // --- API REST pour l’abonnement push ---
-app.post("/api/push/subscribe", async (req, res) => {
+app.post("/api/push/subscribe", authLimiter, async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Authorization header missing" });
   }
   const token = authHeader.split("Bearer ")[1];
-  const user = getUser(token);
+  const user = await getUser(token);
   if (!user) {
     return res.status(401).json({ error: "Invalid token" });
   }
@@ -127,12 +174,20 @@ app.post("/api/push/subscribe", async (req, res) => {
 
 // --- API REST pour la désinscription push ---
 app.post("/api/push/unsubscribe", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Authorization header missing" });
+  }
+  const user = await getUser(authHeader.split("Bearer ")[1]);
+  if (!user) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
   const { endpoint } = req.body;
   if (!endpoint) {
     return res.status(400).json({ error: "Endpoint manquant" });
   }
   try {
-    await db.pushSubscription.deleteMany({ where: { endpoint } });
+    await db.pushSubscription.deleteMany({ where: { endpoint, userId: user.id } });
     return res.status(200).json({ success: true });
   } catch (e) {
     console.error("Erreur suppression push subscription:", e);
@@ -141,13 +196,13 @@ app.post("/api/push/unsubscribe", async (req, res) => {
 });
 
 // --- API REST pour vérification du token (utilisé par le front) ---
-app.get("/api/auth/verify", (req, res) => {
+app.get("/api/auth/verify", async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Authorization header missing" });
   }
   const token = authHeader.split("Bearer ")[1];
-  const user = getUser(token);
+  const user = await getUser(token);
   if (!user) {
     return res.status(401).json({ error: "Invalid token" });
   }

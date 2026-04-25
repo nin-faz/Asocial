@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -798,7 +799,11 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
-    return withMentions.replace(/\n/g, "<br>");
+    const withLineBreaks = withMentions.replace(/\n/g, "<br>");
+    return DOMPurify.sanitize(withLineBreaks, {
+      ALLOWED_TAGS: ["span", "br"],
+      ALLOWED_ATTR: ["class", "data-username"],
+    });
   };
 
   // Fonction pour partager un article

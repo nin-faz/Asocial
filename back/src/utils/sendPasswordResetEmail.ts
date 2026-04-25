@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+}
+
 export async function sendPasswordResetEmail(
   email: string,
   token: string,
@@ -24,7 +28,7 @@ export async function sendPasswordResetEmail(
       html: `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#1a1a2e !important; color:#f0aaff !important; padding:32px; border-radius:12px; border:2px solid #9c27b0; max-width:480px; margin:auto; background-color:#1a1a2e !important;">
         <h1 style="color:#9c27b0 !important; text-align:center; margin-bottom:24px;">🔒 Réinitialisation du mot de passe</h1>
-        <p style="font-size:1.1em; margin-bottom:18px; color:#f0aaff !important;">Hey <strong style="color:#fff !important;">${username}</strong>,</p>
+        <p style="font-size:1.1em; margin-bottom:18px; color:#f0aaff !important;">Hey <strong style="color:#fff !important;">${escapeHtml(username)}</strong>,</p>
         <p style="margin-bottom:18px; color:#f0aaff !important;">Tu as demandé à réinitialiser ton mot de passe pour <span style="color:#9c27b0 !important; font-weight:bold;">Asocial</span>.</p>
         <p style="margin-bottom:24px; color:#f0aaff !important;">Clique sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
         <div style="text-align:center; margin-bottom:24px;">

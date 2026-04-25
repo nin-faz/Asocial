@@ -6,7 +6,9 @@ import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js"
 // Article Dislike
 export const deleteArticleDislike: NonNullable<
   MutationResolvers["deleteArticleDislike"]
-> = async (_, { articleId, userId }, { dataSources: { db } }) => {
+> = async (_, { articleId }, { dataSources: { db }, user }) => {
+  if (!user) return { code: 401, success: false, message: "Non authentifié" };
+  const userId = user.id;
   try {
     await db.dislike.deleteMany({
       where: {
@@ -47,7 +49,9 @@ export const deleteArticleDislike: NonNullable<
 
 export const addArticleDislike: NonNullable<
   MutationResolvers["addArticleDislike"]
-> = async (_, { articleId, userId }, { dataSources: { db } }) => {
+> = async (_, { articleId }, { dataSources: { db }, user }) => {
+  if (!user) return null;
+  const userId = user.id;
   try {
     const dislikeExists = await db.dislike.findFirst({
       where: { userId, articleId },
@@ -115,7 +119,9 @@ export const addArticleDislike: NonNullable<
 // Comment Dislike
 export const deleteCommentDislike: NonNullable<
   MutationResolvers["deleteCommentDislike"]
-> = async (_, { commentId, userId }, { dataSources: { db } }) => {
+> = async (_, { commentId }, { dataSources: { db }, user }) => {
+  if (!user) return null;
+  const userId = user.id;
   try {
     await db.dislike.deleteMany({
       where: {
@@ -152,7 +158,9 @@ export const deleteCommentDislike: NonNullable<
 
 export const addCommentDislike: NonNullable<
   MutationResolvers["addCommentDislike"]
-> = async (_, { commentId, userId }, { dataSources: { db } }) => {
+> = async (_, { commentId }, { dataSources: { db }, user }) => {
+  if (!user) return null;
+  const userId = user.id;
   try {
     const comment = await db.comment.findUnique({
       where: { id: commentId },

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import DOMPurify from "dompurify";
 import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import { ArrowLeft, MessageSquare, Share2, ThumbsDown } from "lucide-react";
@@ -62,7 +63,11 @@ const UserProfilePage = () => {
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-400 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
-    return withMentions.replace(/\n/g, "<br>");
+    const withLineBreaks = withMentions.replace(/\n/g, "<br>");
+    return DOMPurify.sanitize(withLineBreaks, {
+      ALLOWED_TAGS: ["span", "br"],
+      ALLOWED_ATTR: ["class", "data-username"],
+    });
   };
 
   useEffect(() => {

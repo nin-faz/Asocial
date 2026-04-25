@@ -49,7 +49,6 @@ export const typeDefs = gql`
 
     addComment(
       content: String!
-      userId: ID!
       articleId: ID!
       parentId: ID
     ): Comment

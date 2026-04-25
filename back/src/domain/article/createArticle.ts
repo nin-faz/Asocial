@@ -3,6 +3,19 @@ import { notifyTelegram } from "../../utils/notifyTelegram.js";
 import { io } from "../../index.js";
 import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
+const ALLOWED_IMAGE_HOSTS = ["i.ibb.co", "res.cloudinary.com"];
+const ALLOWED_VIDEO_HOSTS = ["res.cloudinary.com", "cirunonxykzinzlkwpwj.supabase.co"];
+
+function isAllowedUrl(url: string | null | undefined, allowedHosts: string[]): boolean {
+  if (!url) return true;
+  try {
+    const { hostname } = new URL(url);
+    return allowedHosts.some((host) => hostname === host || hostname.endsWith(`.${host}`));
+  } catch {
+    return false;
+  }
+}
+
 export const createArticle: NonNullable<
   MutationResolvers["createArticle"]
 > = async (
@@ -18,6 +31,13 @@ export const createArticle: NonNullable<
         message: `Unauthorized`,
         article: null,
       };
+    }
+
+    if (!isAllowedUrl(imageUrl, ALLOWED_IMAGE_HOSTS)) {
+      return { code: 400, success: false, message: "imageUrl invalide", article: null };
+    }
+    if (!isAllowedUrl(videoUrl, ALLOWED_VIDEO_HOSTS)) {
+      return { code: 400, success: false, message: "videoUrl invalide", article: null };
     }
 
     const createdArticle = await db.article.create({
@@ -90,15 +110,6 @@ export const createArticle: NonNullable<
         dislikes: { include: { user: { select: { id: true } } } },
         _count: { select: { dislikes: true, comments: true } },
       },
-    });
-
-    console.log("✅ ARTICLE CRÉÉ:", {
-      id: fullArticle?.id,
-      title: fullArticle?.title,
-      content: fullArticle?.content,
-      authorId: fullArticle?.authorId,
-      createdAt: fullArticle?.createdAt,
-      updatedAt: fullArticle?.updatedAt,
     });
 
     return {

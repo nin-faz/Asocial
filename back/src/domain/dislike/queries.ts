@@ -10,7 +10,7 @@ export const getDislikesByArticleId: NonNullable<
         articleId,
       },
       include: {
-        user: true,
+        user: { select: { id: true, username: true, iconName: true, bio: true, createdAt: true } },
       },
     });
     return dislikes;
@@ -28,7 +28,7 @@ export const getDislikesByCommentId: NonNullable<
         commentId,
       },
       include: {
-        user: true,
+        user: { select: { id: true, username: true, iconName: true, bio: true, createdAt: true } },
       },
     });
     return dislikes;

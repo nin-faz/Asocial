@@ -178,7 +178,6 @@ export type MutationAddCommentArgs = {
   articleId: Scalars['ID']['input'];
   content: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['ID']['input']>;
-  userId: Scalars['ID']['input'];
 };
 
 
@@ -750,7 +749,7 @@ export type MarkNotificationsAsReadResponseResolvers<ContextType = Context, Pare
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addArticleDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddArticleDislikeArgs, 'articleId' | 'userId'>>;
-  addComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationAddCommentArgs, 'articleId' | 'content' | 'userId'>>;
+  addComment?: Resolver<Maybe<ResolversTypes['Comment']>, ParentType, ContextType, RequireFields<MutationAddCommentArgs, 'articleId' | 'content'>>;
   addCommentDislike?: Resolver<Maybe<ResolversTypes['Dislike']>, ParentType, ContextType, RequireFields<MutationAddCommentDislikeArgs, 'commentId' | 'userId'>>;
   addMessageToBubble?: Resolver<ResolversTypes['BubbleMessage'], ParentType, ContextType, RequireFields<MutationAddMessageToBubbleArgs, 'bubbleId' | 'content'>>;
   createArticle?: Resolver<ResolversTypes['CreateArticleResponse'], ParentType, ContextType, RequireFields<MutationCreateArticleArgs, 'content'>>;

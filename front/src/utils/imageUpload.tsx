@@ -1,16 +1,17 @@
-const API_KEY = "f0b08049fc173fd14f6483b221f9f9e9";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 export async function imageUpload(file: File): Promise<string | null> {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
   const formData = new FormData();
   formData.append("image", file);
 
-  const response = await fetch(
-    `https://api.imgbb.com/1/upload?key=${API_KEY}`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+  const response = await fetch(`${API_URL}/api/upload/image`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
 
   if (!response.ok) {
     console.error("Upload failed", await response.text());
@@ -18,6 +19,5 @@ export async function imageUpload(file: File): Promise<string | null> {
   }
 
   const data = await response.json();
-
-  return data.data.url;
+  return data.url;
 }

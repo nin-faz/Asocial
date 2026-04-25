@@ -2,6 +2,19 @@ import { MutationResolvers } from "../../types";
 import { io } from "../../index.js";
 import { sendPushNotificationToUser } from "../../utils/sendPushNotification.js";
 
+const ALLOWED_IMAGE_HOSTS = ["i.ibb.co", "res.cloudinary.com"];
+const ALLOWED_VIDEO_HOSTS = ["res.cloudinary.com", "cirunonxykzinzlkwpwj.supabase.co"];
+
+function isAllowedUrl(url: string | null | undefined, allowedHosts: string[]): boolean {
+  if (!url) return true;
+  try {
+    const { hostname } = new URL(url);
+    return allowedHosts.some((host) => hostname === host || hostname.endsWith(`.${host}`));
+  } catch {
+    return false;
+  }
+}
+
 export const updateArticle: NonNullable<
   MutationResolvers["updateArticle"]
 > = async (
@@ -35,6 +48,13 @@ export const updateArticle: NonNullable<
       };
     }
 
+    if (!isAllowedUrl(imageUrl, ALLOWED_IMAGE_HOSTS)) {
+      return { code: 400, success: false, message: "imageUrl invalide" };
+    }
+    if (!isAllowedUrl(videoUrl, ALLOWED_VIDEO_HOSTS)) {
+      return { code: 400, success: false, message: "videoUrl invalide" };
+    }
+
     const updateData: {
       title?: string;
       content?: string;
@@ -57,8 +77,6 @@ export const updateArticle: NonNullable<
     if (videoUrl !== undefined) {
       updateData.videoUrl = videoUrl;
     }
-
-    console.log("Mise à jour de l'article avec les données:", updateData);
 
     await db.article.update({
       where: { id },

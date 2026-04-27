@@ -175,7 +175,11 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
     while ((mentionMatch = mentionRegex.exec(content))) {
       mentionSet.add(mentionMatch[1]);
     }
+
+    const isHereMention = mentionSet.has("here");
+
     for (const username of mentionSet) {
+      if (username === "here") continue;
       if (username === newComment.author.username) continue;
       const mentionedUser = await db.user.findUnique({ where: { username } });
       if (mentionedUser) {
@@ -195,6 +199,41 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
           url: `/publications/${articleId}?commentId=${newComment.id}`,
         });
       }
+    }
+
+    if (isHereMention && user.username === "Nin") {
+      const allUsers = await db.user.findMany({
+        where: { id: { not: user.id } },
+        select: { id: true },
+      });
+      const articleLabel = article?.title?.trim()
+        ? article.title
+        : article?.content
+          ? article.content.slice(0, 30) + "..."
+          : "";
+      const hereMessage = `📢 ${user.username} a mentionné tout le monde sous "${articleLabel}" : "${
+        content.length > 40 ? content.slice(0, 40) + "..." : content
+      }"`;
+
+      await Promise.all(
+        allUsers.map(async (targetUser) => {
+          const notif = await db.notification.create({
+            data: {
+              type: "mention",
+              message: hereMessage,
+              userId: targetUser.id,
+              articleId: articleId ?? undefined,
+              commentId: newComment.id,
+            },
+          });
+          io.to(targetUser.id).emit("notification", notif);
+          await sendPushNotificationToUser(targetUser.id, {
+            title: "📢 @here",
+            body: hereMessage,
+            url: `/publications/${articleId}?commentId=${newComment.id}`,
+          });
+        }),
+      );
     }
 
     return newComment;

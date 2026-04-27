@@ -242,6 +242,15 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
     }
   }, [user?.id, refetchUserData]);
 
+  useEffect(() => {
+    if (sessionStorage.getItem("forceRefetchArticles")) {
+      sessionStorage.removeItem("forceRefetchArticles");
+      setOffsetRecent(0);
+      setHasMoreRecent(true);
+      refetchArticles({ limit: ARTICLES_PER_PAGE, offset: 0 });
+    }
+  }, [refetchArticles]);
+
   const [createArticle, { loading: isCreatingArticle }] =
     useMutation(CREATE_ARTICLE);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -690,21 +699,28 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
           coords = { top: 0, left: 0, height: rectFallback.height };
         }
         const rect = el.getBoundingClientRect();
-        topPos = rect.top + coords.top + coords.height + window.scrollY;
-        leftPos = rect.left + coords.left + window.scrollX;
+        topPos = rect.top + coords.top + coords.height;
+        leftPos = rect.left + coords.left;
       } else {
-        // fallback for input fields
         const rect = el.getBoundingClientRect();
-        topPos = rect.top + rect.height + window.scrollY;
-        leftPos = rect.left + window.scrollX + 4;
+        topPos = rect.top + rect.height;
+        leftPos = rect.left + 4;
       }
       setMentionListPosition({ top: topPos, left: leftPos, width });
       const query = mentionMatch[1];
-      searchUsers({ variables: { query } });
-      const suggestions = usersData?.searchUsers ?? [];
-      setMentionSuggestions(suggestions);
-      setSelectedIndexUser(0);
-      setShowMentionList(true);
+      if (query === "tous" && user?.username === "Nin") {
+        setMentionSuggestions([{ id: "__here__", username: "tous" }]);
+        setSelectedIndexUser(0);
+        setShowMentionList(true);
+      } else if (query !== "tous") {
+        searchUsers({ variables: { query } });
+        const suggestions = usersData?.searchUsers ?? [];
+        setMentionSuggestions(suggestions);
+        setSelectedIndexUser(0);
+        setShowMentionList(true);
+      } else {
+        setShowMentionList(false);
+      }
     } else {
       setShowMentionList(false);
     }
@@ -795,7 +811,11 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
   // Ajout de la logique pour surligner les mentions dans le texte
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const withMentions = escaped.replace(
+    const withHere = escaped.replace(
+      /@tous(?=\s|$|&)/g,
+      `<span class="text-orange-400 font-semibold">@tous</span>`,
+    );
+    const withMentions = withHere.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
@@ -1379,12 +1399,12 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
       {showMentionList && mentionSuggestions.length > 0 && (
         <div
           ref={mentionListRef}
-          className="absolute bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto"
+          className="bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto"
           style={{
+            position: "fixed",
             top: `${mentionListPosition.top}px`,
             left: `${mentionListPosition.left}px`,
             width: `${mentionListPosition.width}px`,
-            position: "absolute",
           }}
         >
           {mentionSuggestions.map((user, index) => (
@@ -1395,11 +1415,14 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
                   mentionItemRefs.current[index] = el;
                 }
               }}
-              className={`px-4 py-2 hover:bg-purple-500 cursor-pointer text-gray-300 w-full text-left
-              ${
+              className={`px-4 py-2 cursor-pointer w-full text-left ${
                 index === selectedIndexUser
-                  ? "bg-purple-900"
-                  : "hover:bg-purple-500"
+                  ? user.id === "__here__"
+                    ? "bg-orange-700 text-white"
+                    : "bg-purple-900 text-white"
+                  : user.id === "__here__"
+                    ? "text-orange-400 font-semibold"
+                    : "text-gray-300 hover:bg-purple-500"
               }`}
               onClick={() =>
                 insertMention(
@@ -1408,7 +1431,9 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
                 )
               }
             >
-              @{user.username}
+              {user.id === "__here__"
+                ? "📢 @tous — notifie tout le monde"
+                : `@${user.username}`}
             </button>
           ))}
         </div>

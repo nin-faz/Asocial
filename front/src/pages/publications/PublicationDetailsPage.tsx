@@ -2,7 +2,12 @@ import { useState, useEffect, useContext, useRef } from "react";
 import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useMutation, useLazyQuery, useApolloClient } from "@apollo/client";
+import {
+  useQuery,
+  useMutation,
+  useLazyQuery,
+  useApolloClient,
+} from "@apollo/client";
 import {
   FIND_ARTICLE_BY_ID,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
@@ -127,18 +132,25 @@ const PublicationDetailsPage = ({
         } catch {
           coords = { top: 0, left: 0, height: rect.height };
         }
-        topPos = rect.top + coords.top + coords.height + window.scrollY;
-        leftPos = rect.left + coords.left + window.scrollX;
+        topPos = rect.top + coords.top + coords.height;
+        leftPos = rect.left + coords.left;
       } else {
-        // fallback for input fields
-        topPos = rect.top + rect.height + window.scrollY;
-        leftPos = rect.left + window.scrollX;
+        topPos = rect.top + rect.height;
+        leftPos = rect.left;
       }
       setMentionListPosition({ top: topPos, left: leftPos, width });
       const query = mentionMatch[1];
-      searchUsers({ variables: { query } });
-      setSelectedIndexUser(0);
-      setShowMentionList(true);
+      if (query === "here" && user?.username === "Nin") {
+        setMentionSuggestions([{ id: "__here__", username: "here" }]);
+        setSelectedIndexUser(0);
+        setShowMentionList(true);
+      } else if (query !== "here") {
+        searchUsers({ variables: { query } });
+        setSelectedIndexUser(0);
+        setShowMentionList(true);
+      } else {
+        setShowMentionList(false);
+      }
     } else {
       setShowMentionList(false);
     }
@@ -244,7 +256,11 @@ const PublicationDetailsPage = ({
 
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const withMentions = escaped.replace(
+    const withHere = escaped.replace(
+      /@here(?=\s|$|&)/g,
+      `<span class="text-orange-400 font-semibold">@here</span>`,
+    );
+    const withMentions = withHere.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
       `<span class="mention text-purple-500 cursor-pointer hover:underline" data-username="$1">@$1</span>`,
     );
@@ -568,7 +584,10 @@ const PublicationDetailsPage = ({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentContent, setEditedCommentContent] = useState("");
   const handleDeleteComment = async (commentId: string) => {
-    const normalizedId = apolloClient.cache.identify({ __typename: "Comment", id: commentId });
+    const normalizedId = apolloClient.cache.identify({
+      __typename: "Comment",
+      id: commentId,
+    });
     apolloClient.cache.evict({ id: normalizedId });
     apolloClient.cache.modify({
       id: apolloClient.cache.identify({ __typename: "Article", id: finalId! }),
@@ -589,7 +608,9 @@ const PublicationDetailsPage = ({
         refetchArticleData();
       } else {
         refetchComments();
-        toast.error(response?.data?.deleteComment?.message || "Erreur inconnue");
+        toast.error(
+          response?.data?.deleteComment?.message || "Erreur inconnue",
+        );
       }
     } catch (err) {
       refetchComments();
@@ -1139,7 +1160,7 @@ const PublicationDetailsPage = ({
       {showMentionList && mentionSuggestions.length > 0 && (
         <div
           ref={mentionListRef}
-          className="absolute z-10 bg-gray-800 border border-purple-700 rounded-md shadow-lg max-h-48 overflow-y-auto"
+          className="fixed z-50 bg-gray-800 border border-purple-700 rounded-md shadow-lg max-h-48 overflow-y-auto"
           style={{
             top: `${mentionListPosition.top}px`,
             left: `${mentionListPosition.left}px`,
@@ -1154,8 +1175,12 @@ const PublicationDetailsPage = ({
               }}
               className={`w-full text-left px-4 py-2 ${
                 index === selectedIndexUser
-                  ? "bg-purple-700 text-white"
-                  : "text-gray-300"
+                  ? user.id === "__here__"
+                    ? "bg-orange-700 text-white"
+                    : "bg-purple-700 text-white"
+                  : user.id === "__here__"
+                    ? "text-orange-400 font-semibold"
+                    : "text-gray-300"
               } hover:bg-purple-600`}
               onClick={() =>
                 insertMention(
@@ -1165,12 +1190,14 @@ const PublicationDetailsPage = ({
                     : activeField === "content"
                       ? setEditedContent
                       : activeField === "reply"
-                        ? setEditedCommentContent
+                        ? setReplyContent
                         : setNewComment,
                 )
               }
             >
-              {user.username}
+              {user.id === "__here__"
+                ? "📢 @here — notifie tout le monde"
+                : user.username}
             </button>
           ))}
         </div>

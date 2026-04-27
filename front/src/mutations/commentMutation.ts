@@ -13,9 +13,37 @@ export const ADD_COMMENT = graphql(`
     ) {
       id
       content
+      isReply
       author {
         id
         username
+        iconName
+      }
+      createdAt
+      updatedAt
+      dislikes {
+        user {
+          id
+        }
+      }
+      TotalDislikes
+      parent {
+        id
+        content
+        author {
+          username
+        }
+      }
+      replies {
+        id
+        content
+        author {
+          id
+          username
+          iconName
+        }
+        createdAt
+        updatedAt
       }
     }
   }

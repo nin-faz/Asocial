@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery, useApolloClient } from "@apollo/client";
 import {
   FIND_ARTICLE_BY_ID,
   FIND_DISLIKES_BY_USER_ID_FOR_ARTICLES,
@@ -67,6 +67,7 @@ const PublicationDetailsPage = ({
   }
 
   const { token, user } = authContext;
+  const apolloClient = useApolloClient();
 
   const { id } = useParams();
   const finalId = articleId || id;
@@ -514,6 +515,7 @@ const PublicationDetailsPage = ({
   }, [commentsData, targetCommentId]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
@@ -523,11 +525,9 @@ const PublicationDetailsPage = ({
 
   const [createComment] = useMutation(ADD_COMMENT);
 
-  // Variable pour empêcher les clics multiples rapides (debounce)
-  const [lastSubmitTime, setLastSubmitTime] = useState(0);
-
   const handleCreateComment = async () => {
-    // Vérifier si c'est un commentaire principal ou une réponse
+    if (isSubmittingRef.current) return;
+
     const content = replyToCommentId ? replyContent : newComment;
 
     if (content.trim() === "") return;
@@ -536,14 +536,7 @@ const PublicationDetailsPage = ({
       return;
     }
 
-    // Protection anti-double clic/spam
-    const now = Date.now();
-    if (now - lastSubmitTime < 2000) {
-      // 2 secondes de délai minimum entre les envois
-      return;
-    }
-    setLastSubmitTime(now);
-
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -555,17 +548,17 @@ const PublicationDetailsPage = ({
         },
       });
 
-      showCommentAddedToast();
-
-      // Réinitialiser les états
       setNewComment("");
       setReplyContent("");
       setReplyToCommentId(null);
       setReplyingToUsername(null);
-      await Promise.all([refetchComments(), refetchArticleData()]);
+      showCommentAddedToast();
+      refetchComments();
+      refetchArticleData();
     } catch (err) {
       console.error("Erreur lors de l'ajout du commentaire :", err);
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -575,37 +568,33 @@ const PublicationDetailsPage = ({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentContent, setEditedCommentContent] = useState("");
   const handleDeleteComment = async (commentId: string) => {
+    const normalizedId = apolloClient.cache.identify({ __typename: "Comment", id: commentId });
+    apolloClient.cache.evict({ id: normalizedId });
+    apolloClient.cache.modify({
+      id: apolloClient.cache.identify({ __typename: "Article", id: finalId! }),
+      fields: {
+        TotalComments: (existing: number) => Math.max(0, existing - 1),
+      },
+    });
+    apolloClient.cache.gc();
+    showCommentDeletedToast();
+
     try {
       const response = await deleteComment({
         variables: { commentId },
-        context: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        context: { headers: { Authorization: `Bearer ${token}` } },
       });
 
       if (response.data?.deleteComment?.success) {
-        showCommentDeletedToast();
-        await Promise.all([refetchComments(), refetchArticleData()]);
+        refetchArticleData();
       } else {
-        console.error(
-          "Échec de la suppression du commentaire:",
-          response?.data?.deleteComment?.message || "Raison inconnue",
-        );
-        toast.error(
-          `Échec de la suppression : ${
-            response?.data?.deleteComment?.message || "Erreur inconnue"
-          }`,
-        );
+        refetchComments();
+        toast.error(response?.data?.deleteComment?.message || "Erreur inconnue");
       }
     } catch (err) {
+      refetchComments();
       console.error("Erreur lors de la suppression du commentaire :", err);
-      if (err instanceof Error) {
-        toast.error("Erreur lors de la suppression : " + err.message);
-      } else {
-        toast.error("Une erreur inattendue est survenue");
-      }
+      toast.error("Une erreur inattendue est survenue");
     }
   };
 

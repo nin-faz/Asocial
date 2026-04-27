@@ -52,9 +52,9 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(compression());
 app.use(cors(corsOptions));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
+app.use(compression());
 app.use(bodyParser.json());
 app.use(
   "/graphql",

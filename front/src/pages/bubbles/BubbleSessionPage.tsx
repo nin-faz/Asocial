@@ -35,7 +35,42 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
   const [newReply, setNewReply] = useState("");
   const [isAnonymousMsg, setIsAnonymousMsg] = useState(false);
 
-  const [addMessageMutation] = useMutation(ADD_MESSAGE_TO_BUBBLE);
+  const [addMessageMutation, { loading: isSending }] = useMutation(ADD_MESSAGE_TO_BUBBLE);
+  const isSendingRef = useRef(false);
+
+  const handleSend = () => {
+    if (isSendingRef.current || !newReply.trim()) return;
+    isSendingRef.current = true;
+    const content = newReply;
+    addMessageMutation({
+      variables: { bubbleId: bubble.id, content, isAnonymous: isAnonymousMsg },
+      onCompleted: (data) => {
+        const newMsg: FloatingMessage = {
+          id: data.addMessageToBubble.id,
+          author: data.addMessageToBubble.isAnonymous
+            ? "Anonyme"
+            : data.addMessageToBubble.author.username,
+          text: content,
+          isAnonymous: data.addMessageToBubble.isAnonymous,
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          size: 60,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          createdAt: new Date(data.addMessageToBubble.createdAt),
+          trail: [],
+          addedAt: Date.now(),
+        };
+        messagesRef.current.push(newMsg);
+        setNewReply("");
+        isSendingRef.current = false;
+      },
+      onError: () => {
+        isSendingRef.current = false;
+      },
+    });
+  };
 
   useEffect(() => {
     const vw = window.innerWidth;
@@ -396,95 +431,57 @@ const BubbleSessionContent: React.FC<BubbleSessionProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black to-transparent p-2 sm:p-3 md:p-4 lg:p-6 z-40"
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-8 pb-4 px-3 sm:px-4 md:px-6 z-40"
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-right mb-2 text-gray-300 text-[9px] sm:text-[10px] md:text-xs">
-            💬 Clique pour une animation et voir la suite du message
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-2 text-gray-500 text-[9px] sm:text-[10px]">
+            💬 Clique sur une bulle pour l'animation et voir la suite
           </div>
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="checkbox"
-              id="anonymousMsg"
-              checked={isAnonymousMsg}
-              onChange={(e) => setIsAnonymousMsg(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-600 cursor-pointer"
-            />
-            <label htmlFor="anonymousMsg" className="text-gray-300 text-xs cursor-pointer flex items-center gap-1">
-              <Skull size={12} className="text-purple-400" />
-              Envoyer anonymement
-            </label>
+
+          {/* Anonymous toggle */}
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <button
+              onClick={() => setIsAnonymousMsg((v) => !v)}
+              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                isAnonymousMsg
+                  ? "bg-purple-900/60 border-purple-500 text-purple-300"
+                  : "bg-gray-900/60 border-gray-700 text-gray-400 hover:border-gray-500"
+              }`}
+            >
+              <Skull size={11} />
+              Anonyme
+            </button>
           </div>
-          <div className="flex gap-2 sm:gap-3">
+
+          {/* Input row */}
+          <div className="flex items-center gap-2 bg-gray-900/80 border border-gray-700 focus-within:border-purple-500 focus-within:shadow-[0_0_12px_rgba(168,85,247,0.25)] rounded-2xl px-3 py-2 transition-all">
             <input
               type="text"
               value={newReply}
               onChange={(e) => setNewReply(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && newReply.trim()) {
-                  addMessageMutation({
-                    variables: { bubbleId: bubble.id, content: newReply, isAnonymous: isAnonymousMsg },
-                    onCompleted: (data) => {
-                      const newMsg: FloatingMessage = {
-                        id: data.addMessageToBubble.id,
-                        author: data.addMessageToBubble.isAnonymous
-                          ? "Anonyme"
-                          : data.addMessageToBubble.author.username,
-                        text: newReply,
-                        isAnonymous: data.addMessageToBubble.isAnonymous,
-                        x: Math.random() * window.innerWidth,
-                        y: Math.random() * window.innerHeight,
-                        vx: (Math.random() - 0.5) * 2,
-                        vy: (Math.random() - 0.5) * 2,
-                        size: 60,
-                        color:
-                          COLORS[Math.floor(Math.random() * COLORS.length)],
-                        createdAt: new Date(data.addMessageToBubble.createdAt),
-                        trail: [],
-                        addedAt: Date.now(),
-                      };
-                      messagesRef.current.push(newMsg);
-                      setNewReply("");
-                    },
-                  });
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
                 }
               }}
               placeholder="Lâche ton opinion..."
-              className="flex-1 bg-gray-800 text-white rounded px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 border border-gray-700 focus:border-purple-500 focus:outline-none text-xs sm:text-sm"
+              className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
             />
             <button
-              onClick={() => {
-                if (newReply.trim()) {
-                  addMessageMutation({
-                    variables: { bubbleId: bubble.id, content: newReply, isAnonymous: isAnonymousMsg },
-                    onCompleted: (data) => {
-                      const newMsg: FloatingMessage = {
-                        id: data.addMessageToBubble.id,
-                        author: data.addMessageToBubble.isAnonymous
-                          ? "Anonyme"
-                          : data.addMessageToBubble.author.username,
-                        text: newReply,
-                        isAnonymous: data.addMessageToBubble.isAnonymous,
-                        x: Math.random() * window.innerWidth,
-                        y: Math.random() * window.innerHeight,
-                        vx: (Math.random() - 0.5) * 2,
-                        vy: (Math.random() - 0.5) * 2,
-                        size: 60,
-                        color:
-                          COLORS[Math.floor(Math.random() * COLORS.length)],
-                        createdAt: new Date(data.addMessageToBubble.createdAt),
-                        trail: [],
-                        addedAt: Date.now(),
-                      };
-                      messagesRef.current.push(newMsg);
-                      setNewReply("");
-                    },
-                  });
-                }
-              }}
-              className="bg-purple-600 hover:bg-purple-700 text-white p-1.5 sm:p-2 rounded transition-colors flex-shrink-0"
+              onClick={handleSend}
+              disabled={isSending || !newReply.trim()}
+              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                isSending || !newReply.trim()
+                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+              }`}
             >
-              <Send size={16} className="sm:w-4.5 md:w-5" />
+              {isSending ? (
+                <Loader size={14} className="animate-spin" />
+              ) : (
+                <Send size={14} />
+              )}
             </button>
           </div>
         </div>

@@ -92,7 +92,10 @@ export const updateArticle: NonNullable<
     while ((match = mentionRegex.exec(mentionText))) {
       mentioned.add(match[1]);
     }
+    const isHereMention = mentioned.has("tous");
+
     for (const username of mentioned) {
+      if (username === "tous") continue;
       if (username === user.username) continue;
       const mentionedUser = await db.user.findUnique({ where: { username } });
       if (mentionedUser) {
@@ -105,13 +108,39 @@ export const updateArticle: NonNullable<
           },
         });
         io.to(mentionedUser.id).emit("notification", notif);
-        // Send push notification
         await sendPushNotificationToUser(mentionedUser.id, {
           title: "Nouvelle mention",
           body: notif.message,
           url: `/publications/${id}`,
         });
       }
+    }
+
+    if (isHereMention && user.username === "Nin") {
+      const allUsers = await db.user.findMany({
+        where: { id: { not: user.id } },
+        select: { id: true },
+      });
+      const articleLabel = (title ?? existArticle.title)?.trim() || (content ?? existArticle.content).slice(0, 30) + "...";
+      const hereMessage = `📢 ${user.username} a mentionné tout le monde dans "${articleLabel}"`;
+      await Promise.all(
+        allUsers.map(async (targetUser) => {
+          const notif = await db.notification.create({
+            data: {
+              type: "mention",
+              message: hereMessage,
+              userId: targetUser.id,
+              articleId: id,
+            },
+          });
+          io.to(targetUser.id).emit("notification", notif);
+          await sendPushNotificationToUser(targetUser.id, {
+            title: "📢 @tous",
+            body: hereMessage,
+            url: `/publications/${id}`,
+          });
+        }),
+      );
     }
 
     return {

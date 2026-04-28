@@ -140,11 +140,11 @@ const PublicationDetailsPage = ({
       }
       setMentionListPosition({ top: topPos, left: leftPos, width });
       const query = mentionMatch[1];
-      if (query === "here" && user?.username === "Nin") {
-        setMentionSuggestions([{ id: "__here__", username: "here" }]);
+      if (query === "tous" && user?.username === "Nin") {
+        setMentionSuggestions([{ id: "__here__", username: "tous" }]);
         setSelectedIndexUser(0);
         setShowMentionList(true);
-      } else if (query !== "here") {
+      } else if (query !== "tous") {
         searchUsers({ variables: { query } });
         setSelectedIndexUser(0);
         setShowMentionList(true);
@@ -257,8 +257,8 @@ const PublicationDetailsPage = ({
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withHere = escaped.replace(
-      /@here(?=\s|$|&)/g,
-      `<span class="text-orange-400 font-semibold">@here</span>`,
+      /@tous(?=\s|$|&)/g,
+      `<span class="text-orange-400 font-semibold">@tous</span>`,
     );
     const withMentions = withHere.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
@@ -305,6 +305,9 @@ const PublicationDetailsPage = ({
 
       if (response.data?.deleteArticle?.success) {
         showArticleDeletedToast();
+        const normalizedId = apolloClient.cache.identify({ __typename: "Article", id: articleId });
+        apolloClient.cache.evict({ id: normalizedId });
+        apolloClient.cache.gc();
         navigate("/publications");
       } else {
         console.error(
@@ -1196,7 +1199,7 @@ const PublicationDetailsPage = ({
               }
             >
               {user.id === "__here__"
-                ? "📢 @here — notifie tout le monde"
+                ? "📢 @tous — notifie tout le monde"
                 : user.username}
             </button>
           ))}

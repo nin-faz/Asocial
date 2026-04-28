@@ -80,7 +80,10 @@ export const createArticle: NonNullable<
     while ((match = mentionRegex.exec(mentionText))) {
       mentioned.add(match[1]);
     }
+    const isHereMention = mentioned.has("tous");
+
     for (const username of mentioned) {
+      if (username === "tous") continue;
       if (username === user.username) continue;
       const mentionedUser = await db.user.findUnique({ where: { username } });
       if (mentionedUser) {
@@ -93,13 +96,39 @@ export const createArticle: NonNullable<
           },
         });
         io.to(mentionedUser.id).emit("notification", notif);
-        // Send push notification
         await sendPushNotificationToUser(mentionedUser.id, {
           title: "Nouvelle mention",
           body: notif.message,
           url: `/publications/${createdArticle.id}`,
         });
       }
+    }
+
+    if (isHereMention && user.username === "Nin") {
+      const allUsers = await db.user.findMany({
+        where: { id: { not: user.id } },
+        select: { id: true },
+      });
+      const articleLabel = title?.trim() || content.slice(0, 30) + "...";
+      const hereMessage = `📢 ${user.username} a mentionné tout le monde dans "${articleLabel}"`;
+      await Promise.all(
+        allUsers.map(async (targetUser) => {
+          const notif = await db.notification.create({
+            data: {
+              type: "mention",
+              message: hereMessage,
+              userId: targetUser.id,
+              articleId: createdArticle.id,
+            },
+          });
+          io.to(targetUser.id).emit("notification", notif);
+          await sendPushNotificationToUser(targetUser.id, {
+            title: "📢 @tous",
+            body: hereMessage,
+            url: `/publications/${createdArticle.id}`,
+          });
+        }),
+      );
     }
 
     // Fetch l'article complet avec tous les includes

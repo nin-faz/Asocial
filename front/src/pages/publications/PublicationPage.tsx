@@ -242,6 +242,15 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
     }
   }, [user?.id, refetchUserData]);
 
+  useEffect(() => {
+    if (sessionStorage.getItem("forceRefetchArticles")) {
+      sessionStorage.removeItem("forceRefetchArticles");
+      setOffsetRecent(0);
+      setHasMoreRecent(true);
+      refetchArticles({ limit: ARTICLES_PER_PAGE, offset: 0 });
+    }
+  }, [refetchArticles]);
+
   const [createArticle, { loading: isCreatingArticle }] =
     useMutation(CREATE_ARTICLE);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -699,11 +708,11 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
       }
       setMentionListPosition({ top: topPos, left: leftPos, width });
       const query = mentionMatch[1];
-      if (query === "here" && user?.username === "Nin") {
-        setMentionSuggestions([{ id: "__here__", username: "here" }]);
+      if (query === "tous" && user?.username === "Nin") {
+        setMentionSuggestions([{ id: "__here__", username: "tous" }]);
         setSelectedIndexUser(0);
         setShowMentionList(true);
-      } else if (query !== "here") {
+      } else if (query !== "tous") {
         searchUsers({ variables: { query } });
         const suggestions = usersData?.searchUsers ?? [];
         setMentionSuggestions(suggestions);
@@ -803,8 +812,8 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
   const highlightMentions = (text: string) => {
     const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const withHere = escaped.replace(
-      /@here(?=\s|$|&)/g,
-      `<span class="text-orange-400 font-semibold">@here</span>`,
+      /@tous(?=\s|$|&)/g,
+      `<span class="text-orange-400 font-semibold">@tous</span>`,
     );
     const withMentions = withHere.replace(
       /@([a-zA-Z0-9_.\-']+)(?=\s|$)/g,
@@ -1423,7 +1432,7 @@ function PublicationPage({ isActive = true }: { isActive?: boolean }) {
               }
             >
               {user.id === "__here__"
-                ? "📢 @here — notifie tout le monde"
+                ? "📢 @tous — notifie tout le monde"
                 : `@${user.username}`}
             </button>
           ))}

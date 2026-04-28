@@ -180,6 +180,7 @@ export const addComment: NonNullable<MutationResolvers["addComment"]> = async (
 
     for (const username of mentionSet) {
       if (username === "tous") continue;
+
       if (username === newComment.author.username) continue;
       const mentionedUser = await db.user.findUnique({ where: { username } });
       if (mentionedUser) {
